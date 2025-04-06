@@ -1,18 +1,21 @@
 local _G = _G;
 local require = _G.require;
+local ipairs = _G.ipairs;
+local table = _G.table;
 
-local Constants = require("Constants\\Constants");
+local Constants = require("Constants/Constants");
 local sdk = Constants.sdk;
-local ipairs = Constants.ipairs;
 local pairs = Constants.pairs;
 
-local Statics = {}
+local Statics = {};
 
 function Statics.generate(typename, double_ended)
     local double_ended = double_ended or false;
 
-    local t = sdk.find_type_definition(typename)
-    if not t then return {} end
+    local t = sdk.find_type_definition(typename);
+    if not t then
+        return {};
+    end
 
     local fields = t:get_fields();
     local enum = {};
@@ -24,7 +27,7 @@ function Statics.generate(typename, double_ended)
 
             enum[name] = raw_value;
 
-            if double_ended then
+            if double_ended == true then
                 enum[raw_value] = name;
             end
         end
@@ -34,7 +37,7 @@ function Statics.generate(typename, double_ended)
 end
 
 function Statics.generate_global(typename)
-    local parts = {}
+    local parts = {};
 
     for part in typename:gmatch("[^%.]+") do
         table.insert(parts, part);

@@ -23,7 +23,7 @@ end, function()
         local timer = get_DurationTimer_method:call(HunterMealEffect);
         if timer ~= oldMealTimer then
             oldMealTimer = timer;
-            mealInfoTbl.mealTimer = string.format("식사 타이머: %02d:%02d", math.floor(timer / 60.0), math.modf(timer % 60.0));
+            mealInfoTbl.mealTimer = string.format("%02d:%02d", math.floor(timer / 60.0), math.modf(timer % 60.0));
         end
     else
         if mealInfoTbl.mealTimer ~= NO_CANTEEN then

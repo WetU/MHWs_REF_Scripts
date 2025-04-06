@@ -30,17 +30,17 @@ re.on_config_save(saveConfig);
 
 re.on_frame(function()
     if QuestInfo.questInfoCreated == true and imgui.begin_window("퀘스트 정보", nil, windowFlag) == true then
-        imgui.text(QuestInfo.questCurTime .. " / " .. QuestInfo.questTimeLimit);
-        imgui.text("다운 횟수: " .. QuestInfo.questCurDeath .. " / " .. QuestInfo.questMaxDeath);
+        imgui.text(QuestInfo.questTime);
+        imgui.text(QuestInfo.deathCount);
         imgui.end_window();
     end
 
-    if MealInfo.mealTimer ~= nil and imgui.begin_window("식사 정보", nil, windowFlag) == true then
+    if MealInfo.mealTimer ~= nil and imgui.begin_window("식사 타이머", nil, windowFlag) == true then
         imgui.text(MealInfo.mealTimer);
         imgui.end_window();
     end
 
-    if (FacilityItems.Pugee ~= nil or FacilityItems.Rallus ~= nil) and imgui.begin_window("시설 정보", nil, windowFlag) == true then
+    if FacilityItems.HasData == true and imgui.begin_window("시설 정보", nil, windowFlag) == true then
         if FacilityItems.Pugee ~= nil then
             imgui.text(FacilityItems.Pugee);
         end

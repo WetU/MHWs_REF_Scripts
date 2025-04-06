@@ -55,9 +55,10 @@ local set_EnableLocalExposure_method = ToneMapping_type_def:get_method("set_Enab
 local setLocalExposureType_method = ToneMapping_type_def:get_method("setLocalExposureType(via.render.ToneMapping.LocalExposureType)");
 local set_Contrast_method = ToneMapping_type_def:get_method("set_Contrast(System.Single)");
 
-local get_NowGraphicsSetting_method = Constants.get_NowGraphicsSetting_method;
-local setGraphicsSetting_method = Constants.setGraphicsSetting_method;
-local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
+local GraphicsManager_type_def = sdk.find_type_definition("app.GraphicsManager");
+local get_NowGraphicsSetting_method = GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
+local setGraphicsSetting_method = GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
+local get_DisplaySettings_method = GraphicsManager_type_def:get_method("get_DisplaySettings");
 
 local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
 local set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");

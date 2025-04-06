@@ -28,12 +28,15 @@ local DEATH_COUNT_UP = sdk.find_type_definition("app.cQuestDirector.QUEST_FAILED
 local oldDeathCount = nil;
 local oldElapsedTime = nil;
 
+local questMaxDeath = nil;
+local questCurDeath = "0";
+local questTimeLimit = nil;
+local questCurTime = nil;
+
 local questInfoTbl = {
     questInfoCreated = false,
-    questMaxDeath = nil,
-    questCurDeath = 0,
-    questTimeLimit = nil,
-    questCurTime = nil
+    questTime = nil,
+    deathCount = nil
 };
 
 sdk.hook(QuestPlaying_type_def:get_method("update"), function(args)
@@ -44,23 +47,37 @@ end, function()
     local OldQuestPlDieCount = OldQuestPlDieCount_field:get_data(QuestPlaying);
     local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector);
 
-    if questInfoTbl.questMaxDeath == nil then
-        questInfoTbl.questMaxDeath = tostring(getQuestLife_method:call(get_QuestData_method:call(QuestDirector)));
+    local deathUpdated = false;
+    local timeUpdated = false;
+
+    if questMaxDeath == nil then
+        questMaxDeath = tostring(getQuestLife_method:call(get_QuestData_method:call(QuestDirector)));
+        deathUpdated = true;
     end
 
     if OldQuestPlDieCount ~= oldDeathCount then
         oldDeathCount = OldQuestPlDieCount;
-        questInfoTbl.questCurDeath = OldQuestPlDieCount;
+        questCurDeath = tostring(OldQuestPlDieCount);
+        deathUpdated = true;
+    end
+
+    if questTimeLimit == nil then
+        questTimeLimit = string.format("%.0f분", (QuestElapsedTime + get_QuestRemainTime_method:call(QuestDirector)) / 60.0);
+        timeUpdated = true;
     end
 
     if QuestElapsedTime ~= oldElapsedTime then
         oldElapsedTime = QuestElapsedTime;
         local seconds, miliseconds = math.modf(QuestElapsedTime % 60.0);
-        questInfoTbl.questCurTime = string.format("%02d'%02d\"%02d", math.floor(QuestElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0);
+        questCurTime = string.format("%02d'%02d\"%02d", math.floor(QuestElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0);
+        timeUpdated = true;
     end
 
-    if questInfoTbl.questTimeLimit == nil then
-        questInfoTbl.questTimeLimit = string.format("%.0f분", (QuestElapsedTime + get_QuestRemainTime_method:call(QuestDirector)) / 60.0);
+    if deathUpdated == true then
+        questInfoTbl.deathCount = "다운 횟수: " .. questCurDeath .. " / " .. questMaxDeath;
+    end
+    if timeUpdated == true then
+        questInfoTbl.questTime = questCurTime .. " / " .. questTimeLimit;
     end
 
     if questInfoTbl.questInfoCreated ~= true then
@@ -75,11 +92,11 @@ end, function(retval)
         local QuestFailed = thread.get_hook_storage()["this"];
 
         if QuestFailedType_field:get_data(get_Param_method:call(QuestFailed)) == DEATH_COUNT_UP then
-            if questInfoTbl.questMaxDeath == nil then
-                questInfoTbl.questMaxDeath = tostring(getQuestLife_method:call(get_QuestData_method:call(get_Owner_method:call(QuestFailed))));
+            if questMaxDeath == nil then
+                questMaxDeath = tostring(getQuestLife_method:call(get_QuestData_method:call(get_Owner_method:call(QuestFailed))));
             end
 
-            questInfoTbl.questCurDeath = questInfoTbl.questMaxDeath;
+            questInfoTbl.deathCount = "다운 횟수: " .. questMaxDeath .. " / " .. questMaxDeath;
         end
     end
 
@@ -89,10 +106,10 @@ end);
 sdk.hook(QuestDirector_type_def:get_method("questInfoClear(System.Boolean, System.Boolean)"), nil, function()
     questInfoTbl.questInfoCreated = false;
 
-    questInfoTbl.questMaxDeath = nil;
-    questInfoTbl.questCurDeath = 0;
-    questInfoTbl.questTimeLimit = nil;
-    questInfoTbl.questCurTime = nil;
+    questMaxDeath = nil;
+    questCurDeath = 0;
+    questTimeLimit = nil;
+    questCurTime = nil;
 
     oldDeathCount = nil;
     oldElapsedTime = nil;
