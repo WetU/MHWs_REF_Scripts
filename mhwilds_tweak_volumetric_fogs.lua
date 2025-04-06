@@ -176,24 +176,37 @@ end);
 re.on_draw_ui(function()
     if imgui.tree_node("Tweak volumetric fog(s)") == true then
         local changed = false;
+        local requireSave = false;
         imgui.text("Note: Changes are applied immediately");
         imgui.set_next_item_width(200);
         changed, settings.volumetricFogTextureSize = imgui.combo("Volumetric fog resolution", settings.volumetricFogTextureSize, volumetricFogTextureSizeOptions);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("The lower you go the more likely it will look blocky, especially with Accurate fog integration type enabled");
         end
 
         changed, settings.ambientLightEnabled = imgui.checkbox("Ambient light enabled", settings.ambientLightEnabled);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
 
         if settings.ambientLightEnabled == true then
             imgui.indent(50);
             imgui.set_next_item_width(100);
             changed, settings.ambientLightRateMultiplier = imgui.drag_float("Ambient light amount", settings.ambientLightRateMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             imgui.unindent(50);
         end
 
         changed, settings.emissionEnabled = imgui.checkbox("Emission enabled", settings.emissionEnabled);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
 
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("This is a subtle effect");
@@ -203,8 +216,14 @@ re.on_draw_ui(function()
         imgui.push_id("fogCullingDistance");
         imgui.set_next_item_width(100);
         changed, settings.fogCullingDistanceMultiplier = imgui.drag_float(" ", settings.fogCullingDistanceMultiplier, 0.01, 0.0, 10.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.pop_id();
         changed, settings.overrideFadeDistance = imgui.checkbox("Override near fade distance", settings.overrideFadeDistance);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
 
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("These are absolute settings (not multipliers), so it might be buggy.");
@@ -214,6 +233,9 @@ re.on_draw_ui(function()
             imgui.indent(50);
             imgui.set_next_item_width(100);
             changed, settings.fadeDistance = imgui.drag_float("Fade distance", settings.fadeDistance, 0.1, -10.0, 2000.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if imgui.is_item_hovered() == true then
                 imgui.begin_tooltip();
@@ -224,6 +246,9 @@ re.on_draw_ui(function()
 
             imgui.set_next_item_width(100);
             changed, settings.fadeDensity = imgui.drag_float("Fade \"hardness\"(?)", settings.fadeDensity, 0.001, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if imgui.is_item_hovered() == true then
                 imgui.begin_tooltip();
@@ -236,36 +261,66 @@ re.on_draw_ui(function()
         
         if imgui.tree_node("Advanced (no visible effects)") == true then
             changed, settings.advancedOptionsEnabled = imgui.checkbox("Enable advanced options", settings.advancedOptionsEnabled);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if settings.advancedOptionsEnabled ~= true then
                 imgui.begin_disabled(true);
             end
 
             changed, settings.shadowEnabled = imgui.checkbox("Shadow enabled", settings.shadowEnabled);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             
             imgui.push_item_width(100);
             changed, settings.depthDecodingParamMultiplier = imgui.drag_float("Depth decoding parameter", settings.depthDecodingParamMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             
             if imgui.is_item_hovered() == true then
                 imgui.set_tooltip("Seems to affect fog rendering in the far distance");
             end
 
             changed, settings.softnessMultiplier = imgui.drag_float("Softness", settings.softnessMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             changed, settings.prevFrameBlendFactorMultiplier = imgui.drag_float("Previous frame blend factor", settings.prevFrameBlendFactorMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             changed, settings.shadowCullingBlendFactorScaleMultiplier = imgui.drag_float("Shadow culling blend factor scale", settings.shadowCullingBlendFactorScaleMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             changed, settings.rejectionEnabled = imgui.checkbox("Rejection enabled", settings.rejectionEnabled);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             imgui.pop_item_width(100);
 
             if settings.rejectionEnabled == true then
                 imgui.indent(40);
                 imgui.set_next_item_width(100);
                 changed, settings.rejectSensitivityMultiplier = imgui.drag_float("Reject sensitivity", settings.rejectSensitivityMultiplier, 0.01, 0.0, 10.0);
+                if changed == true and requireSave ~= true then
+                    requireSave = true;
+                end
                 imgui.set_next_item_width(100);
                 changed, settings.rejectSensitivityFactorMultiplier = imgui.drag_float("Reject sensitivity factor", settings.rejectSensitivityFactorMultiplier, 0.01, 0.0, 10.0);
+                if changed == true and requireSave ~= true then
+                    requireSave = true;
+                end
                 imgui.unindent(40);
             end
             imgui.set_next_item_width(100);
             changed, settings.leakBiasMultiplier = imgui.drag_float("Leak bias", settings.leakBiasMultiplier, 0.01, 0.0, 10.0);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             imgui.push_id("integrationType");
             imgui.set_next_item_width(200);
             if settings.overrideIntegrationType ~= true then
@@ -273,6 +328,9 @@ re.on_draw_ui(function()
             end
 
             changed, settings.integrationType = imgui.combo("Fog integration type", settings.integrationType, VolumetricFogIntegrationTypes);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if imgui.is_item_hovered() == true then
                 imgui.begin_tooltip();
@@ -287,6 +345,9 @@ re.on_draw_ui(function()
 
             imgui.same_line();
             changed, settings.overrideIntegrationType = imgui.checkbox("Override", settings.overrideIntegrationType);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if imgui.is_item_hovered() == true then
                 imgui.begin_tooltip();
@@ -304,6 +365,9 @@ re.on_draw_ui(function()
             end
 
             changed, settings.jitterNoiseType = imgui.combo("Fog jitter noise type", settings.jitterNoiseType, VolumetricFogJitterNoiseTypes);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
 
             if settings.overrideJitterNoiseType ~= true then
                 imgui.end_disabled();
@@ -311,6 +375,9 @@ re.on_draw_ui(function()
 
             imgui.same_line();
             changed, settings.overrideJitterNoiseType = imgui.checkbox("Override", settings.overrideJitterNoiseType);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
             imgui.pop_id();
 
             if settings.advancedOptionsEnabled ~= true then
@@ -320,23 +387,18 @@ re.on_draw_ui(function()
             imgui.tree_pop();
         end
 
-        imgui.push_style_color(21, -16751773);
-        local saveClicked = imgui.button("Save settings");
-        imgui.pop_style_color(1);
         imgui.push_style_color(21, -16777117);
         local defaultsClicked = imgui.button("Reset to defaults");
         imgui.pop_style_color(1);
 
-        if changed == true then
+        if requireSave == true then
             ApplySettings();
-        end
-
-        if saveClicked == true then
-            SaveSettings();
+            saveConfig();
         end
 
         if defaultsClicked == true then
             ResetSettings();
+            saveConfig();
         end
 
         imgui.tree_pop();

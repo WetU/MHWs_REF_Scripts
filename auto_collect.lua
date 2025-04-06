@@ -19,8 +19,8 @@ local ItemWork_type_def = sdk.find_type_definition("app.savedata.cItemWork");
 local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local Num_field = ItemWork_type_def:get_field("Num");
 
---[[local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
-local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");]]
+local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
+local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 
 local STOCK_TYPE_BOX = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE"):get_field("BOX"):get_data(nil); -- static
 
@@ -64,7 +64,7 @@ end, function()
     end
 end);
 
---[[local FacilityDining = nil;
+local FacilityDining = nil;
 sdk.hook(FacilityDining_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), function(args)
     FacilityDining = sdk.to_managed_object(args[2]);
 end);
@@ -74,4 +74,4 @@ sdk.hook(sdk.find_type_definition("app.LifeAreaMusicManager"):get_method("enterL
         supplyFood_method:call(FacilityDining);
         FacilityDining = nil;
     end
-end);]]
+end);

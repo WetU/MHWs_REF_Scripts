@@ -7,8 +7,6 @@ local json = Constants.json;
 local imgui = Constants.imgui;
 local re = Constants.re;
 
-local configPath = "DisableCameraOverlapTransparency.json"
-
 local default_config = {
 	OverNear_NearestDistance = 4.2,
 	OverNear_NearestHeight = 1.4,
@@ -23,11 +21,11 @@ local preset_config = {
 local config = default_config;
 
 local function saveConfig()
-    json.dump_file(configPath, config);
+    json.dump_file("DisableCameraOverlapTransparency.json", config);
 end
 
 local function loadConfig()
-    config = json.load_file(configPath);
+    config = json.load_file("DisableCameraOverlapTransparency.json");
 end
 
 loadConfig();
@@ -75,31 +73,41 @@ re.on_config_save(saveConfig);
 re.on_draw_ui(function()
 	if imgui.tree_node("Disable Camera Overlap Transparency") == true then
 		local changed = false;
+		local requireSave = false;
 		imgui.begin_group();
 		imgui.text("--------------  CameraSettings(Boss Fight)  --------------");
 		imgui.text("Closest <--MinCameraDistance--> Farthest")
 		changed, config.OverNear_NearestDistance = imgui.slider_float("Distance##DCOT_OverNear_NearestDistance", config.OverNear_NearestDistance, 0.0, 10.0);
+		if changed == true and requireSave ~= true then
+			requireSave = true;
+		end
 		imgui.new_line();
 		imgui.text("Lowest <---MinCameraHeight---> Highest");
 		changed, config.OverNear_NearestHeight = imgui.slider_float("Height##DCOT_OverNear_NearestHeight", config.OverNear_NearestHeight, 0.0, 1.4);
+		if changed == true and requireSave ~= true then
+			requireSave = true;
+		end
 		imgui.new_line();
 		imgui.text("Invisible  <------------Alpha------------>  Fully Visible");
 		changed, config.OverNear_Alpha = imgui.slider_float("Alpha##OverNear_Alpha_Near", config.OverNear_Alpha, 0.0, 1.0);
+		if changed == true and requireSave ~= true then
+			requireSave = true;
+		end
 		
 		imgui.push_style_color(21, 0xFFFF8000);
 		if imgui.button("Reset Default##ResetDefault_Button") == true then
 			config = default_config;
-			changed = true;
+			requireSave = true;
 		end
 		imgui.same_line();
 		if imgui.button("Load Preset##LoadPreset_Button") == true then
 			config = preset_config;
-			changed = true;
+			requireSave = true;
 		end
 		imgui.pop_style_color(1);
 		imgui.end_group();
 
-		if changed == true then
+		if requireSave == true then
 			ApplyCameraSettings();
 			saveConfig();
 		end

@@ -1,0 +1,36 @@
+local require = _G.require;
+
+local Constants = require("Constants/Constants");
+local sdk = Constants.sdk;
+local thread = Constants.thread;
+
+local HunterMealEffect_type_def = sdk.find_type_definition("app.cHunterMealEffect");
+local get_DurationTimer_method = HunterMealEffect_type_def:get_method("get_DurationTimer");
+local IsTimerActive_field = HunterMealEffect_type_def:get_field("_IsTimerActive");
+
+local oldMealTimer = nil;
+local NO_CANTEEN = "식사 효과 없음";
+
+local mealInfoTbl = {
+    mealTimer = nil
+};
+
+sdk.hook(HunterMealEffect_type_def:get_method("update(System.Single, app.HunterCharacter)"), function(args)
+    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+end, function()
+    local HunterMealEffect = thread.get_hook_storage()["this"];
+    if IsTimerActive_field:get_data(HunterMealEffect) == true then
+        local timer = get_DurationTimer_method:call(HunterMealEffect);
+        if timer ~= oldMealTimer then
+            oldMealTimer = timer;
+            mealInfoTbl.mealTimer = string.format("식사 타이머: %02d:%02d", math.floor(timer / 60.0), math.modf(timer % 60.0));
+        end
+    else
+        if mealInfoTbl.mealTimer ~= NO_CANTEEN then
+            oldMealTimer = NO_CANTEEN;
+            mealInfoTbl.mealTimer = NO_CANTEEN;
+        end
+    end
+end);
+
+return mealInfoTbl;

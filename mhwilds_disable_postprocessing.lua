@@ -110,7 +110,16 @@ local function ResetBrightness()
 end
 
 local function get_component(runtime_type)
-    return getComponent_method:call(get_GameObject_method:call(get_PrimaryCamera_method:call(nil)), runtime_type);
+    local PrimaryCamera = get_PrimaryCamera_method:call(nil);
+    if PrimaryCamera ~= nil then
+        local GameObject = get_GameObject_method:call(PrimaryCamera);
+        if GameObject ~= nil then
+            local Component = getComponent_method:call(GameObject, runtime_type);
+            if Component ~= nil then
+                return Component;
+            end
+        end
+    end
 end
 
 local function apply_ws_setting()
@@ -171,6 +180,7 @@ sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), nil, 
     ApplySettings();
     apply_gi_setting();
 end);
+
 sdk.hook(ToneMapping_type_def:get_method("clearHistogram"), nil, function()
     set_EnableLocalExposure_method:call(get_component(ToneMapping_runtime_type), settings.localExposure);
 end);
@@ -195,24 +205,52 @@ re.on_draw_ui(function()
         local ws_changed = false;
         local gi_changed = false;
         local changed = false;
+        local requireSave = false;
 
         imgui.push_style_color(21, 0xFF030380);
         changed = imgui.small_button("Save settings");
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.pop_style_color(1);
         imgui.text("Anti-Aliasing & filters");
         changed, settings.TAA = imgui.checkbox("TAA enabled", settings.TAA);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.jitter = imgui.checkbox("TAA jitter enabled", settings.jitter);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.colorCorrect = imgui.checkbox("Color correction", settings.colorCorrect);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.localExposure = imgui.checkbox("Local exposure enabled", settings.localExposure);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.indent(24);
         changed, settings.localExposureBlurredLuminance = imgui.checkbox("Use blurred luminance (sharpens)", settings.localExposureBlurredLuminance);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.unindent(24);
         changed, settings.customContrastEnable = imgui.checkbox("Custom contrast enabled", settings.customContrastEnable);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.customContrast = imgui.drag_float("Contrast", settings.customContrast, 0.01, 0.01, 5.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.new_line();
 
         imgui.text("SDR gamma & Brightness");
         changed, settings.customBrightnessEnable = imgui.checkbox("SDR custom gamma & brightness enabled", settings.customBrightnessEnable);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.text("NOTE: requires game restart after disabling to revert changes");
         imgui.spacing();
 
@@ -225,13 +263,31 @@ re.on_draw_ui(function()
             ApplySettings();
         end
         changed, settings.gamma = imgui.drag_float("Gamma", settings.gamma, 0.001, 0.001, 5.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.upperLimit = imgui.drag_float("Max brightness", settings.upperLimit, 0.001, 0.001, 10.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.lowerLimit = imgui.drag_float("Min brightness", settings.lowerLimit, 0.001, -5.0, 5.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.spacing();
 
         changed, settings.gammaOverlay = imgui.drag_float("UI gamma", settings.gammaOverlay, 0.001, 0.001, 5.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.upperLimitOverlay = imgui.drag_float("UI max brightness", settings.upperLimitOverlay, 0.001, 0.001, 10.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.lowerLimitOverlay = imgui.drag_float("UI min brightness", settings.lowerLimitOverlay, 0.001, -5.0, 5.0);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         imgui.new_line();
 
         imgui.text("Graphics Settings");
@@ -243,11 +299,29 @@ re.on_draw_ui(function()
             apply = false;
         end
         changed, settings.lensDistortionEnable = imgui.checkbox("Lens distortion enabled", settings.lensDistortionEnable);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.fog = imgui.checkbox("Fog enabled", settings.fog);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.volumetricFog = imgui.checkbox("Volumetric fog enabled", settings.volumetricFog);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.filmGrain = imgui.checkbox("Film grain enabled", settings.filmGrain);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.lensFlare = imgui.checkbox("Lens flare enabled", settings.lensFlare);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         changed, settings.godRay = imgui.checkbox("Godray enabled", settings.godRay);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
         ws_changed, settings.disable_wind_simulation = imgui.checkbox("Disable Wind Simulation", settings.disable_wind_simulation);
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("Huge performance improvement.\n\nThe vegetation and tissues sway will not longer\ndepend of the wind intensity and direction.");
@@ -257,7 +331,7 @@ re.on_draw_ui(function()
             imgui.set_tooltip("Medium performance improvement.\n\nHighly deteriorate the visual quality.");
         end
         imgui.spacing();
-        if changed == true then
+        if requireSave == true then
             SaveSettings();
             ApplySettings();
         end

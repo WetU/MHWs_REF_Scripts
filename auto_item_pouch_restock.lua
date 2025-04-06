@@ -11,7 +11,7 @@ local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
 
-local addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystemLog(System.String)");
+local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
 
 local mySet = 0;
 
@@ -41,10 +41,7 @@ local function restockItems()
 end
 
 sdk.hook(sdk.find_type_definition("app.cCampManager"):get_method("tentGetIn(via.GameObject)"), nil, restockItems);
-sdk.hook(sdk.find_type_definition("app.cQuestStart"):get_method("enter"), nil, function(retval)
-    restockItems();
-    return retval;
-end);
+sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), nil, restockItems);
 sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("openGUI"), nil, function(retval)
     restockItems();
     return retval;
