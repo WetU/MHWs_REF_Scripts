@@ -9,8 +9,6 @@ local string = Constants.string;
 local tostring = Constants.tostring;
 
 local FacilityItems = {
-    HasData = false,
-    Pugee = nil,
     Rallus = nil
 };
 
@@ -19,10 +17,8 @@ local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
 local get_Rallus_method = FacilityManager_type_def:get_method("get_Rallus");
 
 local FacilityPugee_type_def = get_Pugee_method:get_return_type();
-local get__SaveParam_method = FacilityPugee_type_def:get_method("get__SaveParam");
 local isEnableCoolTimer_method = FacilityPugee_type_def:get_method("isEnableCoolTimer");
-
-local getCoolTimer_method = get__SaveParam_method:get_return_type():get_method("getCoolTimer");
+local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)");
 
 local FacilityRallus_type_def = get_Rallus_method:get_return_type();
 local get_SupplyTimer_method = FacilityRallus_type_def:get_method("get_SupplyTimer");
@@ -31,8 +27,6 @@ local SettingData_field = FacilityRallus_type_def:get_field("_SettingData");
 
 local get_StockMax_method = SettingData_field:get_type():get_method("get_StockMax");
 
-local oldPugeeState = nil;
-local oldCoolTimer = nil;
 local oldSupplyTimer = nil;
 local oldSupplyNum = nil;
 
@@ -48,45 +42,21 @@ end, function()
     local FacilityPugee = get_Pugee_method:call(FacilityManager);
     local FacilityRallus = get_Rallus_method:call(FacilityManager);
 
-    if FacilityPugee ~= nil then
-        local isEnableCoolTimer = isEnableCoolTimer_method:call(FacilityPugee);
-
-        if isEnableCoolTimer == true then
-            local CoolTimer = getCoolTimer_method:call(get__SaveParam_method:call(FacilityPugee));
-            if CoolTimer ~= oldCoolTimer then
-                oldCoolTimer = CoolTimer;
-                FacilityItems.Pugee = "푸기: " .. string.format("%02d:%02d", math.floor(CoolTimer / 60.0), math.modf(CoolTimer % 60.0));
-            end
-        end
-
-        if isEnableCoolTimer ~= oldPugeeState then
-            oldPugeeState = isEnableCoolTimer;
-            if isEnableCoolTimer == false then
-                FacilityItems.Pugee = "푸기: 획득 가능";
-            elseif isEnableCoolTimer == nil then
-                FacilityItems.Pugee = nil;
-            end
-        end
-
-        if FacilityItems.HasData ~= true then
-            FacilityItems.HasData = true;
-        end
+    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) ~= true then
+        stroke_method:call(FacilityPugee, true);
     end
 
     if FacilityRallus ~= nil then
         local isUpdated = false;
 
         if isRallusStockMaxUpdated == false then
-            local SettingData = SettingData_field:get_data(FacilityRallus);
-            if SettingData ~= nil then
-                RallusStockMax = tostring(get_StockMax_method:call(SettingData));
-                isUpdated = true;
-            end
+            RallusStockMax = tostring(get_StockMax_method:call(SettingData_field:get_data(FacilityRallus)));
+            isUpdated = true;
             isRallusStockMaxUpdated = true;
         end
 
         local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
-        local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
+        Constants.RallusSupplyNum = get_SupplyNum_method:call(FacilityRallus);
 
         if SupplyTimer ~= oldSupplyTimer then
             oldSupplyTimer = SupplyTimer;
@@ -94,17 +64,14 @@ end, function()
             isUpdated = true;
         end
 
-        if SupplyNum ~= oldSupplyNum then
-            oldSupplyNum = SupplyNum;
-            RallusNum = tostring(SupplyNum);
+        if Constants.RallusSupplyNum ~= oldSupplyNum then
+            oldSupplyNum = Constants.RallusSupplyNum;
+            RallusNum = tostring(Constants.RallusSupplyNum);
             isUpdated = true;
         end
 
         if isUpdated == true then
             FacilityItems.Rallus = "뜸부기 둥지: " .. RallusNum .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
-            if FacilityItems.HasData ~= true then
-                FacilityItems.HasData = true;
-            end
         end
     end
 end);

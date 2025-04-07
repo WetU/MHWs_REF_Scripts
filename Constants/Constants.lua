@@ -15,10 +15,13 @@ local Constants = {
     imgui = _G.imgui,
 
     ["CameraManager_type_def"] = sdk.find_type_definition("app.CameraManager"),
+    ["ChatManager_type_def"] = sdk.find_type_definition("app.ChatManager"),
     ["ItemUtil_type_def"] = sdk.find_type_definition("app.ItemUtil"),
     ["QuestDirector_type_def"] = sdk.find_type_definition("app.cQuestDirector"),
 
-    FALSE_ptr = sdk.to_ptr(false)
+    FALSE_ptr = sdk.to_ptr(false),
+
+    RallusSupplyNum = 0
 };
 
 return Constants;

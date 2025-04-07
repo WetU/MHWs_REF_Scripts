@@ -40,13 +40,8 @@ re.on_frame(function()
         imgui.end_window();
     end
 
-    if FacilityItems.HasData == true and imgui.begin_window("시설 정보", nil, windowFlag) == true then
-        if FacilityItems.Pugee ~= nil then
-            imgui.text(FacilityItems.Pugee);
-        end
-        if FacilityItems.Rallus ~= nil then
-            imgui.text(FacilityItems.Rallus);
-        end
+    if FacilityItems.Rallus ~= nil and imgui.begin_window("시설 정보", nil, windowFlag) == true then
+        imgui.text(FacilityItems.Rallus);
         imgui.end_window();
     end
 end);

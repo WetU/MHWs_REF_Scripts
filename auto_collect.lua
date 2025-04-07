@@ -4,8 +4,11 @@ local Constants = require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local addItemLog_method = sdk.find_type_definition("app.ChatLogUtil"):get_method("addItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID)")  -- static
+local pairs = Constants.pairs;
+
 local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
+
+local getItemLog_method = Constants.ChatManager_type_def:get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local getCollectionItems_method = CollectionNPCParam_type_def:get_method("getCollectionItems");
@@ -22,7 +25,31 @@ local Num_field = ItemWork_type_def:get_field("Num");
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 
+local Gm262_type_def = sdk.find_type_definition("app.Gm262");
+local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
+
 local STOCK_TYPE_BOX = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE"):get_field("BOX"):get_data(nil); -- static
+
+local notifyList = {};
+
+local function getItemLog(ItemDefID, quantity)
+    getItemLog_method:call(sdk.get_managed_singleton("app.ChatManager"), ItemDefID, quantity, false, false, -1, -1);
+end
+
+local function addNotifyList(ItemDefID, quantity)
+    if notifyList[ItemDefID] ~= nil then
+        notifyList[ItemDefID] = notifyList[ItemDefID] + quantity;
+    else
+        notifyList[ItemDefID] = quantity;
+    end
+end
+
+local function sendNotification()
+    for ItemDefID, quantity in pairs(notifyList) do
+        getItemLog(ItemDefID, quantity);
+    end
+    notifyList = {};
+end
 
 sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem"), function(args)
     thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
@@ -36,7 +63,7 @@ end, function()
         if ItemNum > 0 then
             local ItemId = get_ItemId_method:call(ItemWork);
             getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-            addItemLog_method:call(nil, ItemId, ItemNum, false, false, -1);
+            addNotifyList(ItemId, ItemNum);
             clearCollectionItem_method:call(CollectionNPCParam, i);
         else
             break;
@@ -56,7 +83,7 @@ end, function()
         if ItemNum > 0 then
             local ItemId = get_ItemId_method:call(ItemWork);
             getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-            addItemLog_method:call(nil, ItemId, ItemNum, false, false, -1);
+            addNotifyList(ItemId, ItemNum);
             clearRewardItem_method:call(LargeWorkshopParam, i);
         else
             break;
@@ -65,7 +92,7 @@ end, function()
 end);
 
 local FacilityDining = nil;
-sdk.hook(FacilityDining_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), function(args)
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
     FacilityDining = sdk.to_managed_object(args[2]);
 end);
 
@@ -73,5 +100,12 @@ sdk.hook(sdk.find_type_definition("app.LifeAreaMusicManager"):get_method("enterL
     if FacilityDining ~= nil then
         supplyFood_method:call(FacilityDining);
         FacilityDining = nil;
+    end
+    sendNotification();
+end);
+
+sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
+    if Constants.RallusSupplyNum > 0 then
+        successButtonEvent_method:call(sdk.to_managed_object(args[2]));
     end
 end);

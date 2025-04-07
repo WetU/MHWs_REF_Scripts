@@ -66,6 +66,8 @@ local set_Gamma_method = DisplaySettings_type_def:get_method("set_Gamma(System.S
 local set_GammaForOverlay_method = DisplaySettings_type_def:get_method("set_GammaForOverlay(System.Single)");
 local set_OutputLowerLimit_method = DisplaySettings_type_def:get_method("set_OutputLowerLimit(System.Single)");
 local set_OutputUpperLimit_method = DisplaySettings_type_def:get_method("set_OutputUpperLimit(System.Single)");
+local set_OutputLowerLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputLowerLimitForOverlay(System.Single)");
+local set_OutputUpperLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputUpperLimitForOverlay(System.Single)");
 local get_HDRMode_method = DisplaySettings_type_def:get_method("get_HDRMode");
 local updateRequest_method = DisplaySettings_type_def:get_method("updateRequest");
 
@@ -87,13 +89,21 @@ local get_DPGIComponent_method = sdk.find_type_definition("app.EnvironmentManage
 local DPGI_set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
 local apply = false;
+local loadDefaults = false;
 
 local function SaveSettings()
     json.dump_file("mhwi_remove_postprocessing.json", settings);
 end
 
-local function LoadSettings()
-    local loadedTable = json.load_file("mhwi_remove_postprocessing.json");
+local function LoadSettings(setting)
+    local loadedTable = nil;
+    if setting == 1 then
+        loadedTable = json.load_file("mhwi_remove_postprocessing_game_defaults.json");
+        loadDefaults = true;
+    else
+        loadedTable = json.load_file("mhwi_remove_postprocessing.json");
+    end
+
     if loadedTable ~= nil then
         for key in pairs(loadedTable) do
             settings[key] = loadedTable[key];
@@ -106,8 +116,8 @@ local function ResetBrightness()
     settings.gammaOverlay = 1.0;
     settings.lowerLimit = 0.0;
     settings.upperLimit = 1.0;
-    settings.lowerLimitOverlay = 0.0
-    settings.upperLimitOverlay = 1.0
+    settings.lowerLimitOverlay = 0.0;
+    settings.upperLimitOverlay = 1.0;
 end
 
 local function get_component(runtime_type)
@@ -144,7 +154,6 @@ local function ApplySettings()
     set_EchoEnabled_method:call(ToneMapping, settings.jitter);
     set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
     setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and localExposureType.BlurredLuminance or localExposureType.Legacy);
-
     set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
 
     local GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
@@ -156,6 +165,19 @@ local function ApplySettings()
         set_GammaForOverlay_method:call(displaySettings, settings.gammaOverlay);
         set_OutputLowerLimit_method:call(displaySettings, settings.lowerLimit);
         set_OutputUpperLimit_method:call(displaySettings, settings.upperLimit);
+        set_OutputLowerLimitForOverlay_method:call(displaySettings, settings.lowerLimitOverlay);
+        set_OutputUpperLimitForOverlay_method:call(displaySettings, settings.upperLimitOverlay);
+        if get_HDRMode_method:call(displaySettings) == false then
+            updateRequest_method:call(displaySettings);
+        end
+    elseif loadDefaults == true then
+        set_UseSDRBrightnessOptionForOverlay_method:call(displaySettings, false);
+        set_Gamma_method:call(displaySettings, settings.gamma);
+        set_GammaForOverlay_method:call(displaySettings, settings.gammaOverlay);
+        set_OutputLowerLimit_method:call(displaySettings, settings.lowerLimit);
+        set_OutputUpperLimit_method:call(displaySettings, settings.upperLimit);
+        set_OutputLowerLimitForOverlay_method:call(displaySettings, settings.lowerLimitOverlay);
+        set_OutputUpperLimitForOverlay_method:call(displaySettings, settings.upperLimitOverlay);
         if get_HDRMode_method:call(displaySettings) == false then
             updateRequest_method:call(displaySettings);
         end
@@ -201,6 +223,8 @@ re.on_application_entry("LockScene", function()
     end
 end);
 
+re.on_config_save(SaveSettings);
+
 re.on_draw_ui(function()
     if imgui.tree_node("Post Processing Settings") == true then
         local ws_changed = false;
@@ -213,21 +237,39 @@ re.on_draw_ui(function()
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
+        imgui.same_line();
+        local loadGameDefaults = imgui.small_button("Load game defaults");
+        if loadGameDefaults == true then
+            LoadSettings(1);
+            ApplySettings();
+        end
+        imgui.same_line();
+        local loadSaved = imgui.small_button("Load saved settings");
+        if loadSaved == true then
+            LoadSettings();
+            ApplySettings();
+        end
         imgui.pop_style_color(1);
+        imgui.text("NOTE: requires game restart after loading defaults to fully revert brightness changes");
+
+        imgui.spacing();
+
         imgui.text("Anti-Aliasing & filters");
-        changed, settings.TAA = imgui.checkbox("TAA enabled", settings.TAA);
+        changed, settings.TAA = imgui.checkbox("TAA", settings.TAA);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.jitter = imgui.checkbox("TAA jitter enabled", settings.jitter);
+        imgui.indent(24);
+        changed, settings.jitter = imgui.checkbox("TAA jitter", settings.jitter);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
+        imgui.unindent(24);
         changed, settings.colorCorrect = imgui.checkbox("Color correction", settings.colorCorrect);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.localExposure = imgui.checkbox("Local exposure enabled", settings.localExposure);
+        changed, settings.localExposure = imgui.checkbox("Local exposure", settings.localExposure);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
@@ -237,7 +279,7 @@ re.on_draw_ui(function()
             requireSave = true;
         end
         imgui.unindent(24);
-        changed, settings.customContrastEnable = imgui.checkbox("Custom contrast enabled", settings.customContrastEnable);
+        changed, settings.customContrastEnable = imgui.checkbox("Enable custom contrast", settings.customContrastEnable);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
@@ -248,7 +290,7 @@ re.on_draw_ui(function()
         imgui.new_line();
 
         imgui.text("SDR gamma & Brightness");
-        changed, settings.customBrightnessEnable = imgui.checkbox("SDR custom gamma & brightness enabled", settings.customBrightnessEnable);
+        changed, settings.customBrightnessEnable = imgui.checkbox("Enable SDR custom gamma & brightness", settings.customBrightnessEnable);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
@@ -299,27 +341,27 @@ re.on_draw_ui(function()
             ApplySettings();
             apply = false;
         end
-        changed, settings.lensDistortionEnable = imgui.checkbox("Lens distortion enabled", settings.lensDistortionEnable);
+        changed, settings.lensDistortionEnable = imgui.checkbox("Lens distortion", settings.lensDistortionEnable);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.fog = imgui.checkbox("Fog enabled", settings.fog);
+        changed, settings.fog = imgui.checkbox("Fog", settings.fog);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.volumetricFog = imgui.checkbox("Volumetric fog enabled", settings.volumetricFog);
+        changed, settings.volumetricFog = imgui.checkbox("Volumetric fog", settings.volumetricFog);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.filmGrain = imgui.checkbox("Film grain enabled", settings.filmGrain);
+        changed, settings.filmGrain = imgui.checkbox("Film grain", settings.filmGrain);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.lensFlare = imgui.checkbox("Lens flare enabled", settings.lensFlare);
+        changed, settings.lensFlare = imgui.checkbox("Lens flare", settings.lensFlare);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        changed, settings.godRay = imgui.checkbox("Godray enabled", settings.godRay);
+        changed, settings.godRay = imgui.checkbox("Godray", settings.godRay);
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
@@ -332,6 +374,12 @@ re.on_draw_ui(function()
             imgui.set_tooltip("Medium performance improvement.\n\nHighly deteriorate the visual quality.");
         end
         imgui.spacing();
+
+        imgui.text("WARNING: applying graphics settings will set");
+        imgui.text("ambient lighting to high due to a bug in the game");
+        imgui.text("until returning to title or restarting the game");
+        imgui.tree_pop();
+
         if requireSave == true then
             SaveSettings();
             ApplySettings();
@@ -344,12 +392,5 @@ re.on_draw_ui(function()
             SaveSettings();
             apply_gi_setting();
         end
-
-        imgui.text("WARNING: applying graphics settings will set");
-        imgui.text("ambient lighting to high due to a bug in the game");
-        imgui.text("until returning to title or restarting the game");
-        imgui.spacing();
-
-        imgui.tree_pop();
     end
 end);

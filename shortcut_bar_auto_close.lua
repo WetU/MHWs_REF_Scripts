@@ -6,7 +6,7 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local os = Constants.os;
+local os = _G.os;
 
 local config = json.load_file("ShortcutAutoClose.json") or {enabled = true};
 
