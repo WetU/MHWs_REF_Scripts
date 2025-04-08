@@ -91,16 +91,10 @@ end, function()
     end
 end);
 
-local FacilityDining = nil;
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
-    FacilityDining = sdk.to_managed_object(args[2]);
-end);
-
-sdk.hook(sdk.find_type_definition("app.LifeAreaMusicManager"):get_method("enterLifeArea"), nil, function()
-    if FacilityDining ~= nil then
-        supplyFood_method:call(FacilityDining);
-        FacilityDining = nil;
-    end
+    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+end, function()
+    supplyFood_method:call(thread.get_hook_storage()["this"]);
     sendNotification();
 end);
 

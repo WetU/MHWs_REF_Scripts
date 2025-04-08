@@ -89,21 +89,15 @@ local get_DPGIComponent_method = sdk.find_type_definition("app.EnvironmentManage
 local DPGI_set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
 local apply = false;
-local loadDefaults = false;
+local changeBrightness = false;
 
 local function SaveSettings()
     json.dump_file("mhwi_remove_postprocessing.json", settings);
 end
 
 local function LoadSettings(setting)
-    local loadedTable = nil;
-    if setting == 1 then
-        loadedTable = json.load_file("mhwi_remove_postprocessing_game_defaults.json");
-        loadDefaults = true;
-    else
-        loadedTable = json.load_file("mhwi_remove_postprocessing.json");
-    end
-
+    changeBrightness = settings.customBrightnessEnable;
+    local loadedTable = setting == 1 and json.load_file("mhwi_remove_postprocessing_game_defaults.json") or json.load_file("mhwi_remove_postprocessing.json");
     if loadedTable ~= nil then
         for key in pairs(loadedTable) do
             settings[key] = loadedTable[key];
@@ -159,8 +153,8 @@ local function ApplySettings()
     local GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
     local displaySettings = get_DisplaySettings_method:call(GraphicsManager);
 
-    if settings.customBrightnessEnable == true then
-        set_UseSDRBrightnessOptionForOverlay_method:call(displaySettings, true);
+    set_UseSDRBrightnessOptionForOverlay_method:call(displaySettings, settings.customBrightnessEnable);
+    if settings.customBrightnessEnable == true or changeBrightness == true then
         set_Gamma_method:call(displaySettings, settings.gamma);
         set_GammaForOverlay_method:call(displaySettings, settings.gammaOverlay);
         set_OutputLowerLimit_method:call(displaySettings, settings.lowerLimit);
@@ -170,19 +164,7 @@ local function ApplySettings()
         if get_HDRMode_method:call(displaySettings) == false then
             updateRequest_method:call(displaySettings);
         end
-    elseif loadDefaults == true then
-        set_UseSDRBrightnessOptionForOverlay_method:call(displaySettings, false);
-        set_Gamma_method:call(displaySettings, settings.gamma);
-        set_GammaForOverlay_method:call(displaySettings, settings.gammaOverlay);
-        set_OutputLowerLimit_method:call(displaySettings, settings.lowerLimit);
-        set_OutputUpperLimit_method:call(displaySettings, settings.upperLimit);
-        set_OutputLowerLimitForOverlay_method:call(displaySettings, settings.lowerLimitOverlay);
-        set_OutputUpperLimitForOverlay_method:call(displaySettings, settings.upperLimitOverlay);
-        if get_HDRMode_method:call(displaySettings) == false then
-            updateRequest_method:call(displaySettings);
-        end
-    else
-        set_UseSDRBrightnessOptionForOverlay_method:call(displaySettings, false);
+        changeBrightness = false;
     end
 
     local graphicsSetting = get_NowGraphicsSetting_method:call(GraphicsManager);
@@ -251,7 +233,6 @@ re.on_draw_ui(function()
         end
         imgui.pop_style_color(1);
         imgui.text("NOTE: requires game restart after loading defaults to fully revert brightness changes");
-
         imgui.spacing();
 
         imgui.text("Anti-Aliasing & filters");

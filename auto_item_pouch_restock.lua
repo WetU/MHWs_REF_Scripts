@@ -42,7 +42,7 @@ end
 
 sdk.hook(sdk.find_type_definition("app.cCampManager"):get_method("tentGetIn(via.GameObject)"), nil, restockItems);
 sdk.hook(sdk.find_type_definition("app.PlayerCommonAction.cGetInTempTent"):get_method("doEnter"), nil, restockItems);
-sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), nil, restockItems);
+sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), restockItems);
 sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("openGUI"), nil, function(retval)
     restockItems();
     return retval;

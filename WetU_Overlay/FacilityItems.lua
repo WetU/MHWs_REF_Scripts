@@ -28,7 +28,6 @@ local SettingData_field = FacilityRallus_type_def:get_field("_SettingData");
 local get_StockMax_method = SettingData_field:get_type():get_method("get_StockMax");
 
 local oldSupplyTimer = nil;
-local oldSupplyNum = nil;
 
 local RallusStockMax = "5";
 local isRallusStockMaxUpdated = false;
@@ -56,7 +55,7 @@ end, function()
         end
 
         local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
-        Constants.RallusSupplyNum = get_SupplyNum_method:call(FacilityRallus);
+        local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
 
         if SupplyTimer ~= oldSupplyTimer then
             oldSupplyTimer = SupplyTimer;
@@ -64,9 +63,9 @@ end, function()
             isUpdated = true;
         end
 
-        if Constants.RallusSupplyNum ~= oldSupplyNum then
-            oldSupplyNum = Constants.RallusSupplyNum;
-            RallusNum = tostring(Constants.RallusSupplyNum);
+        if SupplyNum ~= Constants.RallusSupplyNum then
+            Constants.RallusSupplyNum = SupplyNum;
+            RallusNum = tostring(SupplyNum);
             isUpdated = true;
         end
 
