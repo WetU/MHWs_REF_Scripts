@@ -7,6 +7,9 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
+local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
+local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
+
 local config = nil;
 
 local function loadConfig()
@@ -24,9 +27,6 @@ local function saveConfig()
 end
 
 loadConfig();
-
-local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
-local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
     return config.enableKillCam == true and Constants.FALSE_ptr or retval;

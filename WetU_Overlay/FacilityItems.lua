@@ -50,8 +50,8 @@ end, function()
 
         if isRallusStockMaxUpdated == false then
             RallusStockMax = tostring(get_StockMax_method:call(SettingData_field:get_data(FacilityRallus)));
-            isUpdated = true;
             isRallusStockMaxUpdated = true;
+            isUpdated = true;
         end
 
         local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
@@ -69,7 +69,7 @@ end, function()
             isUpdated = true;
         end
 
-        if isUpdated == true then
+        if isUpdated == true and RallusNum ~= nil then
             FacilityItems.Rallus = "뜸부기 둥지: " .. RallusNum .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
         end
     end

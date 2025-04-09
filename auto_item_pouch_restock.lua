@@ -11,7 +11,8 @@ local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
 
-local addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystemLog(System.String)");
+local isArenaQuest_method = nil;
+local addSystemLog_method = nil;
 
 local mySet = 0;
 
@@ -28,21 +29,44 @@ local function mySetTracker(args)
 end
 
 local function restockItems()
+    local ChatManager = sdk.get_managed_singleton("app.ChatManager");
+
+    if Constants.ChatManager_type_def == nil then
+        Constants.ChatManager_type_def = ChatManager:get_type_definition();
+    end
+
+    if addSystemLog_method == nil then
+        addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystemLog(System.String)");
+    end
+
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        addSystemLog_method:call(sdk.get_managed_singleton("app.ChatManager"), "아이템 세트가 적용되었습니다.");
+        addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        addSystemLog_method:call(sdk.get_managed_singleton("app.ChatManager"), "아이템이 보충되었습니다.");
+        addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
     end
 
     fillShellPouchItems_method:call(nil);
 end
 
-sdk.hook(sdk.find_type_definition("app.cCampManager"):get_method("tentGetIn(via.GameObject)"), nil, restockItems);
-sdk.hook(sdk.find_type_definition("app.PlayerCommonAction.cGetInTempTent"):get_method("doEnter"), nil, restockItems);
-sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), restockItems);
+sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
+sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
+    local ActiveQuestData = sdk.to_managed_object(args[3]);
+
+    if Constants.ActiveQuestData_type_def == nil then
+        Constants.ActiveQuestData_type_def = ActiveQuestData:get_type_definition();
+    end
+
+    if isArenaQuest_method == nil then
+        isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
+    end
+
+    if isArenaQuest_method:call(ActiveQuestData) ~= true then
+        restockItems();
+    end
+end);
 sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("openGUI"), nil, function(retval)
     restockItems();
     return retval;

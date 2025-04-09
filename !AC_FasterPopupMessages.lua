@@ -25,23 +25,23 @@ local function saveConfig()
 	json.dump_file("FasterPopupMessages.json", config);
 end
 
-local function saveThis(args)
+local function getObj(args)
 	if config.enabled == true then
 		thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 	end
 end
 
-sdk.hook(GUI000003_type_def:get_method("setupDialog"), saveThis, function()
-	local this = thread.get_hook_storage()["this"];
-	if this ~= nil and (config.longerWaits == true or DispMinTimer_field:get_data(this) > config.newMinWait) then
-		this:set_field("_DispMinTimer", config.newMinWait);
+sdk.hook(GUI000003_type_def:get_method("setupDialog"), getObj, function()
+	local GUI000003 = thread.get_hook_storage()["this"];
+	if GUI000003 ~= nil and (config.longerWaits == true or DispMinTimer_field:get_data(GUI000003) > config.newMinWait) then
+		GUI000003:set_field("_DispMinTimer", config.newMinWait);
 	end
 end);
 
-sdk.hook(GUI010002_type_def:get_method("onOpen"), saveThis, function()
-	local this = thread.get_hook_storage()["this"];
-	if this ~= nil then
-		requestClose_method:call(this, false);
+sdk.hook(GUI010002_type_def:get_method("onOpen"), getObj, function()
+	local GUI010002 = thread.get_hook_storage()["this"];
+	if GUI010002 ~= nil then
+		requestClose_method:call(GUI010002, false);
 	end
 end);
 

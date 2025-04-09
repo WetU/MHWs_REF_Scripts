@@ -4,11 +4,11 @@ local Constants = require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local pairs = Constants.pairs;
+local ItemWorkCached = false;
 
 local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 
-local getItemLog_method = Constants.ChatManager_type_def:get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
+local getItemLog_method = nil;
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local getCollectionItems_method = CollectionNPCParam_type_def:get_method("getCollectionItems");
@@ -18,9 +18,8 @@ local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLarg
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
 
-local ItemWork_type_def = sdk.find_type_definition("app.savedata.cItemWork");
-local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
-local Num_field = ItemWork_type_def:get_field("Num");
+local get_ItemId_method = nil;
+local Num_field = nil;
 
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
@@ -30,72 +29,63 @@ local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent"
 
 local STOCK_TYPE_BOX = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE"):get_field("BOX"):get_data(nil); -- static
 
-local notifyList = {};
-
-local function getItemLog(ItemDefID, quantity)
-    getItemLog_method:call(sdk.get_managed_singleton("app.ChatManager"), ItemDefID, quantity, false, false, -1, -1);
+local function getObject(args)
+    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 end
 
-local function addNotifyList(ItemDefID, quantity)
-    if notifyList[ItemDefID] ~= nil then
-        notifyList[ItemDefID] = notifyList[ItemDefID] + quantity;
+local function getItems(obj, facilityType)
+    local getItemsArray_method = nil;
+    local clearItem_method = nil;
+
+    if facilityType == 1 then
+        getItemsArray_method = getCollectionItems_method;
+        clearItem_method = clearCollectionItem_method;
     else
-        notifyList[ItemDefID] = quantity;
+        getItemsArray_method = get_Rewards_method;
+        clearItem_method = clearRewardItem_method;
     end
-end
 
-local function sendNotification()
-    for ItemDefID, quantity in pairs(notifyList) do
-        getItemLog(ItemDefID, quantity);
+    local ItemWorks_array = getItemsArray_method:call(obj);
+    local ChatManager = sdk.get_managed_singleton("app.ChatManager");
+
+    if Constants.ChatManager_type_def == nil then
+        Constants.ChatManager_type_def = ChatManager:get_type_definition();
     end
-    notifyList = {};
-end
 
-sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem"), function(args)
-    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-end, function()
-    local CollectionNPCParam = thread.get_hook_storage()["this"];
-    local ItemWorks_array = getCollectionItems_method:call(CollectionNPCParam);
+    if getItemLog_method == nil then
+        getItemLog_method = Constants.ChatManager_type_def:get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
+    end
 
     for i = 0, ItemWorks_array:get_size() - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
+        if ItemWorkCached == false then
+            local ItemWork_type_def = ItemWork:get_type_definition();
+            get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
+            Num_field = ItemWork_type_def:get_field("Num");
+            ItemWorkCached = true;
+        end
         local ItemNum = Num_field:get_data(ItemWork);
         if ItemNum > 0 then
             local ItemId = get_ItemId_method:call(ItemWork);
             getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-            addNotifyList(ItemId, ItemNum);
-            clearCollectionItem_method:call(CollectionNPCParam, i);
+            getItemLog_method:call(ChatManager, ItemId, ItemNum, false, false, -1, -1);
+            clearItem_method:call(obj, i);
         else
             break;
         end
     end
+end
+
+sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem"), getObject, function()
+    getItems(thread.get_hook_storage()["this"], 1);
 end);
 
-sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem"), function(args)
-    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-end, function()
-    local LargeWorkshopParam = thread.get_hook_storage()["this"];
-    local ItemWorks_array = get_Rewards_method:call(LargeWorkshopParam);
-
-    for i = 0, ItemWorks_array:get_size() - 1 do
-        local ItemWork = ItemWorks_array:get_element(i);
-        local ItemNum = Num_field:get_data(ItemWork);
-        if ItemNum > 0 then
-            local ItemId = get_ItemId_method:call(ItemWork);
-            getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-            addNotifyList(ItemId, ItemNum);
-            clearRewardItem_method:call(LargeWorkshopParam, i);
-        else
-            break;
-        end
-    end
+sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem"), getObject, function()
+    getItems(thread.get_hook_storage()["this"], 2);
 end);
 
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
-    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-end, function()
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
     supplyFood_method:call(thread.get_hook_storage()["this"]);
-    sendNotification();
 end);
 
 sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)

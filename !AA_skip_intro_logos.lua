@@ -9,6 +9,8 @@ local Flow_field = GUI010001_type_def:get_field("_Flow");
 local Skip_field = GUI010001_type_def:get_field("_Skip");
 local EnableSkip_field = GUI010001_type_def:get_field("_EnableSkip");
 
+local AutoSaveConfirm_type_def = sdk.find_type_definition("app.LogoController.cAutoSaveConfirm");
+
 local FLOW_type_def = sdk.find_type_definition("app.GUI010001.FLOW");
 local STARTUP = FLOW_type_def:get_field("STARTUP"):get_data(nil); -- static
 local COPYRIGHT = FLOW_type_def:get_field("COPYRIGHT"):get_data(nil); -- static
@@ -26,32 +28,18 @@ end, function()
 end);
 
 local isWaitConfirm = nil;
-sdk.hook(sdk.find_type_definition("app.LogoController.cAutoSaveConfirm"):get_method("enter"), nil, function(retval)
+sdk.hook(AutoSaveConfirm_type_def:get_method("enter"), nil, function(retval)
     isWaitConfirm = (sdk.to_int64(retval) & 1) == 1;
     return retval;
+end);
+
+sdk.hook(AutoSaveConfirm_type_def:get_method("<enter>b__0_1(System.Object, ace.GUIBaseCore)"), nil, function()
+    isWaitConfirm = false;
 end);
 
 sdk.hook(GUI010001_type_def:get_method("isInputDecideTriggerCore"), nil, function(retval)
     if isWaitConfirm == true then
         isWaitConfirm = nil;
-        return TRUE_ptr;
-    end
-    return retval;
-end);
-
-local isWaitPressAnyKey = nil;
-sdk.hook(sdk.find_type_definition("app.GUI010100"):get_method("guiVisibleUpdate"), nil, function()
-    isWaitPressAnyKey = true;
-end);
-
-sdk.hook(sdk.find_type_definition("app.TitleController.cTitleMenu"):get_method("enter"), nil, function(retval)
-    isWaitPressAnyKey = (sdk.to_int64(retval) & 1) ~= 1;
-    return retval;
-end);
-
-sdk.hook(GUI010001_type_def:get_method("isInputSuccessCore(app.GUIFunc.TYPE)"), nil, function(retval)
-    if isWaitPressAnyKey == true then
-        isWaitPressAnyKey = nil;
         return TRUE_ptr;
     end
     return retval;

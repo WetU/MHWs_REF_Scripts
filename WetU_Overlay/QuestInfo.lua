@@ -14,12 +14,20 @@ local get_Owner_method = QuestPlaying_type_def:get_method("get_Owner");
 local get_Param_method = QuestPlaying_type_def:get_method("get_Param");
 local OldQuestPlDieCount_field = QuestPlaying_type_def:get_field("_OldQuestPlDieCount");
 
-local QuestDirector_type_def = Constants.QuestDirector_type_def;
+local QuestDirector_type_def = get_Owner_method:get_return_type();
+if Constants.QuestDirector_type_def == nil then
+    Constants.QuestDirector_type_def = QuestDirector_type_def;
+end
+
 local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
+if Constants.ActiveQuestData_type_def == nil then
+    Constants.ActiveQuestData_type_def = get_QuestData_method:get_return_type();
+end
+
 local get_QuestElapsedTime_method = QuestDirector_type_def:get_method("get_QuestElapsedTime");
 local get_QuestRemainTime_method = QuestDirector_type_def:get_method("get_QuestRemainTime");
 
-local getQuestLife_method = get_QuestData_method:get_return_type():get_method("getQuestLife");
+local getQuestLife_method = Constants.ActiveQuestData_type_def:get_method("getQuestLife");
 
 local QuestFailedType_field = get_Param_method:get_return_type():get_field("QuestFailedType");
 
