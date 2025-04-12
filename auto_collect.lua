@@ -4,13 +4,11 @@ local Constants = require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local ItemWorkCached = false;
-
 local changeItemNum_method = Constants.ItemUtil_type_def:get_method("changeItemNum(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
-local getItemLog_method = nil;
+local getItemLog_method = Constants.ChatManager_type_def:get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
@@ -19,9 +17,6 @@ local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clear
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
-
-local get_ItemId_method = nil;
-local Num_field = nil;
 
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
@@ -38,6 +33,10 @@ local MoriverInfo_type_def = get_Item_method:get_return_type();
 local ItemFromMoriver_field = MoriverInfo_type_def:get_field("ItemFromMoriver");
 local ItemFromPlayer_field = MoriverInfo_type_def:get_field("ItemFromPlayer");
 
+local ItemWork_type_def = ItemFromMoriver_field:get_type();
+local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
+local Num_field = ItemWork_type_def:get_field("Num");
+
 local Gm262_type_def = sdk.find_type_definition("app.Gm262");
 local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
 
@@ -48,13 +47,6 @@ local MAX = ID_type_def:get_field("MAX"):get_data(nil); -- static
 local STOCK_TYPE_type_def = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE");
 local STOCK_TYPE_POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil); -- static
 local STOCK_TYPE_BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil); -- static
-
-local function getItemWorkCache(itemWork)
-    local ItemWork_type_def = itemWork:get_type_definition();
-    get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
-    Num_field = ItemWork_type_def:get_field("Num");
-    ItemWorkCached = true;
-end
 
 local function getItems(obj, facilityType)
     local getItemsArray_method = nil;
@@ -71,16 +63,8 @@ local function getItems(obj, facilityType)
     local ItemWorks_array = getItemsArray_method:call(obj);
     if ItemWorks_array ~= nil then
         local ChatManager = sdk.get_managed_singleton("app.ChatManager");
-
-        if getItemLog_method == nil then
-            getItemLog_method = ChatManager:get_type_definition():get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
-        end
-
         for i = 0, ItemWorks_array:get_size() - 1 do
             local ItemWork = ItemWorks_array:get_element(i);
-            if ItemWorkCached == false then
-                getItemWorkCache(ItemWork);
-            end
             local ItemId = get_ItemId_method:call(ItemWork);
             if ItemId > NONE and ItemId < MAX then
                 local ItemNum = Num_field:get_data(ItemWork);
@@ -116,11 +100,7 @@ sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
     end
 end);
 
-sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), function(args)
-    if (sdk.to_int64(args[3]) & 1) == 1 then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-    end
-end, function()
+sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), Constants.getObject, function()
     local FacilityMoriver = thread.get_hook_storage()["this"];
     if FacilityMoriver ~= nil then
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
@@ -128,9 +108,7 @@ end, function()
             local Count = get_Count_method:call(MoriverInfos);
             if Count ~= nil and Count > 0 then
                 local ChatManager = sdk.get_managed_singleton("app.ChatManager");
-                if getItemLog_method == nil then
-                    getItemLog_method = ChatManager:get_type_definition():get_method("getItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID, app.GimmickDef.ID)");
-                end
+
                 for i = 0, Count - 1 do
                     local MoriverInfo = get_Item_method:call(MoriverInfos, i);
                     if MoriverInfo ~= nil then
@@ -138,10 +116,6 @@ end, function()
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
 
                         if ItemFromPlayer ~= nil then
-                            if ItemWorkCached == false then
-                                getItemWorkCache(ItemFromPlayer);
-                            end
-
                             local giveItemId = get_ItemId_method:call(ItemFromPlayer);
                             if giveItemId > NONE and giveItemId < MAX then
                                 local giveNum = Num_field:get_data(ItemFromPlayer);
@@ -163,10 +137,6 @@ end, function()
                         end
 
                         if ItemFromMoriver ~= nil then
-                            if ItemWorkCached == false then
-                                getItemWorkCache(ItemFromMoriver);
-                            end
-
                             local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
                             if gettingItemId > NONE and gettingItemId < MAX then
                                 local gettingNum = Num_field:get_data(ItemFromMoriver);

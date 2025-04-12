@@ -15,11 +15,11 @@ local Constants = {
     json = _G.json,
     imgui = _G.imgui,
 
+    ["ActiveQuestData_type_def"] = sdk.find_type_definition("app.cActiveQuestData"),
     ["CameraManager_type_def"] = sdk.find_type_definition("app.CameraManager"),
+    ["ChatManager_type_def"] = sdk.find_type_definition("app.ChatManager"),
     ["ItemUtil_type_def"] = sdk.find_type_definition("app.ItemUtil"),
-    ["QuestDirector_type_def"] = nil,
-
-    requestClose_method = nil,
+    ["QuestDirector_type_def"] = sdk.find_type_definition("app.cQuestDirector"),
 
     FALSE_ptr = sdk.to_ptr(false),
 

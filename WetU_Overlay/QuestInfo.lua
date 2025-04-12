@@ -12,21 +12,16 @@ local math = Constants.math;
 local QuestPlaying_type_def = sdk.find_type_definition("app.cQuestPlaying");
 local get_Owner_method = QuestPlaying_type_def:get_method("get_Owner");
 
-local QuestDirector_type_def = get_Owner_method:get_return_type();
-if Constants.QuestDirector_type_def == nil then
-    Constants.QuestDirector_type_def = QuestDirector_type_def;
-end
-local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
-local get_QuestElapsedTime_method = QuestDirector_type_def:get_method("get_QuestElapsedTime");
-local QuestPlDieCount_field = QuestDirector_type_def:get_field("QuestPlDieCount");
+local get_QuestData_method = Constants.QuestDirector_type_def:get_method("get_QuestData");
+local get_QuestElapsedTime_method = Constants.QuestDirector_type_def:get_method("get_QuestElapsedTime");
+local QuestPlDieCount_field = Constants.QuestDirector_type_def:get_field("QuestPlDieCount");
 
 local Mandrake_type_def = QuestPlDieCount_field:get_type();
 local v_field = Mandrake_type_def:get_field("v");
 local m_field = Mandrake_type_def:get_field("m");
 
-local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
-local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
-local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
+local getTimeLimit_method = Constants.ActiveQuestData_type_def:get_method("getTimeLimit");
+local getQuestLife_method = Constants.ActiveQuestData_type_def:get_method("getQuestLife");
 
 local oldDeathCount = 0.0;
 local oldElapsedTime = nil;
@@ -83,7 +78,7 @@ sdk.hook(QuestPlaying_type_def:get_method("update"), Constants.getObject, functi
     end
 end);
 
-sdk.hook(QuestDirector_type_def:get_method("questInfoClear(System.Boolean, System.Boolean)"), nil, function()
+sdk.hook(Constants.QuestDirector_type_def:get_method("questInfoClear(System.Boolean, System.Boolean)"), nil, function()
     questInfoTbl.questInfoCreated = false;
 
     questMaxDeath = nil;

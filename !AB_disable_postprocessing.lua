@@ -36,10 +36,6 @@ local settings = {
     disable_global_illumination = true
 };
 
-local GraphicsManager_cached = false;
-local DisplaySettings_cached = false;
-local GraphicsSetting_cached = false;
-
 local get_Instance_method = sdk.find_type_definition("ace.GAElement`1<ace.WindManagerBase>"):get_method("get_Instance"); -- static
 
 local get_PrimaryCamera_method = sdk.find_type_definition("ace.CameraUtil"):get_method("get_PrimaryCamera"); -- static
@@ -59,29 +55,32 @@ local LDRPostProcess_runtime_type = LDRPostProcess_type_def:get_runtime_type();
 local get_ColorCorrect_method = LDRPostProcess_type_def:get_method("get_ColorCorrect");
 local ColorCorrect_set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
-local get_NowGraphicsSetting_method = nil;
-local setGraphicsSetting_method = nil;
-local get_DisplaySettings_method = nil;
+local GraphicsManager_type_def = sdk.find_type_definition("app.GraphicsManager");
+local get_DisplaySettings_method = GraphicsManager_type_def:get_method("get_DisplaySettings");
+local get_NowGraphicsSetting_method = GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
+local setGraphicsSetting_method = GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
 
-local set_UseSDRBrightnessOptionForOverlay_method = nil;
-local set_Gamma_method = nil;
-local set_GammaForOverlay_method = nil;
-local set_OutputLowerLimit_method = nil;
-local set_OutputUpperLimit_method = nil;
-local set_OutputLowerLimitForOverlay_method = nil;
-local set_OutputUpperLimitForOverlay_method = nil;
-local get_HDRMode_method = nil;
-local updateRequest_method = nil;
+local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
+local set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");
+local set_Gamma_method = DisplaySettings_type_def:get_method("set_Gamma(System.Single)");
+local set_GammaForOverlay_method = DisplaySettings_type_def:get_method("set_GammaForOverlay(System.Single)");
+local set_OutputLowerLimit_method = DisplaySettings_type_def:get_method("set_OutputLowerLimit(System.Single)");
+local set_OutputUpperLimit_method = DisplaySettings_type_def:get_method("set_OutputUpperLimit(System.Single)");
+local set_OutputLowerLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputLowerLimitForOverlay(System.Single)");
+local set_OutputUpperLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputUpperLimitForOverlay(System.Single)");
+local get_HDRMode_method = DisplaySettings_type_def:get_method("get_HDRMode");
+local updateRequest_method = DisplaySettings_type_def:get_method("updateRequest");
 
-local set_Fog_Enable_method = nil;
-local set_VolumetricFogControl_Enable_method = nil;
-local set_FilmGrain_Enable_method = nil;
-local set_LensFlare_Enable_method = nil;
-local set_GodRay_Enable_method = nil;
-local set_LensDistortionSetting_method = nil;
+local GraphicsSetting_type_def = get_NowGraphicsSetting_method:get_return_type();
+local set_Fog_Enable_method = GraphicsSetting_type_def:get_method("set_Fog_Enable(System.Boolean)");
+local set_VolumetricFogControl_Enable_method = GraphicsSetting_type_def:get_method("set_VolumetricFogControl_Enable(System.Boolean)");
+local set_FilmGrain_Enable_method = GraphicsSetting_type_def:get_method("set_FilmGrain_Enable(System.Boolean)");
+local set_LensFlare_Enable_method = GraphicsSetting_type_def:get_method("set_LensFlare_Enable(System.Boolean)");
+local set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay_Enable(System.Boolean)");
+local set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
 
-local get_DPGIComponent_method = nil;
-local DPGI_set_Enabled_method = nil;
+local get_DPGIComponent_method = sdk.find_type_definition("app.EnvironmentManager"):get_method("get_DPGIComponent");
+local DPGI_set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
 local TemporalAA_type_def = sdk.find_type_definition("via.render.ToneMapping.TemporalAA");
 local Strong = TemporalAA_type_def:get_field("Strong"):get_data(nil); -- static
@@ -132,39 +131,6 @@ local function get_component(runtime_type)
     return nil;
 end
 
-local function getGraphicsManagerCache(graphicsManager)
-    local GraphicsManager_type_def = graphicsManager:get_type_definition();
-    get_DisplaySettings_method = GraphicsManager_type_def:get_method("get_DisplaySettings");
-    get_NowGraphicsSetting_method = GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
-    setGraphicsSetting_method = GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
-    GraphicsManager_cached = true;
-end
-
-local function getDisplaySettingsCache(displaySettings)
-    local DisplaySettings_type_def = displaySettings:get_type_definition();
-    set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");
-    set_Gamma_method = DisplaySettings_type_def:get_method("set_Gamma(System.Single)");
-    set_GammaForOverlay_method = DisplaySettings_type_def:get_method("set_GammaForOverlay(System.Single)");
-    set_OutputLowerLimit_method = DisplaySettings_type_def:get_method("set_OutputLowerLimit(System.Single)");
-    set_OutputUpperLimit_method = DisplaySettings_type_def:get_method("set_OutputUpperLimit(System.Single)");
-    set_OutputLowerLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputLowerLimitForOverlay(System.Single)");
-    set_OutputUpperLimitForOverlay_method = DisplaySettings_type_def:get_method("set_OutputUpperLimitForOverlay(System.Single)");
-    get_HDRMode_method = DisplaySettings_type_def:get_method("get_HDRMode");
-    updateRequest_method = DisplaySettings_type_def:get_method("updateRequest");
-    DisplaySettings_cached = true;
-end
-
-local function getGraphicsSettingCache(graphicsSetting)
-    local GraphicsSetting_type_def = graphicsSetting:get_type_definition();
-    set_Fog_Enable_method = GraphicsSetting_type_def:get_method("set_Fog_Enable(System.Boolean)");
-    set_VolumetricFogControl_Enable_method = GraphicsSetting_type_def:get_method("set_VolumetricFogControl_Enable(System.Boolean)");
-    set_FilmGrain_Enable_method = GraphicsSetting_type_def:get_method("set_FilmGrain_Enable(System.Boolean)");
-    set_LensFlare_Enable_method = GraphicsSetting_type_def:get_method("set_LensFlare_Enable(System.Boolean)");
-    set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay_Enable(System.Boolean)");
-    set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
-    GraphicsSetting_cached = true;
-end
-
 local function apply_ws_setting()
     get_Instance_method:call(nil):set_field("_Stop", settings.disable_wind_simulation);
 end
@@ -172,14 +138,8 @@ end
 local function apply_gi_setting()
     local EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
     if EnvironmentManager ~= nil then
-        if get_DPGIComponent_method == nil then
-            get_DPGIComponent_method = EnvironmentManager:get_type_definition():get_method("get_DPGIComponent");
-        end
         local DPGIComponent = get_DPGIComponent_method:call(EnvironmentManager);
         if DPGIComponent ~= nil then
-            if DPGI_set_Enabled_method == nil then
-                DPGI_set_Enabled_method = DPGIComponent:get_type_definition():get_method("set_Enabled(System.Boolean)");
-            end
             DPGI_set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
         end
     end
@@ -187,7 +147,6 @@ end
 
 local function ApplySettings()
     local ToneMapping = get_component(ToneMapping_runtime_type);
-
     if ToneMapping ~= nil then
         setTemporalAA_method:call(ToneMapping, settings.TAA == true and Strong or Disable);
         set_EchoEnabled_method:call(ToneMapping, settings.jitter);
@@ -197,14 +156,7 @@ local function ApplySettings()
     end
 
     local GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
-    if GraphicsManager_cached == false then
-        getGraphicsManagerCache(GraphicsManager);
-    end
     local DisplaySettings = get_DisplaySettings_method:call(GraphicsManager);
-    if DisplaySettings_cached == false then
-        getDisplaySettingsCache(DisplaySettings);
-    end
-
     set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
     if settings.customBrightnessEnable == true or changeBrightness == true then
         set_Gamma_method:call(DisplaySettings, settings.gamma);
@@ -220,10 +172,6 @@ local function ApplySettings()
     end
 
     local NowGraphicsSetting = get_NowGraphicsSetting_method:call(GraphicsManager);
-    if GraphicsSetting_cached == false then
-        getGraphicsSettingCache(NowGraphicsSetting);
-    end
-
     set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
     set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
     set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);

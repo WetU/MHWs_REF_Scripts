@@ -10,6 +10,9 @@ local thread = Constants.thread;
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local DispMinTimer_field = GUI000003_type_def:get_field("_DispMinTimer");
 
+local GUI010002_type_def = sdk.find_type_definition("app.GUI010002");
+local requestClose_method = GUI010002_type_def:get_method("requestClose(System.Boolean)");
+
 local config = json.load_file("FasterPopupMessages.json") or {
 	enabled = true,
 	longerWaits = false,
@@ -35,13 +38,10 @@ sdk.hook(GUI000003_type_def:get_method("setupDialog"), getObj, function()
 	end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), getObj, function()
+sdk.hook(GUI010002_type_def:get_method("onOpen"), getObj, function()
 	local GUI010002 = thread.get_hook_storage()["this"];
 	if GUI010002 ~= nil then
-		if Constants.requestClose_method == nil then
-			Constants.requestClose_method = GUI010002:get_type_definition():get_method("requestClose(System.Boolean)");
-		end
-		Constants.requestClose_method:call(GUI010002, false);
+		requestClose_method:call(GUI010002, false);
 	end
 end);
 
@@ -85,4 +85,4 @@ re.on_draw_ui(function()
 		end
 		imgui.tree_pop();
 	end
-end)
+end);
