@@ -34,9 +34,7 @@ local isRallusStockMaxUpdated = false;
 
 local RallusTimer = nil;
 local RallusNum = nil;
-sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-end, function()
+sdk.hook(FacilityManager_type_def:get_method("update"), Constants.getObject, function()
     local FacilityManager = thread.get_hook_storage()["this"];
     local FacilityPugee = get_Pugee_method:call(FacilityManager);
     local FacilityRallus = get_Rallus_method:call(FacilityManager);

@@ -3,9 +3,8 @@ local require = _G.require;
 local Constants = require("Constants/Constants");
 local sdk = Constants.sdk;
 
-local ItemUtil_type_def = Constants.ItemUtil_type_def;
-local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static
-local fillShellPouchItems_method = ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
+local fillPouchItems_method = Constants.ItemUtil_type_def:get_method("fillPouchItems"); -- static
+local fillShellPouchItems_method = Constants.ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
 
 local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
@@ -31,12 +30,8 @@ end
 local function restockItems()
     local ChatManager = sdk.get_managed_singleton("app.ChatManager");
 
-    if Constants.ChatManager_type_def == nil then
-        Constants.ChatManager_type_def = ChatManager:get_type_definition();
-    end
-
     if addSystemLog_method == nil then
-        addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystemLog(System.String)");
+        addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)");
     end
 
     if isValidData_method:call(nil, mySet) == true then
@@ -54,10 +49,6 @@ end
 sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
 sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
     local ActiveQuestData = sdk.to_managed_object(args[3]);
-
-    if Constants.ActiveQuestData_type_def == nil then
-        Constants.ActiveQuestData_type_def = ActiveQuestData:get_type_definition();
-    end
 
     if isArenaQuest_method == nil then
         isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");

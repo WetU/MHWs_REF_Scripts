@@ -35,12 +35,12 @@ re.on_frame(function()
         imgui.end_window();
     end
 
-    if MealInfo.mealTimer ~= nil and imgui.begin_window("식사 타이머", nil, windowFlag) == true then
+    if MealInfo.mealTimer ~= nil and imgui.begin_window("식사", nil, windowFlag) == true then
         imgui.text(MealInfo.mealTimer);
         imgui.end_window();
     end
 
-    if FacilityItems.Rallus ~= nil and imgui.begin_window("시설 정보", nil, windowFlag) == true then
+    if FacilityItems.Rallus ~= nil and imgui.begin_window("시설", nil, windowFlag) == true then
         imgui.text(FacilityItems.Rallus);
         imgui.end_window();
     end

@@ -30,8 +30,7 @@ end
 
 loadConfig();
 
-local CameraManager_type_def = Constants.CameraManager_type_def;
-local MasterPlCamera_field = CameraManager_type_def:get_field("_MasterPlCamera");
+local MasterPlCamera_field = Constants.CameraManager_type_def:get_field("_MasterPlCamera");
 local MiniComponents_field = MasterPlCamera_field:get_type():get_field("_MiniComponents");
 local AdjustCollision_field = MiniComponents_field:get_type():get_field("AdjustCollision");
 local SettingParam_field = AdjustCollision_field:get_type():get_field("_SettingParam");
@@ -58,15 +57,13 @@ local function ApplyCameraSettings()
 	end
 end
 
-sdk.hook(CameraOverlapTransparencyControllerBase_type_def:get_method("update"), function(args)
-	thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-end, function()
-	local obj = thread.get_hook_storage()["this"];
-	if IsDeactivateTrigger_field:get_data(obj) ~= true then
-		obj:set_field("_IsDeactivateTrigger", true);
+sdk.hook(CameraOverlapTransparencyControllerBase_type_def:get_method("update"), Constants.getObject, function()
+	local CameraOverlapTransparencyControllerBase = thread.get_hook_storage()["this"];
+	if IsDeactivateTrigger_field:get_data(CameraOverlapTransparencyControllerBase) ~= true then
+		CameraOverlapTransparencyControllerBase:set_field("_IsDeactivateTrigger", true);
 	end
 end);
-sdk.hook(CameraManager_type_def:get_method("onSceneLoadFadeIn"), nil, ApplyCameraSettings);
+sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), nil, ApplyCameraSettings);
 
 re.on_config_save(saveConfig);
 

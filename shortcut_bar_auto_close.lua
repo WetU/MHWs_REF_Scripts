@@ -8,18 +8,17 @@ local imgui = Constants.imgui;
 
 local os = _G.os;
 
-local config = json.load_file("ShortcutAutoClose.json") or {enabled = true};
+local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
+local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
 
-local startTime = nil;
+local config = json.load_file("ShortcutAutoClose.json") or {enabled = true};
 
 local function saveConfig()
 	json.dump_file("ShortcutAutoClose.json", config);
 end
 
-local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
-local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
-
 local GUI020600 = nil;
+local startTime = nil;
 sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), function(args)
 	if config.enabled == true then
 		GUI020600 = sdk.to_managed_object(args[2]);
