@@ -5,9 +5,11 @@ local thread = _G.thread;
 
 local Constants = {
     pairs = _G.pairs,
+    ipairs = _G.ipairs,
     tostring = _G.tostring,
     math = _G.math,
     string = _G.string,
+    table = _G.table,
 
     sdk = sdk,
     re = _G.re,
