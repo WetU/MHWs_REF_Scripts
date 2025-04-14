@@ -30,9 +30,10 @@ end, function()
 end);
 
 re.on_frame(function()
-	if GUI020600 ~= nil and os.clock() - startTime >= 0.5 then
+	if startTime ~= nil and os.clock() - startTime >= 0.5 then
 		onHudClose_method:call(GUI020600);
 		GUI020600 = nil;
+		startTime = nil;
 	end
 end);
 

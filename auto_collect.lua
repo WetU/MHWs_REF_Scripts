@@ -27,12 +27,12 @@ local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 local FacilityMoriver_type_def = sdk.find_type_definition("app.FacilityMoriver");
 local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
 local isEnableMoriverFacility_method = FacilityMoriver_type_def:get_method("isEnableMoriverFacility(app.NpcDef.ID)");
+local executedSharing_method = FacilityMoriver_type_def:get_method("executedSharing(app.FacilityMoriver.MoriverInfo)");
 local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
 
 local MoriverInfos_type_def = MoriverInfos_field:get_type();
 local get_Count_method = MoriverInfos_type_def:get_method("get_Count");
 local get_Item_method = MoriverInfos_type_def:get_method("get_Item(System.Int32)");
-local Remove_method = MoriverInfos_type_def:get_method("Remove(app.FacilityMoriver.MoriverInfo)");
 
 local MoriverInfo_type_def = get_Item_method:get_return_type();
 local NpcId_field = MoriverInfo_type_def:get_field("_NpcId");
@@ -69,23 +69,21 @@ local function getItems(obj, facilityType)
     end
 
     local ItemWorks_array = getItemsArray_method:call(obj);
-    if ItemWorks_array ~= nil then
-        local ChatManager = sdk.get_managed_singleton("app.ChatManager");
-        for i = 0, ItemWorks_array:get_size() - 1 do
-            local ItemWork = ItemWorks_array:get_element(i);
-            local ItemId = get_ItemId_method:call(ItemWork);
-            if ItemId > NONE and ItemId < MAX then
-                local ItemNum = Num_field:get_data(ItemWork);
-                if ItemNum > 0 then
-                    getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-                    getItemLog_method:call(ChatManager, ItemId, ItemNum, false, false, -1, -1);
-                    clearItem_method:call(obj, i);
-                else
-                    break;
-                end
+    local ChatManager = Constants.get_Chat_method:call(nil);
+    for i = 0, ItemWorks_array:get_size() - 1 do
+        local ItemWork = ItemWorks_array:get_element(i);
+        local ItemId = get_ItemId_method:call(ItemWork);
+        if ItemId > NONE and ItemId < MAX then
+            local ItemNum = Num_field:get_data(ItemWork);
+            if ItemNum > 0 then
+                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
+                getItemLog_method:call(ChatManager, ItemId, ItemNum, false, false, -1, -1);
+                clearItem_method:call(obj, i);
             else
                 break;
             end
+        else
+            break;
         end
     end
 end
@@ -110,57 +108,55 @@ end);
 
 sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, function()
     local FacilityMoriver = thread.get_hook_storage()["this"];
-    if FacilityMoriver ~= nil and get__HavingCampfire_method:call(FacilityMoriver) == true then
+    if get__HavingCampfire_method:call(FacilityMoriver) == true then
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
-        if MoriverInfos ~= nil then
-            local Count = get_Count_method:call(MoriverInfos);
-            if Count ~= nil and Count > 0 then
-                local completedData = {};
-                local ChatManager = sdk.get_managed_singleton("app.ChatManager");
-                for i = 0, Count - 1 do
-                    local MoriverInfo = get_Item_method:call(MoriverInfos, i);
-                    if MoriverInfo ~= nil and isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
-                        local FacilityId = FacilityId_field:get_data(MoriverInfo);
-                        if FacilityId == SHARING then
+        local Count = get_Count_method:call(MoriverInfos);
+        if Count > 0 then
+            local completedData = {};
+            local ChatManager = Constants.get_Chat_method:call(nil);
+            for i = 0, Count - 1 do
+                local MoriverInfo = get_Item_method:call(MoriverInfos, i);
+                if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
+                    local FacilityId = FacilityId_field:get_data(MoriverInfo);
+                    if FacilityId == SHARING then
+                        local ItemFromMoriver = ItemFromMoriver_field:get_data(MoriverInfo);
+                        local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
+                        local gettingNum = Num_field:get_data(ItemFromMoriver);
+                        getSellItem_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE_BOX);
+                        getItemLog_method:call(ChatManager, gettingItemId, gettingNum, false, false, -1, -1);
+                        table.insert(completedData, MoriverInfo);
+                    elseif FacilityId == SWOP then
+                        local isSuccessSharing = true;
+                        local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
+                        local giveItemId = get_ItemId_method:call(ItemFromPlayer);
+                        local giveNum = Num_field:get_data(ItemFromPlayer);
+                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_POUCH);
+                        if pouchNum >= giveNum then
+                            changeItemNum_method:call(nil, giveItemId, pouchNum - giveNum, STOCK_TYPE_POUCH);
+                        else
+                            local boxNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_BOX);
+                            if (pouchNum + boxNum) >= giveNum then
+                                changeItemNum_method:call(nil, giveItemId, 0, STOCK_TYPE_POUCH);
+                                changeItemNum_method:call(nil, giveItemId, boxNum - (giveNum - pouchNum), STOCK_TYPE_BOX);
+                            elseif boxNum >= giveNum then
+                                changeItemNum_method:call(nil, giveItemId, boxNum - giveNum, STOCK_TYPE_BOX);
+                            else
+                                isSuccessSharing = false;
+                            end
+                        end
+                        if isSuccessSharing == true then
                             local ItemFromMoriver = ItemFromMoriver_field:get_data(MoriverInfo);
                             local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
                             local gettingNum = Num_field:get_data(ItemFromMoriver);
                             getSellItem_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE_BOX);
                             getItemLog_method:call(ChatManager, gettingItemId, gettingNum, false, false, -1, -1);
                             table.insert(completedData, MoriverInfo);
-                        elseif FacilityId == SWOP then
-                            local isSuccessSharing = true;
-                            local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
-                            local giveItemId = get_ItemId_method:call(ItemFromPlayer);
-                            local giveNum = Num_field:get_data(ItemFromPlayer);
-                            local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_POUCH);
-                            if pouchNum >= giveNum then
-                                changeItemNum_method:call(nil, giveItemId, pouchNum - giveNum, STOCK_TYPE_POUCH);
-                            else
-                                local boxNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_BOX);
-                                if (pouchNum + boxNum) >= giveNum then
-                                    changeItemNum_method:call(nil, giveItemId, 0, STOCK_TYPE_POUCH);
-                                    changeItemNum_method:call(nil, giveItemId, boxNum - (giveNum - pouchNum), STOCK_TYPE_BOX);
-                                elseif boxNum >= giveNum then
-                                    changeItemNum_method:call(nil, giveItemId, boxNum - giveNum, STOCK_TYPE_BOX);
-                                else
-                                    isSuccessSharing = false;
-                                end
-                            end
-                            if isSuccessSharing == true then
-                                local ItemFromMoriver = ItemFromMoriver_field:get_data(MoriverInfo);
-                                local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-                                local gettingNum = Num_field:get_data(ItemFromMoriver);
-                                getSellItem_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE_BOX);
-                                getItemLog_method:call(ChatManager, gettingItemId, gettingNum, false, false, -1, -1);
-                                table.insert(completedData, MoriverInfo);
-                            end
                         end
                     end
                 end
-                for _, completed in ipairs(completedData) do
-                    Remove_method:call(MoriverInfos, completed);
-                end
+            end
+            for _, completed in ipairs(completedData) do
+                executedSharing_method:call(FacilityMoriver, completed);
             end
         end
     end

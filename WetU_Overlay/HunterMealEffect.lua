@@ -23,16 +23,18 @@ sdk.hook(HunterMealEffect_type_def:get_method("update(System.Single, app.HunterC
     end
 end, function()
     local HunterMealEffect = thread.get_hook_storage()["this"];
-    if HunterMealEffect ~= nil and IsTimerActive_field:get_data(HunterMealEffect) == true then
-        local DurationTimer = get_DurationTimer_method:call(HunterMealEffect);
-        if DurationTimer ~= oldMealTimer then
-            oldMealTimer = DurationTimer;
-            mealInfoTbl.mealTimer = string.format("%02d:%02d", math.floor(DurationTimer / 60.0), math.modf(DurationTimer % 60.0));
-        end
-    else
-        if mealInfoTbl.mealTimer ~= NO_CANTEEN then
-            oldMealTimer = NO_CANTEEN;
-            mealInfoTbl.mealTimer = NO_CANTEEN;
+    if HunterMealEffect ~= nil then
+        if IsTimerActive_field:get_data(HunterMealEffect) == true then
+            local DurationTimer = get_DurationTimer_method:call(HunterMealEffect);
+            if DurationTimer ~= oldMealTimer then
+                oldMealTimer = DurationTimer;
+                mealInfoTbl.mealTimer = string.format("%02d:%02d", math.floor(DurationTimer / 60.0), math.modf(DurationTimer % 60.0));
+            end
+        else
+            if mealInfoTbl.mealTimer ~= NO_CANTEEN then
+                oldMealTimer = NO_CANTEEN;
+                mealInfoTbl.mealTimer = NO_CANTEEN;
+            end
         end
     end
 end);

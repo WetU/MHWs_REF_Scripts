@@ -38,32 +38,23 @@ local SettingParam_field = AdjustCollision_field:get_type():get_field("_SettingP
 local CameraOverlapTransparencyControllerBase_type_def = sdk.find_type_definition("app.CameraOverlapTransparencyControllerBase");
 local IsDeactivateTrigger_field = CameraOverlapTransparencyControllerBase_type_def:get_field("_IsDeactivateTrigger");
 
-local function ApplyCameraSettings()
-	local MasterPlCamera = MasterPlCamera_field:get_data(sdk.get_managed_singleton("app.CameraManager"));
-	if MasterPlCamera ~= nil then
-		local MiniComponents = MiniComponents_field:get_data(MasterPlCamera);
-		if MiniComponents ~= nil then
-			local AdjustCollision = AdjustCollision_field:get_data(MiniComponents);
-			if AdjustCollision ~= nil then
-				local SettingParam = SettingParam_field:get_data(AdjustCollision);
-				if SettingParam ~= nil then
-					SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
-					SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
-					SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
-					SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
-				end
-			end
-		end
-	end
-end
-
 sdk.hook(CameraOverlapTransparencyControllerBase_type_def:get_method("update"), Constants.getObject, function()
 	local CameraOverlapTransparencyControllerBase = thread.get_hook_storage()["this"];
 	if IsDeactivateTrigger_field:get_data(CameraOverlapTransparencyControllerBase) ~= true then
 		CameraOverlapTransparencyControllerBase:set_field("_IsDeactivateTrigger", true);
 	end
 end);
-sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), nil, ApplyCameraSettings);
+
+sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), Constants.getObject, function()
+	local MasterPlCamera = MasterPlCamera_field:get_data(thread.get_hook_storage()["this"]);
+	if MasterPlCamera ~= nil then
+		local SettingParam = SettingParam_field:get_data(AdjustCollision_field:get_data(MiniComponents_field:get_data(MasterPlCamera)));
+		SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
+		SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
+		SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
+		SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
+	end
+end);
 
 re.on_config_save(saveConfig);
 
@@ -105,7 +96,14 @@ re.on_draw_ui(function()
 		imgui.end_group();
 
 		if requireSave == true then
-			ApplyCameraSettings();
+			local MasterPlCamera = MasterPlCamera_field:get_data(Constants.get_Camera_method:call(nil));
+			if MasterPlCamera ~= nil then
+				local SettingParam = SettingParam_field:get_data(AdjustCollision_field:get_data(MiniComponents_field:get_data(MasterPlCamera)));
+				SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
+				SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
+				SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
+				SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
+			end
 			saveConfig();
 		end
 

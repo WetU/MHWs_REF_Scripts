@@ -16,19 +16,9 @@ local addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystem
 local mySet = 0;
 
 local isSelfCall = false;
-local function mySetTracker(args)
-    if isSelfCall == true then
-        isSelfCall = false;
-    else
-        local appliedSet = sdk.to_int64(args[2]) & 0xFFFFFFFF;
-        if mySet ~= appliedSet then
-            mySet = appliedSet;
-        end
-    end
-end
 
 local function restockItems()
-    local ChatManager = sdk.get_managed_singleton("app.ChatManager");
+    local ChatManager = Constants.get_Chat_method:call(nil);
 
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
@@ -52,5 +42,19 @@ sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("openGUI
     restockItems();
     return retval;
 end);
-sdk.hook(applyMySetToPouch_method, mySetTracker);
-sdk.hook(sdk.find_type_definition("app.GUI030203"):get_method("applyMySet"), mySetTracker);
+sdk.hook(applyMySetToPouch_method, function(args)
+    if isSelfCall == true then
+        isSelfCall = false;
+    else
+        local appliedSet = sdk.to_int64(args[2]) & 0xFFFFFFFF;
+        if mySet ~= appliedSet then
+            mySet = appliedSet;
+        end
+    end
+end);
+sdk.hook(sdk.find_type_definition("app.GUI030203"):get_method("applyMySet(System.Int32)"), function(args)
+    local appliedSet = sdk.to_int64(args[3]) & 0xFFFFFFFF;
+    if mySet ~= appliedSet then
+        mySet = appliedSet;
+    end
+end);

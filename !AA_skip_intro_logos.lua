@@ -15,10 +15,8 @@ local COPYRIGHT = FLOW_type_def:get_field("COPYRIGHT"):get_data(nil); -- static
 
 sdk.hook(GUI010001_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
     local GUI010001 = thread.get_hook_storage()["this"];
-    if GUI010001 ~= nil then
-        local Flow = Flow_field:get_data(GUI010001);
-        if (Flow > STARTUP and Flow <= COPYRIGHT) and EnableSkip_field:get_data(GUI010001) == true and Skip_field:get_data(GUI010001) == false then
-            GUI010001:set_field("_Skip", true);
-        end
+    local Flow = Flow_field:get_data(GUI010001);
+    if (Flow > STARTUP and Flow <= COPYRIGHT) and EnableSkip_field:get_data(GUI010001) == true and Skip_field:get_data(GUI010001) == false then
+        GUI010001:set_field("_Skip", true);
     end
 end);
