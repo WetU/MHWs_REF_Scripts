@@ -1,6 +1,4 @@
-local require = _G.require;
-
-local Constants = require("Constants/Constants");
+local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
@@ -14,7 +12,7 @@ local oldMealTimer = nil;
 local NO_CANTEEN = "식사 효과 없음";
 
 local mealInfoTbl = {
-    mealTimer = nil
+    MealTimer = nil
 };
 
 sdk.hook(HunterMealEffect_type_def:get_method("update(System.Single, app.HunterCharacter)"), function(args)
@@ -28,12 +26,12 @@ end, function()
             local DurationTimer = get_DurationTimer_method:call(HunterMealEffect);
             if DurationTimer ~= oldMealTimer then
                 oldMealTimer = DurationTimer;
-                mealInfoTbl.mealTimer = string.format("%02d:%02d", math.floor(DurationTimer / 60.0), math.modf(DurationTimer % 60.0));
+                mealInfoTbl.MealTimer = string.format("%02d:%02d", math.floor(DurationTimer / 60.0), math.modf(DurationTimer % 60.0));
             end
         else
-            if mealInfoTbl.mealTimer ~= NO_CANTEEN then
+            if mealInfoTbl.MealTimer ~= NO_CANTEEN then
                 oldMealTimer = NO_CANTEEN;
-                mealInfoTbl.mealTimer = NO_CANTEEN;
+                mealInfoTbl.MealTimer = NO_CANTEEN;
             end
         end
     end

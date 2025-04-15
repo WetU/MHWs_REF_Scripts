@@ -1,6 +1,4 @@
-local require = _G.require;
-
-local Constants = require("Constants/Constants");
+local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local json = Constants.json;
 local re = Constants.re;

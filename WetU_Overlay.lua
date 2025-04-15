@@ -29,14 +29,14 @@ local windowFlag = config.unLock == true and 4096 or (4096 + 64 + 512);
 re.on_config_save(saveConfig);
 
 re.on_frame(function()
-    if QuestInfo.questInfoCreated == true and imgui.begin_window("퀘스트 정보", nil, windowFlag) == true then
-        imgui.text(QuestInfo.questTime);
-        imgui.text(QuestInfo.deathCount);
+    if QuestInfo.QuestInfoCreated == true and imgui.begin_window("퀘스트 정보", nil, windowFlag) == true then
+        imgui.text(QuestInfo.QuestTime);
+        imgui.text(QuestInfo.DeathCount);
         imgui.end_window();
     end
 
-    if MealInfo.mealTimer ~= nil and imgui.begin_window("식사", nil, windowFlag) == true then
-        imgui.text(MealInfo.mealTimer);
+    if MealInfo.MealTimer ~= nil and imgui.begin_window("식사", nil, windowFlag) == true then
+        imgui.text(MealInfo.MealTimer);
         imgui.end_window();
     end
 

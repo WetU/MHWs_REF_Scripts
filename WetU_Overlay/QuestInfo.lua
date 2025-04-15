@@ -1,7 +1,4 @@
-local require = _G.require;
-
-local Constants = require("Constants/Constants");
-
+local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
@@ -30,9 +27,9 @@ local questTimeLimit = nil;
 local questCurTime = nil;
 
 local questInfoTbl = {
-    questInfoCreated = false,
-    questTime = nil,
-    deathCount = nil
+    QuestInfoCreated = false,
+    QuestTime = nil,
+    DeathCount = nil
 };
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObject, function()
@@ -66,20 +63,20 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
         end
 
         if deathUpdated == true then
-            questInfoTbl.deathCount = "다운 횟수: " .. questCurDeath .. " / " .. questMaxDeath;
+            questInfoTbl.DeathCount = "다운 횟수: " .. questCurDeath .. " / " .. questMaxDeath;
         end
         if timeUpdated == true then
-            questInfoTbl.questTime = questCurTime .. " / " .. questTimeLimit;
+            questInfoTbl.QuestTime = questCurTime .. " / " .. questTimeLimit;
         end
 
-        if questInfoTbl.questInfoCreated ~= true then
-            questInfoTbl.questInfoCreated = true;
+        if questInfoTbl.QuestInfoCreated ~= true then
+            questInfoTbl.QuestInfoCreated = true;
         end
     end
 end);
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("questInfoClear(System.Boolean, System.Boolean)"), nil, function()
-    questInfoTbl.questInfoCreated = false;
+    questInfoTbl.QuestInfoCreated = false;
 
     questMaxDeath = nil;
     questCurDeath = "0";

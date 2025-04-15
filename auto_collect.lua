@@ -1,6 +1,4 @@
-local require = _G.require;
-
-local Constants = require("Constants/Constants");
+local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
@@ -47,9 +45,9 @@ local Num_field = ItemWork_type_def:get_field("Num");
 local Gm262_type_def = sdk.find_type_definition("app.Gm262");
 local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
 
-local ID_type_def = sdk.find_type_definition("app.ItemDef.ID");
-local NONE = ID_type_def:get_field("NONE"):get_data(nil); -- static
-local MAX = ID_type_def:get_field("MAX"):get_data(nil); -- static
+local ItemID_type_def = sdk.find_type_definition("app.ItemDef.ID");
+local NONE = ItemID_type_def:get_field("NONE"):get_data(nil); -- static
+local MAX = ItemID_type_def:get_field("MAX"):get_data(nil); -- static
 
 local STOCK_TYPE_type_def = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE");
 local STOCK_TYPE_POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil); -- static
@@ -59,7 +57,15 @@ local FacilityID_type_def = sdk.find_type_definition("app.FacilityDef.ID");
 local SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil); -- static
 local SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil); -- static
 
-local function getItems(obj, facilityType)
+local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
+local GimmickID_INVALID = sdk.find_type_definition("app.GimmickDef.ID"):get_field("INVALID"):get_data(nil); -- static
+
+local function getItems(itemId, itemNum, chatManager)
+    getSellItem_method:call(nil, itemId, itemNum, STOCK_TYPE_BOX);
+    getItemLog_method:call(chatManager, itemId, itemNum, false, false, EnemyID_INVALID, GimmickID_INVALID);
+end
+
+local function getFacilityItems(obj, facilityType)
     local getItemsArray_method = get_Rewards_method;
     local clearItem_method = clearRewardItem_method;
 
@@ -76,8 +82,7 @@ local function getItems(obj, facilityType)
         if ItemId > NONE and ItemId < MAX then
             local ItemNum = Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE_BOX);
-                getItemLog_method:call(ChatManager, ItemId, ItemNum, false, false, -1, -1);
+                getItems(ItemId, ItemNum, ChatManager);
                 clearItem_method:call(obj, i);
             else
                 break;
@@ -88,12 +93,24 @@ local function getItems(obj, facilityType)
     end
 end
 
+local function getMoriverItems(moriverInfo, chatManager, completedData)
+    local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
+    local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
+    if gettingItemId > NONE and gettingItemId < MAX then
+        local gettingNum = Num_field:get_data(ItemFromMoriver);
+        if gettingNum > 0 then
+            getItems(gettingItemId, gettingNum, chatManager);
+            table.insert(completedData, moriverInfo);
+        end
+    end
+end
+
 sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
-    getItems(thread.get_hook_storage()["this"], 1);
+    getFacilityItems(thread.get_hook_storage()["this"], 1);
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
-    getItems(thread.get_hook_storage()["this"], 2);
+    getFacilityItems(thread.get_hook_storage()["this"], 2);
 end);
 
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject, function()
@@ -112,19 +129,14 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
         local Count = get_Count_method:call(MoriverInfos);
         if Count > 0 then
-            local completedData = {};
+            local completedMoriver = {};
             local ChatManager = Constants.get_Chat_method:call(nil);
             for i = 0, Count - 1 do
                 local MoriverInfo = get_Item_method:call(MoriverInfos, i);
                 if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
                     local FacilityId = FacilityId_field:get_data(MoriverInfo);
                     if FacilityId == SHARING then
-                        local ItemFromMoriver = ItemFromMoriver_field:get_data(MoriverInfo);
-                        local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-                        local gettingNum = Num_field:get_data(ItemFromMoriver);
-                        getSellItem_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE_BOX);
-                        getItemLog_method:call(ChatManager, gettingItemId, gettingNum, false, false, -1, -1);
-                        table.insert(completedData, MoriverInfo);
+                        getMoriverItems(MoriverInfo, ChatManager, completedMoriver);
                     elseif FacilityId == SWOP then
                         local isSuccessSharing = true;
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
@@ -145,17 +157,12 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                             end
                         end
                         if isSuccessSharing == true then
-                            local ItemFromMoriver = ItemFromMoriver_field:get_data(MoriverInfo);
-                            local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-                            local gettingNum = Num_field:get_data(ItemFromMoriver);
-                            getSellItem_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE_BOX);
-                            getItemLog_method:call(ChatManager, gettingItemId, gettingNum, false, false, -1, -1);
-                            table.insert(completedData, MoriverInfo);
+                            getMoriverItems(MoriverInfo, ChatManager, completedMoriver);
                         end
                     end
                 end
             end
-            for _, completed in ipairs(completedData) do
+            for _, completed in ipairs(completedMoriver) do
                 executedSharing_method:call(FacilityMoriver, completed);
             end
         end
