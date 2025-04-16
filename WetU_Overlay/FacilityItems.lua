@@ -21,7 +21,6 @@ local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)"
 local FacilityRallus_type_def = get_Rallus_method:get_return_type();
 local get_SupplyTimer_method = FacilityRallus_type_def:get_method("get_SupplyTimer");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
-local getSupplyItem_method = FacilityRallus_type_def:get_method("getSupplyItem(app.cGimmickContext)");
 local SettingData_field = FacilityRallus_type_def:get_field("_SettingData");
 
 local get_StockMax_method = SettingData_field:get_type():get_method("get_StockMax");
