@@ -46,19 +46,20 @@ local Gm262_type_def = sdk.find_type_definition("app.Gm262");
 local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
 
 local ItemID_type_def = sdk.find_type_definition("app.ItemDef.ID");
-local NONE = ItemID_type_def:get_field("NONE"):get_data(nil); -- static
-local MAX = ItemID_type_def:get_field("MAX"):get_data(nil); -- static
+local ItemID_NONE = ItemID_type_def:get_field("NONE"):get_data(nil); -- static
+local ItemID_MAX = ItemID_type_def:get_field("MAX"):get_data(nil); -- static
 
 local STOCK_TYPE_type_def = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE");
 local STOCK_TYPE_POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil); -- static
 local STOCK_TYPE_BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil); -- static
 
 local FacilityID_type_def = sdk.find_type_definition("app.FacilityDef.ID");
-local SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil); -- static
-local SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil); -- static
+local FacilityID_SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil); -- static
+local FacilityID_SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil); -- static
+
+local GimmickID_INVALID = sdk.find_type_definition("app.GimmickDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
 local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
-local GimmickID_INVALID = sdk.find_type_definition("app.GimmickDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
 local function getItems(itemId, itemNum, chatManager)
     getSellItem_method:call(nil, itemId, itemNum, STOCK_TYPE_BOX);
@@ -79,7 +80,7 @@ local function getFacilityItems(obj, facilityType)
     for i = 0, ItemWorks_array:get_size() - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = get_ItemId_method:call(ItemWork);
-        if ItemId > NONE and ItemId < MAX then
+        if ItemId > ItemID_NONE and ItemId < ItemID_MAX then
             local ItemNum = Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 getItems(ItemId, ItemNum, ChatManager);
@@ -96,7 +97,7 @@ end
 local function getMoriverItems(moriverInfo, chatManager, completedData)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-    if gettingItemId > NONE and gettingItemId < MAX then
+    if gettingItemId > ItemID_NONE and gettingItemId < ItemID_MAX then
         local gettingNum = Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
             getItems(gettingItemId, gettingNum, chatManager);
@@ -135,9 +136,9 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                 local MoriverInfo = get_Item_method:call(MoriverInfos, i);
                 if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
                     local FacilityId = FacilityId_field:get_data(MoriverInfo);
-                    if FacilityId == SHARING then
+                    if FacilityId == FacilityID_SHARING then
                         getMoriverItems(MoriverInfo, ChatManager, completedMoriver);
-                    elseif FacilityId == SWOP then
+                    elseif FacilityId == FacilityID_SWOP then
                         local isSuccessSharing = true;
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                         local giveItemId = get_ItemId_method:call(ItemFromPlayer);

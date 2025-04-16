@@ -159,9 +159,15 @@ end, function()
 end);
 
 re.on_application_entry("LockScene", function()
-    local LDRPostProcess = get_LDRPostProcess_method:call(get_Effect_method:call(nil));
-    if LDRPostProcess ~= nil then
-        ColorCorrect_set_Enabled_method:call(get_ColorCorrect_method:call(LDRPostProcess), settings.colorCorrect);
+    local Effect = get_Effect_method:call(nil);
+    if Effect ~= nil then
+        local LDRPostProcess = get_LDRPostProcess_method:call(Effect);
+        if LDRPostProcess ~= nil then
+            local ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
+            if ColorCorrect ~= nil then
+                ColorCorrect_set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
+            end
+        end
     end
 end);
 

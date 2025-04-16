@@ -30,7 +30,10 @@ local function LoadSettings()
 end
 
 local function apply_ws_setting()
-    get_WindBase_method:call(nil):set_field("_Stop", settings.disable_wind_simulation);
+    local WindBase = get_WindBase_method:call(nil);
+    if WindBase ~= nil then
+        WindBase:set_field("_Stop", settings.disable_wind_simulation);
+    end
 end
 
 LiteEnvironment.apply_gi_setting = function()
