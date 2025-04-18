@@ -9,7 +9,6 @@ local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetTo
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
-local addSystemLog_method = Constants.ChatManager_type_def:get_method("addSystemLog(System.String)");
 
 local mySet = 0;
 
@@ -21,10 +20,10 @@ local function restockItems()
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
+        Constants.addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
+        Constants.addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
     end
 
     fillShellPouchItems_method:call(nil);

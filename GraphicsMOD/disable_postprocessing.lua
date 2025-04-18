@@ -22,11 +22,9 @@ local get_LDRPostProcess_method = get_Effect_method:get_return_type():get_method
 local get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
 local ColorCorrect_set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
-local get_Graphics_method = Constants.GA_type_def:get_method("get_Graphics"); -- static
-local GraphicsManager_type_def = get_Graphics_method:get_return_type();
-local get_DisplaySettings_method = GraphicsManager_type_def:get_method("get_DisplaySettings");
-local get_NowGraphicsSetting_method = GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
-local setGraphicsSetting_method = GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
+local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
+local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
+local setGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
 
 local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
 local set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");
@@ -121,7 +119,7 @@ DisablePP.ApplySettings = function()
         end
     end
 
-    local GraphicsManager = get_Graphics_method:call(nil);
+    local GraphicsManager = Constants.get_Graphics_method:call(nil);
     if GraphicsManager ~= nil then
         local DisplaySettings = get_DisplaySettings_method:call(GraphicsManager);
         set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);

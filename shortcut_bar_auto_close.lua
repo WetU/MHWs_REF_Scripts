@@ -3,8 +3,7 @@ local sdk = Constants.sdk;
 local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
-
-local os = _G.os;
+local os = Constants.os;
 
 local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
 local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
