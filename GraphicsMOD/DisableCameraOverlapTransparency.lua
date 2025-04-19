@@ -16,19 +16,15 @@ local preset_config = {
 	OverNear_NearestHeight = 1.4,
 	OverNear_Alpha = 1.0
 };
-local config = nil;
+local config = json.load_file("DisableCameraOverlapTransparency.json") or default_config;
 
 local function saveConfig()
     json.dump_file("DisableCameraOverlapTransparency.json", config);
 end
 
-local function loadConfig()
-    config = json.load_file("DisableCameraOverlapTransparency.json") or default_config;
-end
-
-loadConfig();
-
-local MasterPlCamera_field = Constants.CameraManager_type_def:get_field("_MasterPlCamera");
+local get_Camera_method = Constants.GA_type_def:get_method("get_Camera"); -- static
+DisableCameraOverlapTransparency.CameraManager_type_def = get_Camera_method:get_return_type();
+local MasterPlCamera_field = DisableCameraOverlapTransparency.CameraManager_type_def:get_field("_MasterPlCamera");
 local MiniComponents_field = MasterPlCamera_field:get_type():get_field("_MiniComponents");
 local AdjustCollision_field = MiniComponents_field:get_type():get_field("AdjustCollision");
 local SettingParam_field = AdjustCollision_field:get_type():get_field("_SettingParam");
@@ -37,13 +33,17 @@ local CameraOverlapTransparencyControllerBase_type_def = sdk.find_type_definitio
 local IsDeactivateTrigger_field = CameraOverlapTransparencyControllerBase_type_def:get_field("_IsDeactivateTrigger");
 
 DisableCameraOverlapTransparency.Apply = function(cameraManager)
-	local MasterPlCamera = MasterPlCamera_field:get_data(cameraManager);
-	if MasterPlCamera ~= nil then
-		local SettingParam = SettingParam_field:get_data(AdjustCollision_field:get_data(MiniComponents_field:get_data(MasterPlCamera)));
-		SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
-		SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
-		SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
-		SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
+	if cameraManager ~= nil then
+		local MasterPlCamera = MasterPlCamera_field:get_data(cameraManager);
+		if MasterPlCamera ~= nil then
+			local SettingParam = SettingParam_field:get_data(AdjustCollision_field:get_data(MiniComponents_field:get_data(MasterPlCamera)));
+			if SettingParam ~= nil then
+				SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
+				SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
+				SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
+				SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
+			end
+		end
 	end
 end
 
@@ -94,14 +94,7 @@ re.on_draw_ui(function()
 		imgui.tree_pop();
 
 		if requireSave == true then
-			local MasterPlCamera = MasterPlCamera_field:get_data(Constants.get_Camera_method:call(nil));
-			if MasterPlCamera ~= nil then
-				local SettingParam = SettingParam_field:get_data(AdjustCollision_field:get_data(MiniComponents_field:get_data(MasterPlCamera)));
-				SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
-				SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
-				SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
-				SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
-			end
+			DisableCameraOverlapTransparency.Apply(Constants.get_Camera_method:call(nil));
 			saveConfig();
 		end
 	end

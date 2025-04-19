@@ -9,6 +9,9 @@ local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
 local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
 
 local config = json.load_file("ShortcutAutoClose.json") or {enabled = true};
+if config.enabled == nil then
+	config.enabled = true;
+end
 
 local function saveConfig()
 	json.dump_file("ShortcutAutoClose.json", config);

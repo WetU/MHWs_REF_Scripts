@@ -1,26 +1,18 @@
 local Constants = _G.require("Constants/Constants");
-local sdk = Constants.sdk;
-local thread = Constants.thread;
 local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local config = nil;
-
-local function loadConfig()
-    config = json.load_file("AutoSkipKillCam.json") or {enableKillCam = true};
-    if config.enableKillCam == nil then
-        config.enableKillCam = true;
-    end
+local config = json.load_file("AutoSkipKillCam.json") or {enableKillCam = true};
+if config.enableKillCam == nil then
+    config.enableKillCam = true;
 end
 
 local function saveConfig()
     json.dump_file("AutoSkipKillCam.json", config);
 end
 
-loadConfig();
-
-sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
+Constants.sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
     return config.enableKillCam == true and Constants.FALSE_ptr or retval;
 end);
 

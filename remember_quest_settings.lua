@@ -29,18 +29,16 @@ local function saveConfig()
     json.dump_file("remember_quest_settings.json", config);
 end
 
-if json ~= nil then
-    local file = json.load_file("remember_quest_settings.json");
-    if file ~= nil then
-        for key, value in Constants.pairs(config) do
-            if file[key] == nil then
-                file[key] = value;
-            end
+local file = json.load_file("remember_quest_settings.json");
+if file ~= nil then
+    for key, value in Constants.pairs(config) do
+        if file[key] == nil then
+            file[key] = value;
         end
-		config = file;
     end
-    saveConfig();
+    config = file;
 end
+saveConfig();
 
 local function getObject(args)
     if config.enabled == true then

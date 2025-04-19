@@ -46,16 +46,22 @@ local set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay
 local set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
 
 local TemporalAA_type_def = sdk.find_type_definition("via.render.ToneMapping.TemporalAA");
-local Strong = TemporalAA_type_def:get_field("Strong"):get_data(nil); -- static
-local Disable = TemporalAA_type_def:get_field("Disable"):get_data(nil); -- static
+local TemporalAA = {
+    Strong = TemporalAA_type_def:get_field("Strong"):get_data(nil),
+    Disable = TemporalAA_type_def:get_field("Disable"):get_data(nil)
+};
 
 local LocalExposureType_type_def = sdk.find_type_definition("via.render.ToneMapping.LocalExposureType");
-local Legacy = LocalExposureType_type_def:get_field("Legacy"):get_data(nil); -- static
-local BlurredLuminance = LocalExposureType_type_def:get_field("BlurredLuminance"):get_data(nil); -- static
+local LocalExposureType = {
+    Leagacy = LocalExposureType_type_def:get_field("Legacy"):get_data(nil),
+    BlurredLuminance = LocalExposureType_type_def:get_field("BlurredLuminance"):get_data(nil)
+};
 
 local LensDistortionSetting_type_def = sdk.find_type_definition("via.render.RenderConfig.LensDistortionSetting");
-local ON = LensDistortionSetting_type_def:get_field("ON"):get_data(nil); -- static
-local OFF = LensDistortionSetting_type_def:get_field("OFF"):get_data(nil); -- static
+local LensDistortionSetting = {
+    ON = LensDistortionSetting_type_def:get_field("ON"):get_data(nil),
+    OFF = LensDistortionSetting_type_def:get_field("OFF"):get_data(nil)
+};
 
 local DisablePP = {};
 
@@ -110,10 +116,10 @@ DisablePP.ApplySettings = function()
         if GameObject ~= nil then
             local ToneMapping = getComponent_method:call(GameObject, ToneMapping_runtime_type);
             if ToneMapping ~= nil then
-                setTemporalAA_method:call(ToneMapping, settings.TAA == true and Strong or Disable);
+                setTemporalAA_method:call(ToneMapping, settings.TAA == true and TemporalAA.Strong or TemporalAA.Disable);
                 set_EchoEnabled_method:call(ToneMapping, settings.jitter);
                 set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
-                setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and BlurredLuminance or Legacy);
+                setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and LocalExposureType.BlurredLuminance or LocalExposureType.Legacy);
                 set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
             end
         end
@@ -122,30 +128,33 @@ DisablePP.ApplySettings = function()
     local GraphicsManager = Constants.get_Graphics_method:call(nil);
     if GraphicsManager ~= nil then
         local DisplaySettings = get_DisplaySettings_method:call(GraphicsManager);
-        set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
-        if settings.customBrightnessEnable == true or changeBrightness == true then
-            set_Gamma_method:call(DisplaySettings, settings.gamma);
-            set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
-            set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
-            set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
-            set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
-            set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
-            if get_HDRMode_method:call(DisplaySettings) == false then
-                updateRequest_method:call(DisplaySettings);
+        if DisplaySettings ~= nil then
+            set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
+            if settings.customBrightnessEnable == true or changeBrightness == true then
+                set_Gamma_method:call(DisplaySettings, settings.gamma);
+                set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
+                set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
+                set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
+                set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
+                set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
+                if get_HDRMode_method:call(DisplaySettings) == false then
+                    updateRequest_method:call(DisplaySettings);
+                end
+                changeBrightness = false;
             end
-            changeBrightness = false;
         end
 
         local NowGraphicsSetting = get_NowGraphicsSetting_method:call(GraphicsManager);
-        set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
-        set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
-        set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
-        set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
-        set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
-        set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and ON or OFF);
-
-        if apply == true then
-            setGraphicsSetting_method:call(GraphicsManager, NowGraphicsSetting);
+        if NowGraphicsSetting ~= nil then
+            set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
+            set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
+            set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
+            set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
+            set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
+            set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
+            if apply == true then
+                setGraphicsSetting_method:call(GraphicsManager, NowGraphicsSetting);
+            end
         end
     end
 end

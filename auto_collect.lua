@@ -43,7 +43,7 @@ local Num_field = ItemWork_type_def:get_field("Num");
 local Gm262_type_def = sdk.find_type_definition("app.Gm262");
 local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
 
-local ItemID_type_def = sdk.find_type_definition("app.ItemDef.ID");
+local ItemID_type_def = get_ItemId_method:get_return_type();
 local ItemID_NONE = ItemID_type_def:get_field("NONE"):get_data(nil); -- static
 local ItemID_MAX = ItemID_type_def:get_field("MAX"):get_data(nil); -- static
 
@@ -51,11 +51,9 @@ local STOCK_TYPE_type_def = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE");
 local STOCK_TYPE_POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil); -- static
 local STOCK_TYPE_BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil); -- static
 
-local FacilityID_type_def = sdk.find_type_definition("app.FacilityDef.ID");
+local FacilityID_type_def = FacilityId_field:get_type();
 local FacilityID_SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil); -- static
 local FacilityID_SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil); -- static
-
-local GimmickID_INVALID = sdk.find_type_definition("app.GimmickDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
 local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
 

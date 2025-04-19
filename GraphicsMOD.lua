@@ -8,7 +8,7 @@ local LiteEnvironment = require("GraphicsMOD/LiteEnvironment");
 DisablePP.ApplySettings();
 LiteEnvironment.apply_gi_setting();
 
-Constants.sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), Constants.getObject, function()
+Constants.sdk.hook(DisableCameraOverlapTransparency.CameraManager_type_def:get_method("onSceneLoadFadeIn"), Constants.getObject, function()
     DisablePP.ApplySettings();
     LiteEnvironment.apply_gi_setting();
     DisableCameraOverlapTransparency.Apply(Constants.thread.get_hook_storage()["this"]);

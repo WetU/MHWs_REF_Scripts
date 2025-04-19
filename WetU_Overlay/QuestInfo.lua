@@ -1,6 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
-local thread = Constants.thread;
 
 local tostring = Constants.tostring;
 local string = Constants.string;
@@ -15,8 +14,8 @@ local Mandrake_type_def = QuestPlDieCount_field:get_type();
 local v_field = Mandrake_type_def:get_field("v");
 local m_field = Mandrake_type_def:get_field("m");
 
-local getTimeLimit_method = Constants.ActiveQuestData_type_def:get_method("getTimeLimit");
-local getQuestLife_method = Constants.ActiveQuestData_type_def:get_method("getQuestLife");
+local getTimeLimit_method = nil;
+local getQuestLife_method = nil;
 
 local oldDeathCount = 0.0;
 local oldElapsedTime = nil;
@@ -33,13 +32,19 @@ local questInfoTbl = {
 };
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObject, function()
-    local QuestDirector = thread.get_hook_storage()["this"];
+    local QuestDirector = Constants.thread.get_hook_storage()["this"];
     if get_IsActiveQuest_method:call(QuestDirector) == true then
         local deathUpdated = false;
         local timeUpdated = false;
 
         if questMaxDeath == nil or questTimeLimit == nil then
             local ActiveQuestData = get_QuestData_method:call(QuestDirector);
+            if getTimeLimit_method == nil then
+                getTimeLimit_method = ActiveQuestData.getTimeLimit;
+            end
+            if getQuestLife_method == nil then
+                getQuestLife_method = ActiveQuestData.getQuestLife;
+            end
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             deathUpdated = true;

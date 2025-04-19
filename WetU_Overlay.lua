@@ -9,22 +9,17 @@ local FacilityItems = require("WetU_Overlay/FacilityItems");
 local MealInfo = require("WetU_Overlay/HunterMealEffect");
 local QuestInfo = require("WetU_Overlay/QuestInfo");
 
-local config = nil;
+local windowFlag = 4096 + 64 + 512;
+local config = json.load_file("WetU_Overlay.json") or {unLock = false};;
+if config.unLock == nil then
+    config.unLock = false;
+elseif config.unLock == true then
+    windowFlag = 4096;
+end
 
 local function saveConfig()
     json.dump_file("WetU_Overlay.json", config);
 end
-
-local function loadConfig()
-    config = json.load_file("WetU_Overlay.json") or {unLock = false};
-    if config.unLock == nil then
-        config.unLock = false;
-    end
-end
-
-loadConfig();
-
-local windowFlag = config.unLock == true and 4096 or (4096 + 64 + 512);
 
 re.on_config_save(saveConfig);
 

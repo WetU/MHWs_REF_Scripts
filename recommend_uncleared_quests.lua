@@ -5,8 +5,6 @@ local json = Constants.json;
 local imgui = Constants.imgui;
 local re = Constants.re;
 
-local ipairs = Constants.ipairs;
-
 local config = {
 	enabled = true
 };
@@ -89,7 +87,7 @@ re.on_draw_ui(function()
         local changed = false;
 		changed, config.enabled = imgui.checkbox("Enabled##Recommend_Uncleared_Quests_Enabled", config.enabled);
         if changed == true then
-            json.dump_file("recommend_uncleared_quests.json", config);
+            saveConfig();
         end
         imgui.tree_pop();
 	end

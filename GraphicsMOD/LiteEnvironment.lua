@@ -20,12 +20,10 @@ local function SaveSettings()
     json.dump_file("LiteEnvironment.json", settings);
 end
 
-local function LoadSettings()
-    local loadedTable = json.load_file("LiteEnvironment.json");
-    if loadedTable ~= nil then
-        for key, value in pairs(loadedTable) do
-            settings[key] = value;
-        end
+local loadedTable = json.load_file("LiteEnvironment.json");
+if loadedTable ~= nil then
+    for key, value in pairs(loadedTable) do
+        settings[key] = value;
     end
 end
 
@@ -46,7 +44,6 @@ LiteEnvironment.apply_gi_setting = function()
     end
 end
 
-LoadSettings();
 apply_ws_setting();
 
 re.on_config_save(SaveSettings);
