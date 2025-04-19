@@ -12,10 +12,12 @@ local addItemLog_method = sdk.find_type_definition("app.ChatLogUtil"):get_method
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clearCollectionItem(System.Int32)");
+local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
+local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
@@ -44,38 +46,46 @@ local Gm262_type_def = sdk.find_type_definition("app.Gm262");
 local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
 
 local ItemID_type_def = get_ItemId_method:get_return_type();
-local ItemID_NONE = ItemID_type_def:get_field("NONE"):get_data(nil); -- static
-local ItemID_MAX = ItemID_type_def:get_field("MAX"):get_data(nil); -- static
+local ItemID = {
+    NONE = ItemID_type_def:get_field("NONE"):get_data(nil),
+    MAX = ItemID_type_def:get_field("MAX"):get_data(nil)
+};
 
 local STOCK_TYPE_type_def = sdk.find_type_definition("app.ItemUtil.STOCK_TYPE");
-local STOCK_TYPE_POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil); -- static
-local STOCK_TYPE_BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil); -- static
+local STOCK_TYPE = {
+    POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil),
+    BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil)
+};
 
 local FacilityID_type_def = FacilityId_field:get_type();
-local FacilityID_SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil); -- static
-local FacilityID_SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil); -- static
+local FacilityID = {
+    SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil),
+    SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
+}
 
 local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
 local function getItems(itemId, itemNum)
-    getSellItem_method:call(nil, itemId, itemNum, STOCK_TYPE_BOX);
+    getSellItem_method:call(nil, itemId, itemNum, STOCK_TYPE.BOX);
     addItemLog_method:call(nil, itemId, itemNum, false, false, EnemyID_INVALID);
 end
 
 local function getFacilityItems(obj, facilityType)
     local getItemsArray_method = get_Rewards_method;
     local clearItem_method = clearRewardItem_method;
+    local MAX_ITEM_NUM = LargeWorkshop_MAX_ITEM_NUM;
 
     if facilityType == 1 then
         getItemsArray_method = get_CollectionItem_method;
         clearItem_method = clearCollectionItem_method;
+        MAX_ITEM_NUM = Collection_MAX_ITEM_NUM;
     end
 
     local ItemWorks_array = getItemsArray_method:call(obj);
-    for i = 0, ItemWorks_array:get_size() - 1 do
+    for i = 0, MAX_ITEM_NUM - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = get_ItemId_method:call(ItemWork);
-        if ItemId > ItemID_NONE and ItemId < ItemID_MAX then
+        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 getItems(ItemId, ItemNum);
@@ -92,7 +102,7 @@ end
 local function getMoriverItems(moriverInfo, completedData)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-    if gettingItemId > ItemID_NONE and gettingItemId < ItemID_MAX then
+    if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
             getItems(gettingItemId, gettingNum);
@@ -103,10 +113,12 @@ end
 
 sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
     getFacilityItems(thread.get_hook_storage()["this"], 1);
+    Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "소재 채집 의뢰 획득!");
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
     getFacilityItems(thread.get_hook_storage()["this"], 2);
+    Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "축제 기념 선물 획득!");
 end);
 
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject, function()
@@ -116,6 +128,7 @@ end);
 sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
     if Constants.RallusSupplyNum > 0 then
         successButtonEvent_method:call(sdk.to_managed_object(args[2]));
+        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "뜸부기 둥지 획득!");
     end
 end);
 
@@ -130,23 +143,23 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                 local MoriverInfo = get_Item_method:call(MoriverInfos, i);
                 if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
                     local FacilityId = FacilityId_field:get_data(MoriverInfo);
-                    if FacilityId == FacilityID_SHARING then
+                    if FacilityId == FacilityID.SHARING then
                         getMoriverItems(MoriverInfo, completedMoriver);
-                    elseif FacilityId == FacilityID_SWOP then
+                    elseif FacilityId == FacilityID.SWOP then
                         local isSuccessSharing = true;
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                         local giveItemId = get_ItemId_method:call(ItemFromPlayer);
                         local giveNum = Num_field:get_data(ItemFromPlayer);
-                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_POUCH);
+                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
                         if pouchNum >= giveNum then
-                            payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE_POUCH);
+                            payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE.POUCH);
                         else
-                            local boxNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE_BOX);
+                            local boxNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.BOX);
                             if (pouchNum + boxNum) >= giveNum then
-                                payItem_method:call(nil, giveItemId, pouchNum, STOCK_TYPE_POUCH);
-                                payItem_method:call(nil, giveItemId, giveNum - pouchNum, STOCK_TYPE_BOX);
+                                payItem_method:call(nil, giveItemId, pouchNum, STOCK_TYPE.POUCH);
+                                payItem_method:call(nil, giveItemId, giveNum - pouchNum, STOCK_TYPE.BOX);
                             elseif boxNum >= giveNum then
-                                payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE_BOX);
+                                payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE.BOX);
                             else
                                 isSuccessSharing = false;
                             end
@@ -160,6 +173,7 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
             for _, completed in Constants.ipairs(completedMoriver) do
                 executedSharing_method:call(FacilityMoriver, completed);
             end
+            Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "모리바 아이템 획득!");
         end
     end
 end);

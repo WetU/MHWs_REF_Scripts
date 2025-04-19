@@ -39,6 +39,7 @@ sdk.hook(FacilityManager_type_def:get_method("update"), Constants.getObject, fun
 
     if isEnableCoolTimer_method:call(FacilityPugee) == false then
         stroke_method:call(FacilityPugee, true);
+        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "푸기 아이템 획득!");
     end
 
     if isRallusStockMaxUpdated == false then

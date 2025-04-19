@@ -36,6 +36,10 @@ local get_Quality_method = UpscaleSetting_type_def:get_method("get_Quality");
 local set_Quality_method = UpscaleSetting_type_def:get_method("set_Quality(ace.cUpscaleSetting.QUALITY)");
 local updateRequest_method = UpscaleSetting_type_def:get_method("updateRequest");
 
+local Size_type_def = getResolution_method:get_return_type();
+local w_field = Size_type_def:get_field("w");
+local h_field = Size_type_def:get_field("h");
+
 local max_upscale_mode = 4;
 local stage = nil;
 local env = nil;
@@ -89,12 +93,12 @@ local WindowModeOption = {
     [1] = WindowMode_type_def:get_field("Normal"):get_data(nil)
 };
 
-local Option_ID_type_def = sdk.find_type_definition("app.Option.ID");
+local OptionID_type_def = sdk.find_type_definition("app.Option.ID");
 local Options = {
-    SCREEN_MODE = Option_ID_type_def:get_field("SCREEN_MODE"):get_data(nil),
-    RESOLUTION_SETTING = Option_ID_type_def:get_field("RESOLUTION_SETTING"):get_data(nil),
-    FRAME_GENERATION = Option_ID_type_def:get_field("FRAME_GENERATION"):get_data(nil),
-    UPSCALE_MODE = Option_ID_type_def:get_field("UPSCALE_MODE"):get_data(nil)
+    SCREEN_MODE = OptionID_type_def:get_field("SCREEN_MODE"):get_data(nil),
+    RESOLUTION_SETTING = OptionID_type_def:get_field("RESOLUTION_SETTING"):get_data(nil),
+    FRAME_GENERATION = OptionID_type_def:get_field("FRAME_GENERATION"):get_data(nil),
+    UPSCALE_MODE = OptionID_type_def:get_field("UPSCALE_MODE"):get_data(nil)
 };
 
 local STAGE_type_def = getCurrentStageMasterPlayer_method:get_return_type();
@@ -140,7 +144,7 @@ end
 local ENVIRONMENT_type_def = getCurrentEnvType_method:get_return_type();
 local environmentNames = {
     "황폐기",
-    "이상 기후",
+    "이상 기변",
     "풍요기"
 };
 local environments = {
@@ -201,7 +205,7 @@ local function resolutionEqual(a, b)
     if a == nil or b == nil then
         return false;
     end
-    if a == b or (a.w == b.w and a.h == b.h) then
+    if a == b or (w_field:get_data(a) == w_field:get_data(b) and h_field:get_data(a) == h_field:get_data(b)) then
         return true;
     end
     return false;
@@ -234,7 +238,7 @@ local function autoAdjustReset()
 end
 
 local function resolutionString(r)
-    return string.format("%dx%d", r.w, r.h);
+    return string.format("%dx%d", w_field:get_data(r), h_field:get_data(r));
 end
 
 local function getStageDefaultGraphicLevel(stageNo)
@@ -304,7 +308,7 @@ local function applyGraphicLevel()
         local oriResolution = getValue_method:call(Option, Options.RESOLUTION_SETTING);
         local oriUpscaleMode = getValue_method:call(Option, Options.UPSCALE_MODE);
 
-        local resolution_max = settings.max_resolution == nil and #resolutions - 1 or settings.max_resolution;
+        local resolution_max = settings.max_resolution == nil and resolutions:get_size() - 1 or settings.max_resolution;
         local upscale_increase_step = upscaleEnabled == false and 0 or -1;
         local prefered_option = graphicLevel < 0 and settings.down_level_prefered_option or settings.up_level_prefered_option;
 
@@ -320,8 +324,8 @@ local function applyGraphicLevel()
         end
 
         if resolution ~= prevResolutionIndex then
-            nowResolution.w = resolutions[resolution].w;
-            nowResolution.h = resolutions[resolution].h;
+            nowResolution.w = w_field:get_data(resolutions[resolution]);
+            nowResolution.h = h_field:get_data(resolutions[resolution]);
             setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
             msg = "해상도: " .. resolutionString(resolutions[prevResolutionIndex]) .. " -> " .. resolutionString(nowResolution);
         end
@@ -540,7 +544,7 @@ re.on_draw_ui(function()
         local resolutions = getResolutions_method:call(Option);
         local resolutionSettingValue = getValue_method:call(Option, Options.RESOLUTION_SETTING);
         local upscaleValue = getValue_method:call(Option, Options.UPSCALE_MODE);
-        local resolutionCount = #resolutions - 1;
+        local resolutionCount = resolutions:get_size() - 1;
         local max_resolution = resolutionCount;
         imgui.text("그래픽 강도 0: ");
         imgui.same_line();
