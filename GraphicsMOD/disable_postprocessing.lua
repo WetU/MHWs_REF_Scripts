@@ -17,10 +17,9 @@ local set_EnableLocalExposure_method = ToneMapping_type_def:get_method("set_Enab
 local setLocalExposureType_method = ToneMapping_type_def:get_method("setLocalExposureType(via.render.ToneMapping.LocalExposureType)");
 local set_Contrast_method = ToneMapping_type_def:get_method("set_Contrast(System.Single)");
 
-local get_Effect_method = Constants.GA_type_def:get_method("get_Effect"); -- static
-local get_LDRPostProcess_method = get_Effect_method:get_return_type():get_method("get_LDRPostProcess");
-local get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
-local ColorCorrect_set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
+local get_LDRPostProcess_method = nil;
+local get_ColorCorrect_method = nil;
+local ColorCorrect_set_Enabled_method = nil;
 
 local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
 local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
@@ -125,36 +124,36 @@ DisablePP.ApplySettings = function()
         end
     end
 
-    local GraphicsManager = Constants.get_Graphics_method:call(nil);
-    if GraphicsManager ~= nil then
-        local DisplaySettings = get_DisplaySettings_method:call(GraphicsManager);
-        if DisplaySettings ~= nil then
-            set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
-            if settings.customBrightnessEnable == true or changeBrightness == true then
-                set_Gamma_method:call(DisplaySettings, settings.gamma);
-                set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
-                set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
-                set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
-                set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
-                set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
-                if get_HDRMode_method:call(DisplaySettings) == false then
-                    updateRequest_method:call(DisplaySettings);
-                end
-                changeBrightness = false;
+    if Constants.GraphicsManager == nil then
+        Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
+    end
+    local DisplaySettings = get_DisplaySettings_method:call(Constants.GraphicsManager);
+    if DisplaySettings ~= nil then
+        set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
+        if settings.customBrightnessEnable == true or changeBrightness == true then
+            set_Gamma_method:call(DisplaySettings, settings.gamma);
+            set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
+            set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
+            set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
+            set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
+            set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
+            if get_HDRMode_method:call(DisplaySettings) == false then
+                updateRequest_method:call(DisplaySettings);
             end
+            changeBrightness = false;
         end
+    end
 
-        local NowGraphicsSetting = get_NowGraphicsSetting_method:call(GraphicsManager);
-        if NowGraphicsSetting ~= nil then
-            set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
-            set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
-            set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
-            set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
-            set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
-            set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
-            if apply == true then
-                setGraphicsSetting_method:call(GraphicsManager, NowGraphicsSetting);
-            end
+    local NowGraphicsSetting = get_NowGraphicsSetting_method:call(Constants.GraphicsManager);
+    if NowGraphicsSetting ~= nil then
+        set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
+        set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
+        set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
+        set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
+        set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
+        set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
+        if apply == true then
+            setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
         end
     end
 end
@@ -165,17 +164,23 @@ end, function()
     set_EnableLocalExposure_method:call(thread.get_hook_storage()["this"], settings.localExposure);
 end);
 
+local ColorCorrect = nil;
 re.on_application_entry("LockScene", function()
-    local Effect = get_Effect_method:call(nil);
-    if Effect ~= nil then
-        local LDRPostProcess = get_LDRPostProcess_method:call(Effect);
+    if ColorCorrect == nil then
+        if Constants.AppEffectManager == nil then
+            Constants.AppEffectManager = sdk.get_managed_singleton("app.AppEffectManager");
+        end
+        if get_LDRPostProcess_method == nil then
+            get_LDRPostProcess_method = Constants.AppEffectManager.get_LDRPostProcess;
+            get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
+            ColorCorrect_set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
+        end
+        local LDRPostProcess = get_LDRPostProcess_method:call(Constants.AppEffectManager);
         if LDRPostProcess ~= nil then
-            local ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
-            if ColorCorrect ~= nil then
-                ColorCorrect_set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
-            end
+            ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
         end
     end
+    ColorCorrect_set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
 end);
 
 re.on_config_save(SaveSettings);

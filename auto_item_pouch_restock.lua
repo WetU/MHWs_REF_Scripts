@@ -15,15 +15,13 @@ local mySet = 0;
 local isSelfCall = false;
 
 local function restockItems()
-    local ChatManager = Constants.get_Chat_method:call(nil);
-
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        Constants.addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
+        Constants.addSystemLog("아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        Constants.addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
+        Constants.addSystemLog("아이템이 보충되었습니다.");
     end
 
     fillShellPouchItems_method:call(nil);

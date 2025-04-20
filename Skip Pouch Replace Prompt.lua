@@ -2,7 +2,6 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
 local isPickup = false;
-
 sdk.hook(Constants.ItemUtil_type_def:get_method("pickupItem(app.ItemDef.ID, System.Int16, app.EnemyDef.ID, app.ItemDef.LOG_TYPE)"), function(args)
 	isPickup = true;
 end, function(retval)

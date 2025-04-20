@@ -18,9 +18,7 @@ local PorterUtil_type_def = sdk.find_type_definition("app.PorterUtil");
 local getCurrentEnvType_method = PorterUtil_type_def:get_method("getCurrentEnvType"); -- static
 local getCurrentStageMasterPlayer_method = PorterUtil_type_def:get_method("getCurrentStageMasterPlayer"); -- static
 
-local get_GUI_method = Constants.GA_type_def:get_method("get_GUI"); -- static
-
-local get_Option_method = get_GUI_method:get_return_type():get_method("get_Option");
+local get_Option_method = Constants.GUIManager_type_def:get_method("get_Option");
 
 local Option_type_def = get_Option_method:get_return_type();
 local getValue_method = Option_type_def:get_method("getValue(app.Option.ID)");
@@ -51,13 +49,6 @@ local autoAdjustLastReduceTime = nil;
 
 local questFrames = 0;
 local questBeginTime = 0;
-
-local function sendMsg(msg)
-    local ChatManager = Constants.get_Chat_method:call(nil);
-    if ChatManager ~= nil then
-        Constants.addSystemLog_method:call(ChatManager, msg);
-    end
-end
 
 local GraphicOptions = {
     "업스케일",
@@ -135,7 +126,7 @@ local function getStageName(stageNo)
     if name == nil then
         name = tostring(stageNo);
         if stageNo ~= stages.INVALID then
-            sendMsg("알 수 없는 지역: " .. name);
+            Constants.addSystemLog("알 수 없는 지역: " .. name);
         end
     end
     return name;
@@ -297,13 +288,18 @@ end
 
 local function applyGraphicLevel()
     if settings.enabled == true then
-        local GraphicsManager = Constants.get_Graphics_method:call(nil);
-        local UpscaleSetting = get_UpscaleSetting_method:call(GraphicsManager);
-        local nowResolution = getResolution_method:call(GraphicsManager);
+        if Constants.GraphicsManager == nil then
+            Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
+        end
+        local UpscaleSetting = get_UpscaleSetting_method:call(Constants.GraphicsManager);
+        local nowResolution = getResolution_method:call(Constants.GraphicsManager);
 
         local upscaleEnabled = get_IsEnableUpscaling_method:call(UpscaleSetting);
 
-        local Option = get_Option_method:call(get_GUI_method:call(nil));
+        if Constants.GUIManager == nil then
+            Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+        end
+        local Option = get_Option_method:call(Constants.GUIManager);
         local resolutions = getResolutions_method:call(Option);
         local oriResolution = getValue_method:call(Option, Options.RESOLUTION_SETTING);
         local oriUpscaleMode = getValue_method:call(Option, Options.UPSCALE_MODE);
@@ -324,15 +320,14 @@ local function applyGraphicLevel()
         end
 
         if resolution ~= prevResolutionIndex then
-            nowResolution.w = w_field:get_data(resolutions[resolution]);
-            nowResolution.h = h_field:get_data(resolutions[resolution]);
+            nowResolution:set_field("w", w_field:get_data(resolutions[resolution]));
+            nowResolution:set_field("h", h_field:get_data(resolutions[resolution]));
             setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
             msg = "해상도: " .. resolutionString(resolutions[prevResolutionIndex]) .. " -> " .. resolutionString(nowResolution);
         end
 
         if upscale_increase_step == -1 then
-            local nowUpscale = get_Quality_method:call(UpscaleSetting);
-            nowUpscale = indexOf(UpscaleQuality, nowUpscale) - 1;
+            local nowUpscale = indexOf(UpscaleQuality, get_Quality_method:call(UpscaleSetting)) - 1;
             if upscale ~= nowUpscale then
                 set_Quality_method:call(UpscaleSetting, UpscaleQuality[upscale + 1]);
                 updateRequest_method:call(UpscaleSetting);
@@ -345,7 +340,7 @@ local function applyGraphicLevel()
         if msg ~= "" then
             autoAdjustReset();
             msg = "그래픽 강도: " .. tostring(graphicLevel)  .. getStageName(stage) .. ": " .. getEnvName(env) .. ":\n" .. msg;
-            sendMsg(msg);
+            Constants.addSystemLog(msg);
         end
     end
 end
@@ -481,17 +476,19 @@ for _, t in pairs({"app.cQuestCancel", "app.cQuestClear", "app.cQuestFailed", "a
                     end
                     local fps = questFrames / questDuration;
                     questFrames = 0;
-                    local GraphicsManager = Constants.get_Graphics_method:call(nil);
+                    if Constants.GraphicsManager == nil then
+                        Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
+                    end
                     local msg = string.format(
                         "%s %s 그래픽 강도: %d, FPS: %.2f\n해상도: %s\n업스케일: %d",
                         getStageName(stage),
                         getEnvName(env),
                         graphicLevel,
                         fps,
-                        resolutionString(getResolution_method:call(GraphicsManager)),
-                        getUpscaleName(get_Quality_method:call(get_UpscaleSetting_method:call(GraphicsManager)))
+                        resolutionString(getResolution_method:call(Constants.GraphicsManager)),
+                        getUpscaleName(get_Quality_method:call(get_UpscaleSetting_method:call(Constants.GraphicsManager)))
                     );
-                    sendMsg(msg);
+                    Constants.addSystemLog(msg);
                 end
             end
         end
@@ -540,7 +537,10 @@ re.on_draw_ui(function()
         if changed == true and requireSave ~= true then
             requireSave = true;
         end
-        local Option = get_Option_method:call(get_GUI_method:call(nil));
+        if Constants.GUIManager == nil then
+            Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+        end
+        local Option = get_Option_method:call(Constants.GUIManager);
         local resolutions = getResolutions_method:call(Option);
         local resolutionSettingValue = getValue_method:call(Option, Options.RESOLUTION_SETTING);
         local upscaleValue = getValue_method:call(Option, Options.UPSCALE_MODE);

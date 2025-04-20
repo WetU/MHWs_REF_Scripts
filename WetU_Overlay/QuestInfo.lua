@@ -74,22 +74,22 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
             questInfoTbl.QuestTime = questCurTime .. " / " .. questTimeLimit;
         end
 
-        if questInfoTbl.QuestInfoCreated ~= true then
+        if questInfoTbl.QuestInfoCreated == false then
             questInfoTbl.QuestInfoCreated = true;
         end
+    else
+        if questInfoTbl.QuestInfoCreated == true then
+            questInfoTbl.QuestInfoCreated = false;
+
+            questMaxDeath = nil;
+            questCurDeath = "0";
+            questTimeLimit = nil;
+            questCurTime = nil;
+
+            oldDeathCount = 0.0;
+            oldElapsedTime = nil;
+        end
     end
-end);
-
-sdk.hook(Constants.QuestDirector_type_def:get_method("questInfoClear(System.Boolean, System.Boolean)"), nil, function()
-    questInfoTbl.QuestInfoCreated = false;
-
-    questMaxDeath = nil;
-    questCurDeath = "0";
-    questTimeLimit = nil;
-    questCurTime = nil;
-
-    oldDeathCount = 0.0;
-    oldElapsedTime = nil;
 end);
 
 return questInfoTbl;

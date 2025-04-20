@@ -34,17 +34,20 @@ local isRallusStockMaxUpdated = false;
 
 local RallusTimer = nil;
 local RallusNum = nil;
-sdk.hook(FacilityManager_type_def:get_method("update"), Constants.getObject, function()
-    local FacilityManager = thread.get_hook_storage()["this"];
-    local FacilityPugee = get_Pugee_method:call(FacilityManager);
-    local FacilityRallus = get_Rallus_method:call(FacilityManager);
+sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
+    if Constants.FacilityManager == nil then
+        Constants.FacilityManager = sdk.to_managed_object(args[2]);
+    end
+end, function()
+    local FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
+    local FacilityRallus = get_Rallus_method:call(Constants.FacilityManager);
     local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
     local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
     local isUpdated = false;
 
     if isEnableCoolTimer_method:call(FacilityPugee) == false then
         stroke_method:call(FacilityPugee, true);
-        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "푸기 아이템 획득!");
+        Constants.addSystemLog("푸기 아이템 획득");
     end
 
     if isRallusStockMaxUpdated == false then
@@ -77,7 +80,7 @@ end, function()
     local Gm262 = thread.get_hook_storage()["this"];
     if Gm262 ~= nil then
         successButtonEvent_method:call(Gm262);
-        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "뜸부기 둥지 획득!");
+        Constants.addSystemLog("뜸부기 둥지 획득!");
     end
 end);
 

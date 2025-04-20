@@ -2,7 +2,7 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local get_IsMaster_method = nil;
+local get_IsMaster_method = Constants.HunterCharacter_type_def:get_method("get_IsMaster");
 
 local HunterMealEffect_type_def = sdk.find_type_definition("app.cHunterMealEffect");
 local get_DurationTimer_method = HunterMealEffect_type_def:get_method("get_DurationTimer");
@@ -16,11 +16,7 @@ local mealInfoTbl = {
 };
 
 sdk.hook(HunterMealEffect_type_def:get_method("update(System.Single, app.HunterCharacter)"), function(args)
-    local HunterCharacter = sdk.to_managed_object(args[4]);
-    if get_IsMaster_method == nil then
-        get_IsMaster_method = HunterCharacter.get_IsMaster;
-    end
-    if get_IsMaster_method:call(HunterCharacter) == true then
+    if get_IsMaster_method:call(sdk.to_managed_object(args[4])) == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()

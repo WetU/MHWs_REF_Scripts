@@ -3,9 +3,7 @@ local _G = _G;
 local sdk = _G.sdk;
 local thread = _G.thread;
 
-local GA_type_def = sdk.find_type_definition("app.GA");
-local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
-local get_Graphics_method = GA_type_def:get_method("get_Graphics"); -- static
+local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
 
 local Constants = {
     pairs = _G.pairs,
@@ -22,15 +20,12 @@ local Constants = {
     json = _G.json,
     imgui = _G.imgui,
 
-    GA_type_def = GA_type_def,
-    GraphicsManager_type_def = get_Graphics_method:get_return_type(),
+    CameraManager_type_def = sdk.find_type_definition("app.CameraManager"),
+    GraphicsManager_type_def = sdk.find_type_definition("app.GraphicsManager"),
+    GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
+    HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
-
-    get_Chat_method = get_Chat_method,
-    get_Graphics_method = get_Graphics_method,
-
-    addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
 
     FALSE_ptr = sdk.to_ptr(false),
 
@@ -38,5 +33,12 @@ local Constants = {
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 };
+
+function Constants.addSystemLog(msg)
+    if Constants.ChatManager == nil then
+        Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+    end
+    addSystemLog_method:call(Constants.ChatManager, msg);
+end
 
 return Constants;
