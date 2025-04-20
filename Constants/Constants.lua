@@ -36,9 +36,7 @@ local Constants = {
 
     getObject = function(args)
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-    end,
-
-    RallusSupplyNum = nil
+    end
 };
 
 return Constants;

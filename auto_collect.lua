@@ -42,9 +42,6 @@ local ItemWork_type_def = ItemFromMoriver_field:get_type();
 local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local Num_field = ItemWork_type_def:get_field("Num");
 
-local Gm262_type_def = sdk.find_type_definition("app.Gm262");
-local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
-
 local ItemID_type_def = get_ItemId_method:get_return_type();
 local ItemID = {
     NONE = ItemID_type_def:get_field("NONE"):get_data(nil),
@@ -61,7 +58,7 @@ local FacilityID_type_def = FacilityId_field:get_type();
 local FacilityID = {
     SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil),
     SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
-}
+};
 
 local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
@@ -125,13 +122,6 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
-    if Constants.RallusSupplyNum > 0 then
-        successButtonEvent_method:call(sdk.to_managed_object(args[2]));
-        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "뜸부기 둥지 획득!");
-    end
-end);
-
 sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, function()
     local FacilityMoriver = thread.get_hook_storage()["this"];
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
@@ -146,25 +136,25 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                     if FacilityId == FacilityID.SHARING then
                         getMoriverItems(MoriverInfo, completedMoriver);
                     elseif FacilityId == FacilityID.SWOP then
-                        local isSuccessSharing = true;
+                        local isSuccessSWOP = true;
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
-                        local giveItemId = get_ItemId_method:call(ItemFromPlayer);
-                        local giveNum = Num_field:get_data(ItemFromPlayer);
+                        local givingItemId = get_ItemId_method:call(ItemFromPlayer);
+                        local givingNum = Num_field:get_data(ItemFromPlayer);
                         local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                        if pouchNum >= giveNum then
-                            payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE.POUCH);
+                        if pouchNum >= givingNum then
+                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
                         else
-                            local boxNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.BOX);
-                            if (pouchNum + boxNum) >= giveNum then
-                                payItem_method:call(nil, giveItemId, pouchNum, STOCK_TYPE.POUCH);
-                                payItem_method:call(nil, giveItemId, giveNum - pouchNum, STOCK_TYPE.BOX);
-                            elseif boxNum >= giveNum then
-                                payItem_method:call(nil, giveItemId, giveNum, STOCK_TYPE.BOX);
+                            local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
+                            if (pouchNum + boxNum) >= givingNum then
+                                payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
+                                payItem_method:call(nil, givingItemId, givingNum - pouchNum, STOCK_TYPE.BOX);
+                            elseif boxNum >= givingNum then
+                                payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
                             else
-                                isSuccessSharing = false;
+                                isSuccessSWOP = false;
                             end
                         end
-                        if isSuccessSharing == true then
+                        if isSuccessSWOP == true then
                             getMoriverItems(MoriverInfo, completedMoriver);
                         end
                     end

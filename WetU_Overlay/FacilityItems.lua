@@ -1,5 +1,6 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
+local thread = Constants.thread;
 
 local math = Constants.math;
 local tostring = Constants.tostring;
@@ -23,14 +24,18 @@ local SettingData_field = FacilityRallus_type_def:get_field("_SettingData");
 
 local get_StockMax_method = SettingData_field:get_type():get_method("get_StockMax");
 
+local Gm262_type_def = sdk.find_type_definition("app.Gm262");
+local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent");
+
 local oldSupplyTimer = nil;
 
 local RallusStockMax = "5";
 local isRallusStockMaxUpdated = false;
 
 local RallusTimer = nil;
+local RallusNum = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), Constants.getObject, function()
-    local FacilityManager = Constants.thread.get_hook_storage()["this"];
+    local FacilityManager = thread.get_hook_storage()["this"];
     local FacilityPugee = get_Pugee_method:call(FacilityManager);
     local FacilityRallus = get_Rallus_method:call(FacilityManager);
     local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
@@ -54,13 +59,25 @@ sdk.hook(FacilityManager_type_def:get_method("update"), Constants.getObject, fun
         isUpdated = true;
     end
 
-    if SupplyNum ~= Constants.RallusSupplyNum then
-        Constants.RallusSupplyNum = SupplyNum;
+    if SupplyNum ~= RallusNum then
+        RallusNum = SupplyNum;
         isUpdated = true;
     end
 
-    if isUpdated == true and Constants.RallusSupplyNum ~= nil then
-        FacilityItems.Rallus = "뜸부기 둥지: " .. tostring(Constants.RallusSupplyNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
+    if isUpdated == true and RallusNum ~= nil then
+        FacilityItems.Rallus = "뜸부기 둥지: " .. tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
+    end
+end);
+
+sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
+    if RallusNum > 0 then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end
+end, function()
+    local Gm262 = thread.get_hook_storage()["this"];
+    if Gm262 ~= nil then
+        successButtonEvent_method:call(Gm262);
+        Constants.addSystemLog_method:call(Constants.get_Chat_method:call(nil), "뜸부기 둥지 획득!");
     end
 end);
 
