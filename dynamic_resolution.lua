@@ -7,12 +7,10 @@ local imgui = Constants.imgui;
 
 local pairs = Constants.pairs;
 local ipairs = Constants.ipairs;
-local string = Constants.string;
 local tostring = Constants.tostring;
 local table = Constants.table;
-local os = Constants.os;
 
-local getOptionValue_method = sdk.find_type_definition("app.OptionUtil"):get_method("getOptionValue(app.Option.ID)"); -- static
+local get_Fps_method = sdk.find_type_definition("via.dynamics.System"):get_method("get_Fps"); -- static
 
 local PorterUtil_type_def = sdk.find_type_definition("app.PorterUtil");
 local getCurrentEnvType_method = PorterUtil_type_def:get_method("getCurrentEnvType"); -- static
@@ -38,42 +36,6 @@ local Size_type_def = getResolution_method:get_return_type();
 local w_field = Size_type_def:get_field("w");
 local h_field = Size_type_def:get_field("h");
 
-local max_upscale_mode = 4;
-local stage = nil;
-local env = nil;
-local graphicLevel = 0;
-
-local autoAdjustDurationBegin = 0;
-local autoAdjustFrames = 0;
-local autoAdjustLastReduceTime = nil;
-
-local questFrames = 0;
-local questBeginTime = 0;
-
-local GraphicOptions = {
-    "업스케일",
-    "해상도"
-};
-
-local settings = {
-    enabled = true,
-    fps_message = false,
-    max_resolution = nil,
-    min_resolution = 0,
-    max_upscale_mode = max_upscale_mode,
-    min_upscale_mode = 0,
-    up_level_prefered_option = 1,
-    down_level_prefered_option = 1,
-    auto_adjust = true,
-    auto_adjust_fps_target = 30,
-    auto_adjust_fps_reduce_threshold = 3,
-    auto_adjust_fps_increase_threshold = 6,
-    auto_adjust_max_level = 3,
-    auto_adjust_reduce_duration = 5,
-    auto_adjust_increase_duration = 10,
-    auto_adjust_recover_interval = 100
-};
-
 local WindowMode_type_def = sdk.find_type_definition("via.render.WindowMode");
 local WindowModeOption = {
     [0] = WindowMode_type_def:get_field("Borderless"):get_data(nil),
@@ -89,16 +51,6 @@ local Options = {
 };
 
 local STAGE_type_def = getCurrentStageMasterPlayer_method:get_return_type();
-local stageNames = {
-    "경계의 모래 평원",
-    "주홍빛 숲",
-    "기름 솟는 계곡",
-    "빙무의 절벽",
-    "용도의 폐허",
-    "용곡의 터",
-    "용등의 사원",
-    "수련장"
-};
 local stages = {
     STAGE_type_def:get_field("ST101"):get_data(nil),
     STAGE_type_def:get_field("ST102"):get_data(nil),
@@ -109,6 +61,90 @@ local stages = {
     STAGE_type_def:get_field("ST403"):get_data(nil),
     STAGE_type_def:get_field("ST503"):get_data(nil),
     INVALID = STAGE_type_def:get_field("INVALID"):get_data(nil)
+};
+local stageNames = {
+    "경계의 모래 평원",
+    "주홍빛 숲",
+    "기름 솟는 계곡",
+    "빙무의 절벽",
+    "용도의 폐허",
+    "용곡의 터",
+    "용등의 사원",
+    "수련장"
+};
+
+local ENVIRONMENT_type_def = getCurrentEnvType_method:get_return_type();
+local environments = {
+    ENVIRONMENT_type_def:get_field("RUIN"):get_data(nil),
+    ENVIRONMENT_type_def:get_field("ABNORMAL"):get_data(nil),
+    ENVIRONMENT_type_def:get_field("FERTILITY"):get_data(nil),
+    INVALID = ENVIRONMENT_type_def:get_field("INVALID"):get_data(nil)
+};
+local environmentNames = {
+    "황폐기",
+    "이상 기변",
+    "풍요기"
+};
+
+local QUALITY_type_def = get_Quality_method:get_return_type();
+local UpscaleNames = {
+    "DLAA",
+    "품질 우선",
+    "균형",
+    "성능 우선",
+    "성능 최우선"
+};
+local UpscaleQuality = {
+    QUALITY_type_def:get_field("NativeAA"):get_data(nil),
+    QUALITY_type_def:get_field("Quality"):get_data(nil),
+    QUALITY_type_def:get_field("Balanced"):get_data(nil),
+    QUALITY_type_def:get_field("Performance"):get_data(nil),
+    QUALITY_type_def:get_field("UltraPerformance"):get_data(nil)
+};
+
+local settings = {
+    enabled = true,
+    max_resolution = nil,
+    min_resolution = 0,
+    max_upscale_mode = UpscaleQuality[2],
+    min_upscale_mode = 0,
+    up_level_prefered_option = 1,
+    down_level_prefered_option = 1,
+    auto_adjust = true,
+    auto_adjust_fps_target = 30,
+    auto_adjust_fps_reduce_threshold = 3,
+    auto_adjust_fps_increase_threshold = 6,
+    auto_adjust_max_level = 3,
+    auto_adjust_reduce_duration = 5,
+    auto_adjust_increase_duration = 10,
+    auto_adjust_recover_interval = 100
+};
+
+local function saveConfig() 
+    json.dump_file("dynamic_resolution.json", settings);
+end
+
+local loaded = json.load_file("dynamic_resolution.json");
+if loaded ~= nil then
+    for k, v in pairs(loaded) do
+        settings[k] = v;
+    end
+end
+local fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
+local fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
+
+local max_upscale_mode = UpscaleQuality[2];
+local stage = nil;
+local env = nil;
+local graphicLevel = 0;
+
+local autoAdjustDurationBegin = 0;
+local autoAdjustLastReduceTime = nil;
+local autoAdjustFpsTable = {};
+
+local GraphicOptions = {
+    "업스케일",
+    "해상도"
 };
 
 local function getStageName(stageNo)
@@ -128,21 +164,8 @@ local function getStageName(stageNo)
     return name;
 end
 
-local ENVIRONMENT_type_def = getCurrentEnvType_method:get_return_type();
-local environmentNames = {
-    "황폐기",
-    "이상 기변",
-    "풍요기"
-};
-local environments = {
-    ENVIRONMENT_type_def:get_field("RUIN"):get_data(nil),
-    ENVIRONMENT_type_def:get_field("ABNORMAL"):get_data(nil),
-    ENVIRONMENT_type_def:get_field("FERTILITY"):get_data(nil),
-    INVALID = ENVIRONMENT_type_def:get_field("INVALID"):get_data(nil)
-};
-
 local function getEnvName(envNo)
-    local name = "기본값";
+    local name = nil;
     for i, v in ipairs(environments) do
         if envNo == v then
             name = environmentNames[i];
@@ -150,22 +173,6 @@ local function getEnvName(envNo)
     end
     return name;
 end
-
-local QUALITY_type_def = get_Quality_method:get_return_type();
-local UpscaleNames = {
-    "DLAA",
-    "품질 우선",
-    "균형",
-    "성능 우선",
-    "성능 최우선"
-};
-local UpscaleQuality = {
-    QUALITY_type_def:get_field("NativeAA"):get_data(nil),
-    QUALITY_type_def:get_field("Quality"):get_data(nil),
-    QUALITY_type_def:get_field("Balanced"):get_data(nil),
-    QUALITY_type_def:get_field("Performance"):get_data(nil),
-    QUALITY_type_def:get_field("UltraPerformance"):get_data(nil)
-};
 
 local function getUpscaleName(mode)
     local name = nil;
@@ -176,20 +183,6 @@ local function getUpscaleName(mode)
     end
     return name;
 end
-
-local function saveConfig() 
-    json.dump_file("dynamic_resolution.json", settings);
-end
-
-local loaded = json.load_file("dynamic_resolution.json");
-if loaded ~= nil then
-    for k, v in pairs(loaded) do
-        settings[k] = v;
-    end
-end
-
-local fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
-local fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
 
 local function resolutionEqual(a, b)
     if a == nil or b == nil then
@@ -222,13 +215,8 @@ local function indexOf(t, a)
     return nil;
 end
 
-local function autoAdjustReset()
-    autoAdjustDurationBegin = 0;
-    autoAdjustFrames = 0;
-end
-
 local function resolutionString(r)
-    return string.format("%dx%d", w_field:get_data(r), h_field:get_data(r));
+    return Constants.string.format("%dx%d", w_field:get_data(r), h_field:get_data(r));
 end
 
 local function getStageDefaultGraphicLevel(stageNo)
@@ -285,68 +273,82 @@ local function caculateGraphicOptions(firstOri, secondOri, firstMin, firstMax, s
     return first, second;
 end
 
+local function autoAdjustReset()
+    autoAdjustDurationBegin = 0;
+    autoAdjustFpsTable = {};
+    autoAdjustLastReduceTime = nil;
+end
+
 local function applyGraphicLevel()
-    if settings.enabled == true then
-        if Constants.GraphicsManager == nil then
-            Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
-        end
-        local UpscaleSetting = get_UpscaleSetting_method:call(Constants.GraphicsManager);
-        local nowResolution = getResolution_method:call(Constants.GraphicsManager);
+    if Constants.GraphicsManager == nil then
+        Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
+    end
+    if Constants.GUIManager == nil then
+        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+    end
+    local UpscaleSetting = get_UpscaleSetting_method:call(Constants.GraphicsManager);
+    local nowResolution = getResolution_method:call(Constants.GraphicsManager);
+    local Option = get_Option_method:call(Constants.GUIManager);
 
-        local upscaleEnabled = get_IsEnableUpscaling_method:call(UpscaleSetting);
+    local upscaleEnabled = get_IsEnableUpscaling_method:call(UpscaleSetting);
 
-        if Constants.GUIManager == nil then
-            Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-        end
-        local Option = get_Option_method:call(Constants.GUIManager);
-        local resolutions = getResolutions_method:call(Option);
-        local oriResolution = getValue_method:call(Option, Options.RESOLUTION_SETTING);
-        local oriUpscaleMode = getValue_method:call(Option, Options.UPSCALE_MODE);
+    local resolutions = getResolutions_method:call(Option);
+    local oriResolution = getValue_method:call(Option, Options.RESOLUTION_SETTING);
+    local oriUpscaleMode = getValue_method:call(Option, Options.UPSCALE_MODE);
 
-        local resolution_max = settings.max_resolution or resolutions:get_size() - 1;
-        local upscale_increase_step = upscaleEnabled == false and 0 or -1;
-        local prefered_option = graphicLevel < 0 and settings.down_level_prefered_option or settings.up_level_prefered_option;
+    local resolution_max = settings.max_resolution or resolutions:get_size() - 1;
+    local upscale_increase_step = upscaleEnabled == false and 0 or -1;
+    local prefered_option = graphicLevel < 0 and settings.down_level_prefered_option or settings.up_level_prefered_option;
 
-        local prevResolutionIndex = resolutionIndexOf(resolutions, nowResolution);
-        local msg = "";
+    local prevResolutionIndex = resolutionIndexOf(resolutions, nowResolution);
+    local msg = "";
 
-        local upscale = oriUpscaleMode;
-        local resolution = oriResolution;
-        if prefered_option == 1 then
-            upscale, resolution = caculateGraphicOptions(oriUpscaleMode, oriResolution, settings.min_upscale_mode, settings.max_upscale_mode, settings.min_resolution, resolution_max, upscale_increase_step, 1);
-        else
-            resolution, upscale = caculateGraphicOptions(oriResolution, oriUpscaleMode, settings.min_resolution, resolution_max, settings.min_upscale_mode, settings.max_upscale_mode, 1, upscale_increase_step);
-        end
+    local upscale = oriUpscaleMode;
+    local resolution = oriResolution;
+    if prefered_option == 1 then
+        upscale, resolution = caculateGraphicOptions(oriUpscaleMode, oriResolution, settings.min_upscale_mode, settings.max_upscale_mode, settings.min_resolution, resolution_max, upscale_increase_step, 1);
+    else
+        resolution, upscale = caculateGraphicOptions(oriResolution, oriUpscaleMode, settings.min_resolution, resolution_max, settings.min_upscale_mode, settings.max_upscale_mode, 1, upscale_increase_step);
+    end
 
-        if resolution ~= prevResolutionIndex then
-            nowResolution:set_field("w", w_field:get_data(resolutions[resolution]));
-            nowResolution:set_field("h", h_field:get_data(resolutions[resolution]));
-            setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
-            msg = "해상도: " .. resolutionString(resolutions[prevResolutionIndex]) .. " -> " .. resolutionString(nowResolution);
-        end
+    if resolution ~= prevResolutionIndex then
+        nowResolution:set_field("w", w_field:get_data(resolutions[resolution]));
+        nowResolution:set_field("h", h_field:get_data(resolutions[resolution]));
+        setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
+        msg = "해상도: " .. resolutionString(resolutions[prevResolutionIndex]) .. " -> " .. resolutionString(nowResolution);
+    end
 
-        if upscale_increase_step == -1 then
-            local nowUpscale = indexOf(UpscaleQuality, get_Quality_method:call(UpscaleSetting)) - 1;
-            if upscale ~= nowUpscale then
-                set_Quality_method:call(UpscaleSetting, UpscaleQuality[upscale + 1]);
-                updateRequest_method:call(UpscaleSetting);
-                if msg ~= "" then
-                    msg = msg .. "\n";
-                end
-                msg = msg .. "업스케일: " .. getUpscaleName(UpscaleQuality[nowUpscale + 1]) .. " -> " .. getUpscaleName(UpscaleQuality[upscale + 1]);
+    if upscale_increase_step == -1 then
+        local nowUpscale = indexOf(UpscaleQuality, get_Quality_method:call(UpscaleSetting)) - 1;
+        if upscale ~= nowUpscale then
+            set_Quality_method:call(UpscaleSetting, UpscaleQuality[upscale + 1]);
+            updateRequest_method:call(UpscaleSetting);
+            if msg ~= "" then
+                msg = msg .. "\n";
             end
+            msg = msg .. "업스케일: " .. getUpscaleName(UpscaleQuality[nowUpscale + 1]) .. " -> " .. getUpscaleName(UpscaleQuality[upscale + 1]);
         end
-        if msg ~= "" then
-            autoAdjustReset();
-            msg = "그래픽 강도: " .. tostring(graphicLevel) .. ", " .. getStageName(stage) .. ": " .. getEnvName(env) .. "\n" .. msg;
-            Constants.addSystemLog(msg);
-        end
+    end
+    if msg ~= "" then
+        autoAdjustReset();
+        msg = "그래픽 강도: " .. tostring(graphicLevel) .. ", " .. getStageName(stage) .. ": " .. getEnvName(env) .. "\n" .. msg;
+        Constants.addSystemLog(msg);
     end
 end
 
 local function resetGraphics()
     graphicLevel = 0;
-    applyGraphicLevel();
+    if settings.enabled == true then
+        applyGraphicLevel();
+    end
+end
+
+local function getAvgFps()
+    local fps = 0;
+    for _, v in ipairs(autoAdjustFpsTable) do
+        fps = fps + v;
+    end
+    return fps / #autoAdjustFpsTable;
 end
 
 local function reduceGraphicLevel(nowTime)
@@ -363,13 +365,15 @@ local function reduceGraphicLevel(nowTime)
 end
 
 local function autoAdjust()
-    if settings.enabled == true and settings.auto_adjust == true and env ~= nil and env ~= environments.INVALID and stage ~= nil and stage ~= stages.INVALID then
-        local now = os.time();
-        if autoAdjustDurationBegin > 0 then
-            autoAdjustFrames = autoAdjustFrames + 1;
+    if env ~= nil and env ~= environments.INVALID and stage ~= nil and stage ~= stages.INVALID then
+        local now = Constants.os.time();
+        table.insert(autoAdjustFpsTable, get_Fps_method:call(nil));
+        if autoAdjustDurationBegin == 0 then
+            autoAdjustDurationBegin = now;
+        elseif autoAdjustDurationBegin > 0 then
             local duration = now - autoAdjustDurationBegin;
             if duration >= settings.auto_adjust_increase_duration then
-                local fps = getOptionValue_method:call(nil, Options.FRAME_GENERATION) == 0 and (autoAdjustFrames / duration) * 2 or autoAdjustFrames / duration;
+                local fps = getAvgFps();
                 if fps < fpsLowTrigger then
                     reduceGraphicLevel(now);
                 elseif fps > fpsHighTrigger then
@@ -385,15 +389,17 @@ local function autoAdjust()
                         end
                     end
                 end
+                if duration >= settings.auto_adjust_reduce_duration then
+                    autoAdjustDurationBegin = now;
+                end
             else
-                local fps = getOptionValue_method:call(nil, Options.FRAME_GENERATION) == 0 and (autoAdjustFrames / duration) * 2 or autoAdjustFrames / duration;
-                if duration >= settings.auto_adjust_reduce_duration and fps < fpsLowTrigger then
-                    reduceGraphicLevel(now);
+                if duration >= settings.auto_adjust_reduce_duration then
+                    if getAvgFps() < fpsLowTrigger then
+                        reduceGraphicLevel(now);
+                    end
                 end
             end
         end
-        autoAdjustDurationBegin = now;
-        autoAdjustFrames = 0;
     end
 end
 
@@ -427,6 +433,13 @@ end
 
 changeCondition(nil, nil);
 
+local function questPostHook(retval)
+    if settings.enabled == true then
+        autoAdjustLastReduceTime = nil;
+    end
+    return retval;
+end
+
 sdk.hook(sdk.find_type_definition("app.MasterFieldManager"):get_method("onChangedStage(app.FieldDef.STAGE)"), function(args)
     if settings.enabled == true then
         thread.get_hook_storage()["newStage"] = sdk.to_int64(args[3]) & 0xFFFFFFFF;
@@ -443,52 +456,8 @@ end, function()
     changeCondition(nil, thread.get_hook_storage()["env"]);
 end);
 
-sdk.hook(sdk.find_type_definition("app.cQuestPlaying"):get_method("enter"), nil, function(retval)
-    if settings.enabled == true then
-        autoAdjustLastReduceTime = nil;
-        if settings.fps_message == true then
-            questFrames = 0;
-            questBeginTime = os.time();
-        end
-    end
-    return retval;
-end);
-
-for _, t in pairs({"app.cQuestCancel", "app.cQuestClear", "app.cQuestFailed", "app.cQuestResult", "app.cQuestReward"}) do
-    sdk.hook(sdk.find_type_definition(t):get_method("enter"), nil, function(retval)
-        if settings.enabled == true then
-            autoAdjustLastReduceTime = nil;
-            if settings.fps_message == true and questFrames > 0 and questBeginTime > 0 then
-                local questEndTime = os.time();
-                local questDuration = questEndTime - questBeginTime;
-                questBeginTime = 0;
-                if questDuration <= 0 then
-                    questFrames = 0;
-                else
-                    local frameGen = getOptionValue_method:call(nil, Options.FRAME_GENERATION) == 0;
-                    if frameGen == true then
-                        questFrames = questFrames * 2;
-                    end
-                    local fps = questFrames / questDuration;
-                    questFrames = 0;
-                    if Constants.GraphicsManager == nil then
-                        Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
-                    end
-                    local msg = string.format(
-                        "%s %s 그래픽 강도: %d, FPS: %.2f\n해상도: %s\n업스케일: %d",
-                        getStageName(stage),
-                        getEnvName(env),
-                        graphicLevel,
-                        fps,
-                        resolutionString(getResolution_method:call(Constants.GraphicsManager)),
-                        getUpscaleName(get_Quality_method:call(get_UpscaleSetting_method:call(Constants.GraphicsManager)))
-                    );
-                    Constants.addSystemLog(msg);
-                end
-            end
-        end
-        return retval;
-    end);
+for _, t in pairs({"app.cQuestPlaying", "app.cQuestCancel", "app.cQuestClear", "app.cQuestFailed", "app.cQuestResult", "app.cQuestReward"}) do
+    sdk.hook(sdk.find_type_definition(t):get_method("enter"), nil, questPostHook);
 end
 
 re.on_config_save(saveConfig);
@@ -500,13 +469,8 @@ re.on_script_reset(function()
 end);
 
 re.on_frame(function()
-    if settings.enabled == true then
-        if settings.fps_message == true and questBeginTime > 0 then
-            questFrames = questFrames + 1;
-        end
-        if settings.auto_adjust == true then
-            autoAdjust();
-        end
+    if settings.enabled == true and settings.auto_adjust == true then
+        autoAdjust();
     end
 end);
 
@@ -525,10 +489,6 @@ re.on_draw_ui(function()
             changeCondition(nil, nil);
         end
         if settings.enabled == true then
-            changed, settings.fps_message = imgui.checkbox("퀘스트 종료 시 평균 FPS 보고", settings.fps_message);
-            if changed == true and requireSave ~= true then
-                requireSave = true;
-            end
             if Constants.GUIManager == nil then
                 Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
             end
@@ -596,63 +556,61 @@ re.on_draw_ui(function()
                 end
                 autoAdjustReset();
             end
-            if settings.auto_adjust == true then
-                if imgui.tree_node("자동 조정 설정") == true then
-                    changed, settings.auto_adjust_fps_target = imgui.slider_int("목표 FPS", settings.auto_adjust_fps_target, 30, 144);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
-                        fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_fps_reduce_threshold = imgui.slider_int("FPS 하락 한계치", settings.auto_adjust_fps_reduce_threshold, 1, 20);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_fps_increase_threshold = imgui.slider_int("FPS 초과 한계치", settings.auto_adjust_fps_increase_threshold, 0, 20);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_reduce_duration = imgui.slider_int("하락 인터벌", settings.auto_adjust_reduce_duration, 1, 15);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        if settings.auto_adjust_reduce_duration > settings.auto_adjust_increase_duration then
-                            settings.auto_adjust_increase_duration = settings.auto_adjust_reduce_duration;
-                        end
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_increase_duration = imgui.slider_int("초과 인터벌", settings.auto_adjust_increase_duration, settings.auto_adjust_reduce_duration, 30);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_max_level = imgui.slider_int("최대 조정 강도", settings.auto_adjust_max_level, 1, 5);
-                    if changed == true then
-                        if requireSave ~= true then
-                            requireSave = true;
-                        end
-                        autoAdjustReset();
-                    end
-                    changed, settings.auto_adjust_recover_interval = imgui.slider_int("Recover Interval", settings.auto_adjust_recover_interval, settings.auto_adjust_increase_duration, 300);
-                    if changed == true and requireSave ~= true then
+            if settings.auto_adjust == true and imgui.tree_node("자동 조정 설정") == true then
+                changed, settings.auto_adjust_fps_target = imgui.slider_int("목표 FPS", settings.auto_adjust_fps_target, 30, 144);
+                if changed == true then
+                    if requireSave ~= true then
                         requireSave = true;
                     end
-                    imgui.tree_pop();
+                    fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
+                    fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
+                    autoAdjustReset();
                 end
+                changed, settings.auto_adjust_fps_reduce_threshold = imgui.slider_int("FPS 하락 한계치", settings.auto_adjust_fps_reduce_threshold, 1, 20);
+                if changed == true then
+                    if requireSave ~= true then
+                        requireSave = true;
+                    end
+                    fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
+                    autoAdjustReset();
+                end
+                changed, settings.auto_adjust_fps_increase_threshold = imgui.slider_int("FPS 초과 한계치", settings.auto_adjust_fps_increase_threshold, 0, 20);
+                if changed == true then
+                    if requireSave ~= true then
+                        requireSave = true;
+                    end
+                    fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
+                    autoAdjustReset();
+                end
+                changed, settings.auto_adjust_reduce_duration = imgui.slider_int("하락 인터벌", settings.auto_adjust_reduce_duration, 1, 15);
+                if changed == true then
+                    if requireSave ~= true then
+                        requireSave = true;
+                    end
+                    if settings.auto_adjust_reduce_duration > settings.auto_adjust_increase_duration then
+                        settings.auto_adjust_increase_duration = settings.auto_adjust_reduce_duration;
+                    end
+                    autoAdjustReset();
+                end
+                changed, settings.auto_adjust_increase_duration = imgui.slider_int("초과 인터벌", settings.auto_adjust_increase_duration, settings.auto_adjust_reduce_duration, 30);
+                if changed == true then
+                    if requireSave ~= true then
+                        requireSave = true;
+                    end
+                    autoAdjustReset();
+                end
+                changed, settings.auto_adjust_max_level = imgui.slider_int("최대 조정 강도", settings.auto_adjust_max_level, 1, 5);
+                if changed == true then
+                    if requireSave ~= true then
+                        requireSave = true;
+                    end
+                    autoAdjustReset();
+                end
+                changed, settings.auto_adjust_recover_interval = imgui.slider_int("Recover Interval", settings.auto_adjust_recover_interval, settings.auto_adjust_increase_duration, 300);
+                if changed == true and requireSave ~= true then
+                    requireSave = true;
+                end
+                imgui.tree_pop();
             end
             if imgui.tree_node("상세 설정") == true then
                 if settings.max_resolution ~= nil then

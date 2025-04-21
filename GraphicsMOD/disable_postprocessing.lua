@@ -5,25 +5,14 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local get_PrimaryCamera_method = sdk.find_type_definition("ace.CameraUtil"):get_method("get_PrimaryCamera"); -- static
-local get_GameObject_method = get_PrimaryCamera_method:get_return_type():get_method("get_GameObject");
-local getComponent_method = get_GameObject_method:get_return_type():get_method("getComponent(System.Type)");
-
-local ToneMapping_type_def = sdk.find_type_definition("via.render.ToneMapping");
-local ToneMapping_runtime_type = ToneMapping_type_def:get_runtime_type();
-local setTemporalAA_method = ToneMapping_type_def:get_method("setTemporalAA(via.render.ToneMapping.TemporalAA)");
-local set_EchoEnabled_method = ToneMapping_type_def:get_method("set_EchoEnabled(System.Boolean)");
-local set_EnableLocalExposure_method = ToneMapping_type_def:get_method("set_EnableLocalExposure(System.Boolean)");
-local setLocalExposureType_method = ToneMapping_type_def:get_method("setLocalExposureType(via.render.ToneMapping.LocalExposureType)");
-local set_Contrast_method = ToneMapping_type_def:get_method("set_Contrast(System.Single)");
-
 local get_LDRPostProcess_method = nil;
 local get_ColorCorrect_method = nil;
-local ColorCorrect_set_Enabled_method = nil;
+local set_Enabled_method = nil;
 
 local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
 local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
 local setGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
+local ToneMapping_field = Constants.GraphicsManager_type_def:get_field("_ToneMapping");
 
 local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
 local set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");
@@ -43,6 +32,13 @@ local set_FilmGrain_Enable_method = GraphicsSetting_type_def:get_method("set_Fil
 local set_LensFlare_Enable_method = GraphicsSetting_type_def:get_method("set_LensFlare_Enable(System.Boolean)");
 local set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay_Enable(System.Boolean)");
 local set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
+
+local ToneMapping_type_def = ToneMapping_field:get_type();
+local setTemporalAA_method = ToneMapping_type_def:get_method("setTemporalAA(via.render.ToneMapping.TemporalAA)");
+local set_EchoEnabled_method = ToneMapping_type_def:get_method("set_EchoEnabled(System.Boolean)");
+local set_EnableLocalExposure_method = ToneMapping_type_def:get_method("set_EnableLocalExposure(System.Boolean)");
+local setLocalExposureType_method = ToneMapping_type_def:get_method("setLocalExposureType(via.render.ToneMapping.LocalExposureType)");
+local set_Contrast_method = ToneMapping_type_def:get_method("set_Contrast(System.Single)");
 
 local TemporalAA_type_def = sdk.find_type_definition("via.render.ToneMapping.TemporalAA");
 local TemporalAA = {
@@ -88,7 +84,6 @@ local settings = {
     upperLimitOverlay = 1.0
 };
 
-local apply = false;
 local changeBrightness = false;
 
 local function SaveSettings()
@@ -105,27 +100,21 @@ local function LoadSettings(setting)
     end
 end
 
-LoadSettings();
+LoadSettings(nil);
 
 DisablePP.ApplySettings = function()
-    local PrimaryCamera = get_PrimaryCamera_method:call(nil);
-    if PrimaryCamera ~= nil then
-        local GameObject = get_GameObject_method:call(PrimaryCamera);
-        if GameObject ~= nil then
-            local ToneMapping = getComponent_method:call(GameObject, ToneMapping_runtime_type);
-            if ToneMapping ~= nil then
-                setTemporalAA_method:call(ToneMapping, settings.TAA == true and TemporalAA.Strong or TemporalAA.Disable);
-                set_EchoEnabled_method:call(ToneMapping, settings.jitter);
-                set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
-                setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and LocalExposureType.BlurredLuminance or LocalExposureType.Legacy);
-                set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
-            end
-        end
-    end
-
     if Constants.GraphicsManager == nil then
         Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
     end
+    local ToneMapping = ToneMapping_field:get_data(Constants.GraphicsManager);
+    if ToneMapping ~= nil then
+        setTemporalAA_method:call(ToneMapping, settings.TAA == true and TemporalAA.Strong or TemporalAA.Disable);
+        set_EchoEnabled_method:call(ToneMapping, settings.jitter);
+        set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
+        setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and LocalExposureType.BlurredLuminance or LocalExposureType.Legacy);
+        set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
+    end
+
     local DisplaySettings = get_DisplaySettings_method:call(Constants.GraphicsManager);
     if DisplaySettings ~= nil then
         set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
@@ -151,9 +140,7 @@ DisablePP.ApplySettings = function()
         set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
         set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
         set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
-        if apply == true then
-            setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
-        end
+        setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
     end
 end
 
@@ -172,14 +159,14 @@ re.on_application_entry("LockScene", function()
         if get_LDRPostProcess_method == nil then
             get_LDRPostProcess_method = Constants.AppEffectManager.get_LDRPostProcess;
             get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
-            ColorCorrect_set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
+            set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
         end
         local LDRPostProcess = get_LDRPostProcess_method:call(Constants.AppEffectManager);
         if LDRPostProcess ~= nil then
             ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
         end
     end
-    ColorCorrect_set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
+    set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
 end);
 
 re.on_config_save(SaveSettings);
@@ -199,7 +186,7 @@ re.on_draw_ui(function()
         end
         imgui.same_line();
         if imgui.small_button("Load saved settings") == true then
-            LoadSettings();
+            LoadSettings(nil);
             DisablePP.ApplySettings();
         end
         imgui.pop_style_color(1);
@@ -293,7 +280,6 @@ re.on_draw_ui(function()
         imgui.push_style_color(21, 0xFF030380);
         if imgui.small_button("Apply graphics settings") == true then
             DisablePP.ApplySettings();
-            apply = false;
         end
         imgui.pop_style_color(1);
         changed, settings.lensDistortionEnable = imgui.checkbox("Lens distortion", settings.lensDistortionEnable);

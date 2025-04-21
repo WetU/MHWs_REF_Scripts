@@ -7,7 +7,7 @@ local imgui = Constants.imgui;
 local get_WindBase_method = sdk.find_type_definition("app.GA"):get_method("get_WindBase"); -- static
 
 local get_DPGIComponent_method = nil;
-local DPGI_set_Enabled_method = nil;
+local set_Enabled_method = nil;
 
 local LiteEnvironment = {};
 
@@ -32,7 +32,9 @@ local function apply_ws_setting()
     if WindBase == nil then
         WindBase = get_WindBase_method:call(nil);
     end
-    WindBase:set_field("_Stop", settings.disable_wind_simulation);
+    if WindBase ~= nil then
+        WindBase:set_field("_Stop", settings.disable_wind_simulation);
+    end
 end
 
 LiteEnvironment.apply_gi_setting = function()
@@ -41,11 +43,11 @@ LiteEnvironment.apply_gi_setting = function()
     end
     if get_DPGIComponent_method == nil then
         get_DPGIComponent_method = Constants.EnvironmentManager.get_DPGIComponent;
-        DPGI_set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
+        set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
     end
     local DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
     if DPGIComponent ~= nil then
-        DPGI_set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
+        set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
     end
 end
 
