@@ -66,13 +66,14 @@ re.on_draw_ui(function()
             imgui.set_tooltip("Medium performance improvement.\n\nHighly deteriorate the visual quality.");
         end
         imgui.tree_pop();
-        if ws_changed == true then
+        if ws_changed == true or gi_changed == true then
             SaveSettings();
-            apply_ws_setting();
-        end
-        if gi_changed == true then
-            SaveSettings();
-            LiteEnvironment.apply_gi_setting();
+            if ws_changed == true then
+                apply_ws_setting();
+            end
+            if gi_changed == true then
+                LiteEnvironment.apply_gi_setting();
+            end
         end
     end
 end);

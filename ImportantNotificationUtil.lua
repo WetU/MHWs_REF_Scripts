@@ -35,24 +35,25 @@ sdk.hook(Constants.GUIManager_type_def:get_method("updatePlCommandMask"), functi
             Constants.GUIManager = sdk.to_managed_object(args[2]);
         end
     else
-        GUI020100 = nil;
+        if GUI020100 ~= nil then
+            GUI020100 = nil;
+        end
     end
 end, function()
     if config.enabled == true and get_IsJustTimingShortcutWaiting_method:call(Constants.GUIManager) == true then
         if GUI020100 == nil then
             GUI020100 = GUIs_field:get_data(get_GUI020100Accessor_method:call(Constants.GUIManager)):get_element(0);
-        else
-            local FixPanelType = get_FixPanelType_method:call(GUI020100);
-            if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
-                if Constants.PlayerManager == nil then
-                    Constants.PlayerManager = sdk.get_managed_singleton("app.PlayerManager");
-                end
-                if getMasterPlayer_method == nil then
-                    getMasterPlayer_method = Constants.PlayerManager.getMasterPlayer;
-                    get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
-                end
-                off_method:call(HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(Constants.PlayerManager))), 200);
+        end
+        local FixPanelType = get_FixPanelType_method:call(GUI020100);
+        if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
+            if Constants.PlayerManager == nil then
+                Constants.PlayerManager = sdk.get_managed_singleton("app.PlayerManager");
             end
+            if getMasterPlayer_method == nil then
+                getMasterPlayer_method = Constants.PlayerManager.getMasterPlayer;
+                get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
+            end
+            off_method:call(HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(Constants.PlayerManager))), 200);
         end
     end
 end);

@@ -67,7 +67,6 @@ local DisablePP = {};
 local settings = {
     TAA = false,
     jitter = false,
-    LDRPostProcessEnable = true,
     colorCorrect = true,
     lensDistortionEnable = false,
     localExposure = true,

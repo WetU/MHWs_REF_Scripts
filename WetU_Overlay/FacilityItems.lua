@@ -47,7 +47,7 @@ end, function()
 
     if isEnableCoolTimer_method:call(FacilityPugee) == false then
         stroke_method:call(FacilityPugee, true);
-        Constants.addSystemLog("푸기 아이템 획득");
+        Constants.addSystemLog("푸기 아이템 획득!");
     end
 
     if isRallusStockMaxUpdated == false then
