@@ -25,9 +25,9 @@ local questCurDeath = "0";
 local questTimeLimit = nil;
 local questCurTime = nil;
 
-local questInfoTbl = {
+local QuestInfo = {
     QuestInfoCreated = false,
-    QuestTime = nil,
+    QuestTimer = nil,
     DeathCount = nil
 };
 
@@ -41,8 +41,6 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
             local ActiveQuestData = get_QuestData_method:call(QuestDirector);
             if getTimeLimit_method == nil then
                 getTimeLimit_method = ActiveQuestData.getTimeLimit;
-            end
-            if getQuestLife_method == nil then
                 getQuestLife_method = ActiveQuestData.getQuestLife;
             end
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
@@ -68,18 +66,18 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
         end
 
         if deathUpdated == true then
-            questInfoTbl.DeathCount = "다운 횟수: " .. questCurDeath .. " / " .. questMaxDeath;
+            QuestInfo.DeathCount = "다운 횟수: " .. questCurDeath .. " / " .. questMaxDeath;
         end
         if timeUpdated == true then
-            questInfoTbl.QuestTime = questCurTime .. " / " .. questTimeLimit;
+            QuestInfo.QuestTimer = questCurTime .. " / " .. questTimeLimit;
         end
 
-        if questInfoTbl.QuestInfoCreated == false then
-            questInfoTbl.QuestInfoCreated = true;
+        if QuestInfo.QuestInfoCreated == false then
+            QuestInfo.QuestInfoCreated = true;
         end
     else
-        if questInfoTbl.QuestInfoCreated == true then
-            questInfoTbl.QuestInfoCreated = false;
+        if QuestInfo.QuestInfoCreated == true then
+            QuestInfo.QuestInfoCreated = false;
 
             questMaxDeath = nil;
             questCurDeath = "0";
@@ -92,4 +90,4 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
     end
 end);
 
-return questInfoTbl;
+return QuestInfo;

@@ -12,9 +12,7 @@ local table = Constants.table;
 
 local get_Fps_method = sdk.find_type_definition("via.dynamics.System"):get_method("get_Fps"); -- static
 
-local PorterUtil_type_def = sdk.find_type_definition("app.PorterUtil");
-local getCurrentEnvType_method = PorterUtil_type_def:get_method("getCurrentEnvType"); -- static
-local getCurrentStageMasterPlayer_method = PorterUtil_type_def:get_method("getCurrentStageMasterPlayer"); -- static
+local getCurrentEnvType_method = Constants.PorterUtil_type_def:get_method("getCurrentEnvType"); -- static
 
 local get_Option_method = Constants.GUIManager_type_def:get_method("get_Option");
 
@@ -50,18 +48,6 @@ local Options = {
     UPSCALE_MODE = OptionID_type_def:get_field("UPSCALE_MODE"):get_data(nil)
 };
 
-local STAGE_type_def = getCurrentStageMasterPlayer_method:get_return_type();
-local stages = {
-    STAGE_type_def:get_field("ST101"):get_data(nil),
-    STAGE_type_def:get_field("ST102"):get_data(nil),
-    STAGE_type_def:get_field("ST103"):get_data(nil),
-    STAGE_type_def:get_field("ST104"):get_data(nil),
-    STAGE_type_def:get_field("ST105"):get_data(nil),
-    STAGE_type_def:get_field("ST401"):get_data(nil),
-    STAGE_type_def:get_field("ST403"):get_data(nil),
-    STAGE_type_def:get_field("ST503"):get_data(nil),
-    INVALID = STAGE_type_def:get_field("INVALID"):get_data(nil)
-};
 local stageNames = {
     "경계의 모래 평원",
     "주홍빛 숲",
@@ -147,7 +133,7 @@ local GraphicOptions = {
 
 local function getStageName(stageNo)
     local name = nil;
-    for i, v in ipairs(stages) do
+    for i, v in ipairs(Constants.Stages) do
         if v == stageNo then
             name = stageNames[i];
             break;
@@ -155,7 +141,7 @@ local function getStageName(stageNo)
     end
     if name == nil then
         name = tostring(stageNo);
-        if stageNo ~= stages.INVALID then
+        if stageNo ~= Constants.Stages.INVALID then
             Constants.addSystemLog("알 수 없는 지역: " .. name);
         end
     end
@@ -340,7 +326,7 @@ local function reduceGraphicLevel(nowTime)
 end
 
 local function autoAdjust()
-    if env ~= nil and env ~= environments.INVALID and stage ~= nil and stage ~= stages.INVALID then
+    if env ~= nil and env ~= environments.INVALID and stage ~= nil and stage ~= Constants.Stages.INVALID then
         local now = Constants.os.time();
         table.insert(autoAdjustFpsTable, get_Fps_method:call(nil));
         if autoAdjustDurationBegin == 0 then
@@ -380,10 +366,10 @@ end
 
 local function changeCondition(stageNo, envNo)
     if settings.enabled == true then
-        local newStage = stageNo or getCurrentStageMasterPlayer_method:call(nil);
+        local newStage = stageNo or Constants.curStage or Constants.getCurrentStageMasterPlayer();
         local newEnv = envNo or getCurrentEnvType_method:call(nil);
         local isUpdateRequired = false;
-        if newStage ~= nil and newStage ~= stages.INVALID and (stage == nil or newStage ~= stage) then
+        if newStage ~= nil and newStage ~= Constants.Stages.INVALID and (stage == nil or newStage ~= stage) then
             stage = newStage;
             if isUpdateRequired == false then
                 isUpdateRequired = true;
@@ -416,19 +402,14 @@ local function questPostHook(retval)
 end
 
 sdk.hook(sdk.find_type_definition("app.MasterFieldManager"):get_method("onChangedStage(app.FieldDef.STAGE)"), function(args)
-    if settings.enabled == true then
-        thread.get_hook_storage()["newStage"] = sdk.to_int64(args[3]) & 0xFFFFFFFF;
-    end
-end, function()
-    changeCondition(thread.get_hook_storage()["newStage"], nil);
+    Constants.curStage = sdk.to_int64(args[3]) & 0xFFFFFFFF;
+    changeCondition(Constants.curStage, nil);
 end);
 
 sdk.hook(sdk.find_type_definition("app.EnemyManager"):get_method("onChangedEnvironment(app.FieldDef.STAGE, app.EnvironmentType.ENVIRONMENT, app.EnvironmentType.ENVIRONMENT)"), function(args)
     if settings.enabled == true then
-        thread.get_hook_storage()["env"] = sdk.to_int64(args[5]) & 0xFFFFFFFF;
+        changeCondition(nil, sdk.to_int64(args[5]) & 0xFFFFFFFF);
     end
-end, function()
-    changeCondition(nil, thread.get_hook_storage()["env"]);
 end);
 
 for _, t in pairs({"app.cQuestPlaying", "app.cQuestCancel", "app.cQuestClear", "app.cQuestFailed", "app.cQuestResult", "app.cQuestReward"}) do
@@ -482,7 +463,7 @@ re.on_draw_ui(function()
                 uiCurrentEnvIdx = 0;
             end
             _, uiCurrentEnvIdx = imgui.combo("환경", uiCurrentEnvIdx, environmentNames);
-            local selectedStage = stages[uiCurrentStageIdx];
+            local selectedStage = Constants.Stages[uiCurrentStageIdx];
             local selectedEnv = environments[uiCurrentEnvIdx];
             if selectedStage ~= nil and selectedEnv ~= nil then
                 local graphicLevel = calculateGraphicLevel(selectedStage, selectedEnv);
