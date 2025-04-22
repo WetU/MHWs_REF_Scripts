@@ -110,12 +110,10 @@ end
 
 sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
     getFacilityItems(thread.get_hook_storage()["this"], 1);
-    Constants.addSystemLog("소재 채집 의뢰 획득!");
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
     getFacilityItems(thread.get_hook_storage()["this"], 2);
-    Constants.addSystemLog("축제 기념 선물 획득!");
 end);
 
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject, function()
@@ -163,7 +161,6 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
             for _, completed in Constants.ipairs(completedMoriver) do
                 executedSharing_method:call(FacilityMoriver, completed);
             end
-            Constants.addSystemLog("모리바 아이템 획득!");
         end
     end
 end);

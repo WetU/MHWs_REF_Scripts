@@ -87,27 +87,25 @@ local environmentNames = {
 };
 
 local QUALITY_type_def = get_Quality_method:get_return_type();
-local UpscaleNames = {
-    "DLAA",
-    "품질 우선",
-    "균형",
-    "성능 우선",
-    "성능 최우선"
-};
 local UpscaleQuality = {
-    QUALITY_type_def:get_field("NativeAA"):get_data(nil),
     QUALITY_type_def:get_field("Quality"):get_data(nil),
     QUALITY_type_def:get_field("Balanced"):get_data(nil),
     QUALITY_type_def:get_field("Performance"):get_data(nil),
     QUALITY_type_def:get_field("UltraPerformance"):get_data(nil)
+};
+local UpscaleNames = {
+    "품질 우선",
+    "균형",
+    "성능 우선",
+    "성능 최우선"
 };
 
 local settings = {
     enabled = true,
     max_resolution = nil,
     min_resolution = 0,
-    max_upscale_mode = UpscaleQuality[2],
-    min_upscale_mode = 0,
+    max_upscale_mode = UpscaleQuality[1],
+    min_upscale_mode = UpscaleQuality[4],
     up_level_prefered_option = 1,
     down_level_prefered_option = 1,
     auto_adjust = true,
@@ -133,7 +131,7 @@ end
 local fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
 local fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
 
-local max_upscale_mode = UpscaleQuality[2];
+local max_upscale_mode = UpscaleQuality[1];
 local stage = nil;
 local env = nil;
 local graphicLevel = 0;
@@ -165,51 +163,42 @@ local function getStageName(stageNo)
 end
 
 local function getEnvName(envNo)
-    local name = nil;
     for i, v in ipairs(environments) do
         if envNo == v then
-            name = environmentNames[i];
+            return environmentNames[i];
         end
     end
-    return name;
+    return nil;
 end
 
 local function getUpscaleName(mode)
-    local name = nil;
     for i, v in ipairs(UpscaleQuality) do
         if mode == v then
-            name = UpscaleNames[i];
+            return UpscaleNames[i];
         end
     end
-    return name;
+    return nil;
 end
 
 local function resolutionEqual(a, b)
-    if a == nil or b == nil then
-        return false;
-    end
-    if a == b or (w_field:get_data(a) == w_field:get_data(b) and h_field:get_data(a) == h_field:get_data(b)) then
-        return true;
-    end
-    return false;
+    return a ~= nil and b ~= nil and (a == b or (w_field:get_data(a) == w_field:get_data(b) and h_field:get_data(a) == h_field:get_data(b)));
 end
 
 local function resolutionIndexOf(rs, r)
-    if rs == nil or r == nil then
-        return nil;
-    end
-    for k, v in pairs(rs) do
-        if resolutionEqual(v, r) == true then
-            return k;
+    if rs ~= nil and r ~= nil then
+        for k, v in pairs(rs) do
+            if resolutionEqual(v, r) == true then
+                return k;
+            end
         end
     end
     return nil;
 end
 
 local function indexOf(t, a)
-    for k, v in pairs(t) do
+    for i, v in ipairs(t) do
         if v == a then
-            return k;
+            return i;
         end
     end
     return nil;
@@ -219,27 +208,15 @@ local function resolutionString(r)
     return Constants.string.format("%dx%d", w_field:get_data(r), h_field:get_data(r));
 end
 
-local function getStageDefaultGraphicLevel(stageNo)
+local function calculateGraphicLevel(stageNo, envNo)
     if settings.items ~= nil then
         for _, item in pairs(settings.items) do
-            if item.matcher ~= nil and item.matcher.stage == stageNo and (item.matcher.env == nil or item.matcher.env == environments.INVALID) then
+            if item.matcher ~= nil and item.matcher.stage == stageNo and item.matcher.env == envNo then
                 return item.level;
             end
         end
     end
     return 0;
-end
-
-local function calculateGraphicLevel(stageNo, envNo)
-    if settings.items == nil then
-        return 0;
-    end
-    for _, item in pairs(settings.items) do
-        if item.matcher ~= nil and item.matcher.stage == stageNo and item.matcher.env == envNo then
-            return item.level;
-        end
-    end
-    return getStageDefaultGraphicLevel(stageNo);
 end
 
 local function caculateGraphicOptions(firstOri, secondOri, firstMin, firstMax, secondMin, secondMax, firstIncreaseStep, secondIncreaseStep)
@@ -290,14 +267,12 @@ local function applyGraphicLevel()
     local nowResolution = getResolution_method:call(Constants.GraphicsManager);
     local Option = get_Option_method:call(Constants.GUIManager);
 
-    local upscaleEnabled = get_IsEnableUpscaling_method:call(UpscaleSetting);
-
     local resolutions = getResolutions_method:call(Option);
     local oriResolution = getValue_method:call(Option, Options.RESOLUTION_SETTING);
     local oriUpscaleMode = getValue_method:call(Option, Options.UPSCALE_MODE);
 
     local resolution_max = settings.max_resolution or resolutions:get_size() - 1;
-    local upscale_increase_step = upscaleEnabled == false and 0 or -1;
+    local upscale_increase_step = get_IsEnableUpscaling_method:call(UpscaleSetting) == true and -1 or 0;
     local prefered_option = graphicLevel < 0 and settings.down_level_prefered_option or settings.up_level_prefered_option;
 
     local prevResolutionIndex = resolutionIndexOf(resolutions, nowResolution);
@@ -310,23 +285,23 @@ local function applyGraphicLevel()
     else
         resolution, upscale = caculateGraphicOptions(oriResolution, oriUpscaleMode, settings.min_resolution, resolution_max, settings.min_upscale_mode, settings.max_upscale_mode, 1, upscale_increase_step);
     end
-
     if resolution ~= prevResolutionIndex then
-        nowResolution:set_field("w", w_field:get_data(resolutions[resolution]));
-        nowResolution:set_field("h", h_field:get_data(resolutions[resolution]));
+        local newResolution = resolutions[resolution];
+        nowResolution:set_field("w", w_field:get_data(newResolution));
+        nowResolution:set_field("h", h_field:get_data(newResolution));
         setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
         msg = "해상도: " .. resolutionString(resolutions[prevResolutionIndex]) .. " -> " .. resolutionString(nowResolution);
     end
-
     if upscale_increase_step == -1 then
-        local nowUpscale = indexOf(UpscaleQuality, get_Quality_method:call(UpscaleSetting)) - 1;
+        local nowUpscale = indexOf(UpscaleQuality, get_Quality_method:call(UpscaleSetting));
         if upscale ~= nowUpscale then
-            set_Quality_method:call(UpscaleSetting, UpscaleQuality[upscale + 1]);
+            local newUpscale = UpscaleQuality[upscale];
+            set_Quality_method:call(UpscaleSetting, newUpscale);
             updateRequest_method:call(UpscaleSetting);
             if msg ~= "" then
                 msg = msg .. "\n";
             end
-            msg = msg .. "업스케일: " .. getUpscaleName(UpscaleQuality[nowUpscale + 1]) .. " -> " .. getUpscaleName(UpscaleQuality[upscale + 1]);
+            msg = msg .. "업스케일: " .. getUpscaleName(UpscaleQuality[nowUpscale]) .. " -> " .. getUpscaleName(newUpscale);
         end
     end
     if msg ~= "" then
@@ -501,7 +476,7 @@ re.on_draw_ui(function()
             imgui.same_line();
             imgui.text(resolutionString(resolutions[resolutionSettingValue]));
             imgui.same_line();
-            imgui.text("업스케일: " .. getUpscaleName(UpscaleQuality[getValue_method:call(Option, Options.UPSCALE_MODE) + 1]));
+            imgui.text("업스케일: " .. getUpscaleName(UpscaleQuality[getValue_method:call(Option, Options.UPSCALE_MODE)]));
             changed, uiCurrentStageIdx = imgui.combo("지역", uiCurrentStageIdx, stageNames);
             if changed == true then
                 uiCurrentEnvIdx = 0;
@@ -517,26 +492,21 @@ re.on_draw_ui(function()
                     if settings.items == nil then
                         settings.items = {};
                     else
-                        for i, item in pairs(settings.items) do
+                        for k, item in pairs(settings.items) do
                             if item.matcher.stage == selectedStage and item.matcher.env == selectedEnv then
-                                item.level = value;
-                                found_idx = i;
+                                found_idx = k;
                                 break;
                             end
                         end
                     end
                     if found_idx ~= nil then
-                        if selectedEnv == environments.INVALID then
-                            if value == 0 then
-                                table.remove(settings.items, found_idx);
-                            end
+                        if value == 0 then
+                            table.remove(settings.items, found_idx);
                         else
-                            if value == getStageDefaultGraphicLevel(selectedStage) then
-                                table.remove(settings.items, found_idx);
-                            end
+                            settings.items[found_idx].level = value;
                         end
                     else
-                        if (value ~= 0 and selectedEnv == environments.INVALID) or (value ~= getStageDefaultGraphicLevel(selectedStage) and selectedEnv ~= environments.INVALID) then 
+                        if value ~= 0 then
                             table.insert(settings.items, {matcher = {stage = selectedStage, env = selectedEnv}, level = value});
                         end
                     end

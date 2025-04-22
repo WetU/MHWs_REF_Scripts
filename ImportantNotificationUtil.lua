@@ -14,7 +14,7 @@ local get_FixPanelType_method = sdk.find_type_definition("app.GUI020100"):get_me
 local getMasterPlayer_method = nil;
 local get_Character_method = nil;
 local HunterContinueFlag_field = Constants.HunterCharacter_type_def:get_field("_HunterContinueFlag");
-local off_method = HunterContinueFlag_field:get_type():get_method("off(System.UInt32)");
+local off_method = nil;
 
 local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
 local FIX_PANEL_TYPE = {
@@ -51,9 +51,23 @@ end, function()
             end
             if getMasterPlayer_method == nil then
                 getMasterPlayer_method = Constants.PlayerManager.getMasterPlayer;
-                get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
             end
-            off_method:call(HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(Constants.PlayerManager))), 200);
+            local MasterPlayer = getMasterPlayer_method:call(Constants.PlayerManager);
+            if MasterPlayer ~= nil then
+                if get_Character_method == nil then
+                    get_Character_method = MasterPlayer.get_Character;
+                end
+                local Character = get_Character_method:call(MasterPlayer);
+                if Character ~= nil then
+                    local HunterContinueFlag = HunterContinueFlag_field:get_data(Character);
+                    if HunterContinueFlag ~= nil then
+                        if off_method == nil then
+                            off_method = HunterContinueFlag["off(System.UInt32)"];
+                        end
+                        off_method:call(HunterContinueFlag, 200);
+                    end
+                end
+            end
         end
     end
 end);

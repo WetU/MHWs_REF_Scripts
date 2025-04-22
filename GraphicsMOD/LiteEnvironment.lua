@@ -4,7 +4,7 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local get_WindBase_method = sdk.find_type_definition("app.GA"):get_method("get_WindBase"); -- static
+local set_Stop_method = nil;
 
 local get_DPGIComponent_method = nil;
 local set_Enabled_method = nil;
@@ -27,13 +27,15 @@ if loadedTable ~= nil then
     end
 end
 
-local WindBase = nil;
 local function apply_ws_setting()
-    if WindBase == nil then
-        WindBase = get_WindBase_method:call(nil);
+    if Constants.WindManager == nil then
+        Constants.WindManager = sdk.get_managed_singleton("app.WindManager");
     end
-    if WindBase ~= nil then
-        WindBase:set_field("_Stop", settings.disable_wind_simulation);
+    if Constants.WindManager ~= nil then
+        if set_Stop_method == nil then
+            set_Stop_method = Constants.WindManager["set_Stop(System.Boolean)"];
+        end
+        set_Stop_method:call(Constants.WindManager, settings.disable_wind_simulation);
     end
 end
 
@@ -41,13 +43,17 @@ LiteEnvironment.apply_gi_setting = function()
     if Constants.EnvironmentManager == nil then
         Constants.EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
     end
-    if get_DPGIComponent_method == nil then
-        get_DPGIComponent_method = Constants.EnvironmentManager.get_DPGIComponent;
-        set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
-    end
-    local DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
-    if DPGIComponent ~= nil then
-        set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
+    if Constants.EnvironmentManager ~= nil then
+        if get_DPGIComponent_method == nil then
+            get_DPGIComponent_method = Constants.EnvironmentManager.get_DPGIComponent;
+        end
+        local DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
+        if DPGIComponent ~= nil then
+            if set_Enabled_method == nil then
+                set_Enabled_method = DPGIComponent["set_Enabled(System.Boolean)"];
+            end
+            set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
+        end
     end
 end
 
