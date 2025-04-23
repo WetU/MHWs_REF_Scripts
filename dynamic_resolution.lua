@@ -10,8 +10,6 @@ local ipairs = Constants.ipairs;
 local tostring = Constants.tostring;
 local table = Constants.table;
 
-local get_Fps_method = sdk.find_type_definition("via.dynamics.System"):get_method("get_Fps"); -- static
-
 local getCurrentEnvType_method = Constants.PorterUtil_type_def:get_method("getCurrentEnvType"); -- static
 
 local get_Option_method = Constants.GUIManager_type_def:get_method("get_Option");
@@ -90,9 +88,7 @@ local settings = {
     enabled = true,
     max_resolution = nil,
     min_resolution = 0,
-    max_upscale_mode = UpscaleQuality[1],
-    min_upscale_mode = UpscaleQuality[4],
-    up_level_prefered_option = 1,
+    up_level_prefered_option = 2,
     down_level_prefered_option = 1,
     auto_adjust = true,
     auto_adjust_fps_target = 30,
@@ -117,14 +113,13 @@ end
 local fpsLowTrigger = settings.auto_adjust_fps_target - settings.auto_adjust_fps_reduce_threshold;
 local fpsHighTrigger = settings.auto_adjust_fps_target + settings.auto_adjust_fps_increase_threshold;
 
-local max_upscale_mode = UpscaleQuality[1];
 local stage = nil;
 local env = nil;
 local graphicLevel = 0;
 
 local autoAdjustDurationBegin = 0;
 local autoAdjustLastReduceTime = nil;
-local autoAdjustFpsTable = {};
+local autoAdjustFrames = 0;
 
 local GraphicOptions = {
     "업스케일",
@@ -154,7 +149,7 @@ local function getEnvName(envNo)
             return environmentNames[i];
         end
     end
-    return nil;
+    return "환경 정보 없음";
 end
 
 local function getUpscaleName(mode)
@@ -194,8 +189,8 @@ local function resolutionString(r)
     return Constants.string.format("%dx%d", w_field:get_data(r), h_field:get_data(r));
 end
 
-local function calculateGraphicLevel(stageNo, envNo)
-    if settings.items ~= nil then
+local function getGraphicLevelSetting(stageNo, envNo)
+    if stageNo ~= nil and envNo ~= nil and settings.items ~= nil then
         for _, item in pairs(settings.items) do
             if item.matcher ~= nil and item.matcher.stage == stageNo and item.matcher.env == envNo then
                 return item.level;
@@ -238,7 +233,7 @@ end
 
 local function autoAdjustReset()
     autoAdjustDurationBegin = 0;
-    autoAdjustFpsTable = {};
+    autoAdjustFrames = 0;
     autoAdjustLastReduceTime = nil;
 end
 
@@ -267,12 +262,12 @@ local function applyGraphicLevel()
     local upscale = oriUpscaleMode;
     local resolution = oriResolution;
     if prefered_option == 1 then
-        upscale, resolution = caculateGraphicOptions(oriUpscaleMode, oriResolution, settings.min_upscale_mode, settings.max_upscale_mode, settings.min_resolution, resolution_max, upscale_increase_step, 1);
+        upscale, resolution = caculateGraphicOptions(oriUpscaleMode, oriResolution, 1, 4, settings.min_resolution, resolution_max, upscale_increase_step, 1);
     else
-        resolution, upscale = caculateGraphicOptions(oriResolution, oriUpscaleMode, settings.min_resolution, resolution_max, settings.min_upscale_mode, settings.max_upscale_mode, 1, upscale_increase_step);
+        resolution, upscale = caculateGraphicOptions(oriResolution, oriUpscaleMode, settings.min_resolution, resolution_max, 1, 4, 1, upscale_increase_step);
     end
     if resolution ~= prevResolutionIndex then
-        local newResolution = resolutions[resolution];
+        local newResolution = resolutions:get_element(resolution);
         nowResolution:set_field("w", w_field:get_data(newResolution));
         nowResolution:set_field("h", h_field:get_data(newResolution));
         setResolution_method:call(Option, WindowModeOption[getValue_method:call(Option, Options.SCREEN_MODE)], nowResolution);
@@ -304,19 +299,11 @@ local function resetGraphics()
     end
 end
 
-local function getAvgFps()
-    local fps = 0;
-    for _, v in ipairs(autoAdjustFpsTable) do
-        fps = fps + v;
-    end
-    return fps / #autoAdjustFpsTable;
-end
-
 local function reduceGraphicLevel(nowTime)
     local newGraphicLevel = graphicLevel - 1;
-    local recommendLevel = calculateGraphicLevel(stage, env);
-    if recommendLevel - newGraphicLevel > settings.auto_adjust_max_level then
-        newGraphicLevel = recommendLevel - settings.auto_adjust_max_level;
+    local minLevel = getGraphicLevelSetting(stage, env) - settings.auto_adjust_max_level;
+    if newGraphicLevel < minLevel then
+        newGraphicLevel = minLevel;
     end
     if newGraphicLevel ~= graphicLevel then
         graphicLevel = newGraphicLevel;
@@ -326,38 +313,35 @@ local function reduceGraphicLevel(nowTime)
 end
 
 local function autoAdjust()
-    if env ~= nil and env ~= environments.INVALID and stage ~= nil and stage ~= Constants.Stages.INVALID then
+    autoAdjustFrames = autoAdjustFrames + 1;
+    if autoAdjustDurationBegin == 0 then
+        autoAdjustDurationBegin = Constants.os.time();
+    elseif autoAdjustDurationBegin > 0 then
         local now = Constants.os.time();
-        table.insert(autoAdjustFpsTable, get_Fps_method:call(nil));
-        if autoAdjustDurationBegin == 0 then
+        local duration = now - autoAdjustDurationBegin;
+        if duration >= settings.auto_adjust_increase_duration then
+            local fps = autoAdjustFrames / duration;
+            if fps < fpsLowTrigger then
+                reduceGraphicLevel(now);
+            elseif fps > fpsHighTrigger then
+                if autoAdjustLastReduceTime == nil or now - autoAdjustLastReduceTime >= settings.auto_adjust_recover_interval then
+                    local newGraphicLevel = graphicLevel + 1;
+                    local maxLevel = getGraphicLevelSetting(stage, env) + settings.auto_adjust_max_level;
+                    if newGraphicLevel > maxLevel then
+                        newGraphicLevel = maxLevel;
+                    end
+                    if newGraphicLevel ~= graphicLevel then
+                        graphicLevel = newGraphicLevel;
+                        applyGraphicLevel();
+                    end
+                end
+            end
             autoAdjustDurationBegin = now;
-        elseif autoAdjustDurationBegin > 0 then
-            local duration = now - autoAdjustDurationBegin;
-            if duration >= settings.auto_adjust_increase_duration then
-                local fps = getAvgFps();
-                if fps < fpsLowTrigger then
+            autoAdjustFrames = 0;
+        else
+            if duration >= settings.auto_adjust_reduce_duration then
+                if autoAdjustFrames / duration < fpsLowTrigger then
                     reduceGraphicLevel(now);
-                elseif fps > fpsHighTrigger then
-                    if autoAdjustLastReduceTime == nil or now - autoAdjustLastReduceTime >= settings.auto_adjust_recover_interval then
-                        local newGraphicLevel = graphicLevel + 1;
-                        local newLevel = calculateGraphicLevel(stage, env) + settings.auto_adjust_max_level;
-                        if newGraphicLevel > newLevel then
-                            newGraphicLevel = newLevel;
-                        end
-                        if newGraphicLevel ~= graphicLevel then
-                            graphicLevel = newGraphicLevel;
-                            applyGraphicLevel();
-                        end
-                    end
-                end
-                if duration >= settings.auto_adjust_reduce_duration then
-                    autoAdjustDurationBegin = now;
-                end
-            else
-                if duration >= settings.auto_adjust_reduce_duration then
-                    if getAvgFps() < fpsLowTrigger then
-                        reduceGraphicLevel(now);
-                    end
                 end
             end
         end
@@ -383,7 +367,7 @@ local function changeCondition(stageNo, envNo)
         end
         if isUpdateRequired == true then
             autoAdjustReset();
-            local newGraphicLevel = calculateGraphicLevel(stage, env);
+            local newGraphicLevel = getGraphicLevelSetting(stage, env);
             if newGraphicLevel ~= graphicLevel then
                 graphicLevel = newGraphicLevel;
                 applyGraphicLevel();
@@ -393,13 +377,6 @@ local function changeCondition(stageNo, envNo)
 end
 
 changeCondition(nil, nil);
-
-local function questPostHook(retval)
-    if settings.enabled == true then
-        autoAdjustLastReduceTime = nil;
-    end
-    return retval;
-end
 
 sdk.hook(sdk.find_type_definition("app.MasterFieldManager"):get_method("onChangedStage(app.FieldDef.STAGE)"), function(args)
     Constants.curStage = sdk.to_int64(args[3]) & 0xFFFFFFFF;
@@ -411,10 +388,6 @@ sdk.hook(sdk.find_type_definition("app.EnemyManager"):get_method("onChangedEnvir
         changeCondition(nil, sdk.to_int64(args[5]) & 0xFFFFFFFF);
     end
 end);
-
-for _, t in pairs({"app.cQuestPlaying", "app.cQuestCancel", "app.cQuestClear", "app.cQuestFailed", "app.cQuestResult", "app.cQuestReward"}) do
-    sdk.hook(sdk.find_type_definition(t):get_method("enter"), nil, questPostHook);
-end
 
 re.on_config_save(saveConfig);
 
@@ -441,8 +414,9 @@ re.on_draw_ui(function()
             requireSave = true;
             if settings.enabled == false then
                 resetGraphics();
+            else
+                changeCondition(nil, nil);
             end
-            changeCondition(nil, nil);
         end
         if settings.enabled == true then
             if Constants.GUIManager == nil then
@@ -452,7 +426,7 @@ re.on_draw_ui(function()
             local resolutions = getResolutions_method:call(Option);
             local resolutionSettingValue = getValue_method:call(Option, Options.RESOLUTION_SETTING);
             local resolutionCount = resolutions:get_size() - 1;
-            local max_resolution = resolutionCount;
+            local maxLevel = resolutionCount + 3;
             imgui.text("그래픽 강도 0: ");
             imgui.same_line();
             imgui.text(resolutionString(resolutions[resolutionSettingValue]));
@@ -466,8 +440,8 @@ re.on_draw_ui(function()
             local selectedStage = Constants.Stages[uiCurrentStageIdx];
             local selectedEnv = environments[uiCurrentEnvIdx];
             if selectedStage ~= nil and selectedEnv ~= nil then
-                local graphicLevel = calculateGraphicLevel(selectedStage, selectedEnv);
-                local thisChanged, value = imgui.slider_int("그래픽 강도", graphicLevel, 0 - max_resolution - max_upscale_mode, max_resolution + max_upscale_mode);
+                local graphicLevel = getGraphicLevelSetting(selectedStage, selectedEnv);
+                local thisChanged, value = imgui.slider_int("그래픽 강도", graphicLevel, 0 - resolutionCount - 3, maxLevel);
                 if thisChanged == true then
                     local found_idx = nil;
                     if settings.items == nil then
@@ -550,7 +524,7 @@ re.on_draw_ui(function()
                     end
                     autoAdjustReset();
                 end
-                changed, settings.auto_adjust_max_level = imgui.slider_int("최대 조정 강도", settings.auto_adjust_max_level, 1, 5);
+                changed, settings.auto_adjust_max_level = imgui.slider_int("최대 조정 강도", settings.auto_adjust_max_level, 1, maxLevel);
                 if changed == true then
                     if requireSave ~= true then
                         requireSave = true;
@@ -564,17 +538,15 @@ re.on_draw_ui(function()
                 imgui.tree_pop();
             end
             if imgui.tree_node("상세 설정") == true then
-                if settings.max_resolution ~= nil then
-                    max_resolution = settings.max_resolution;
-                end
+                local max_resolution = settings.max_resolution or resolutionCount;
                 local resolution_names = {};
                 for i = resolutionSettingValue, resolutionCount do
                     table.insert(resolution_names, resolutionString(resolutions[i]));
                 end
-                local thisChanged, max_resolution_idx = imgui.combo("최대 해상도", max_resolution, resolution_names);
+                local thisChanged, max_resolution_idx = imgui.combo("최대 해상도", max_resolution - resolutionSettingValue + 1, resolution_names);
                 if thisChanged == true then
                     max_resolution_idx = resolutionSettingValue + max_resolution_idx - 1;
-                    settings.max_resolution = max_resolution_idx ~= resolutionCount and max_resolution_idx or nil;
+                    settings.max_resolution = max_resolution_idx;
                     if requireSave ~= true then
                         requireSave = true;
                     end
@@ -587,20 +559,6 @@ re.on_draw_ui(function()
                 changed, newValue = imgui.combo("최소 해상도", settings.min_resolution + 1, resolution_names);
                 if changed == true then
                     settings.min_resolution = newValue - 1;
-                    if requireSave ~= true then
-                        requireSave = true;
-                    end
-                end
-                changed, newValue = imgui.combo("최대 업스케일 모드", indexOf(UpscaleQuality, settings.max_upscale_mode), UpscaleNames);
-                if changed == true then
-                    settings.max_upscale_mode = UpscaleQuality[newValue];
-                    if requireSave ~= true then
-                        requireSave = true;
-                    end
-                end
-                changed, newValue = imgui.combo("최소 업스케일 모드", indexOf(UpscaleQuality, settings.min_upscale_mode), UpscaleNames);
-                if changed == true then
-                    settings.min_upscale_mode = UpscaleQuality[newValue];
                     if requireSave ~= true then
                         requireSave = true;
                     end
