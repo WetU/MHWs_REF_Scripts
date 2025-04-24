@@ -5,9 +5,9 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local get_LDRPostProcess_method = nil;
-local get_ColorCorrect_method = nil;
-local set_Enabled_method = nil;
+local get_LDRPostProcess_method = sdk.find_type_definition("app.AppEffectManager"):get_method("get_LDRPostProcess");
+local get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
+local set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
 local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
 local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
@@ -32,7 +32,7 @@ local set_FilmGrain_Enable_method = GraphicsSetting_type_def:get_method("set_Fil
 local set_LensFlare_Enable_method = GraphicsSetting_type_def:get_method("set_LensFlare_Enable(System.Boolean)");
 local set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay_Enable(System.Boolean)");
 local set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
-
+_t
 local ToneMapping_type_def = ToneMapping_field:get_type();
 local setTemporalAA_method = ToneMapping_type_def:get_method("setTemporalAA(via.render.ToneMapping.TemporalAA)");
 local set_EchoEnabled_method = ToneMapping_type_def:get_method("set_EchoEnabled(System.Boolean)");
@@ -155,11 +155,6 @@ re.on_application_entry("LockScene", function()
     if ColorCorrect == nil then
         if Constants.AppEffectManager == nil then
             Constants.AppEffectManager = sdk.get_managed_singleton("app.AppEffectManager");
-        end
-        if get_LDRPostProcess_method == nil then
-            get_LDRPostProcess_method = Constants.AppEffectManager.get_LDRPostProcess;
-            get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
-            set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
         end
         local LDRPostProcess = get_LDRPostProcess_method:call(Constants.AppEffectManager);
         if LDRPostProcess ~= nil then
