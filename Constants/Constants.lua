@@ -50,15 +50,15 @@ local Constants = {
     end
 };
 
-function Constants.addSystemLog(msg)
-    if Constants.ChatManager == nil then
-        Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+function Constants:addSystemLog(msg)
+    if self.ChatManager == nil then
+        self.ChatManager = sdk.get_managed_singleton("app.ChatManager");
     end
-    addSystemLog_method:call(Constants.ChatManager, msg);
+    addSystemLog_method:call(self.ChatManager, msg);
 end
 
-function Constants.getCurrentStageMasterPlayer()
-    return getCurrentStageMasterPlayer_method:call(nil);
+function Constants:getCurrentStageMasterPlayer()
+    return self.curStage or getCurrentStageMasterPlayer_method:call(nil);
 end
 
 return Constants;
