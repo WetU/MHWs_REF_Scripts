@@ -4,10 +4,10 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local set_Stop_method = nil;
+local set_Stop_method = sdk.find_type_definition("app.WindManager"):get_method("set_Stop(System.Boolean)");
 
-local get_DPGIComponent_method = nil;
-local set_Enabled_method = nil;
+local get_DPGIComponent_method = sdk.find_type_definition("app.EnvironmentManager"):get_method("get_DPGIComponent");
+local set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
 local LiteEnvironment = {};
 
@@ -32,9 +32,6 @@ local function apply_ws_setting()
         Constants.WindManager = sdk.get_managed_singleton("app.WindManager");
     end
     if Constants.WindManager ~= nil then
-        if set_Stop_method == nil then
-            set_Stop_method = Constants.WindManager["set_Stop(System.Boolean)"];
-        end
         set_Stop_method:call(Constants.WindManager, settings.disable_wind_simulation);
     end
 end
@@ -44,14 +41,8 @@ LiteEnvironment.apply_gi_setting = function()
         Constants.EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
     end
     if Constants.EnvironmentManager ~= nil then
-        if get_DPGIComponent_method == nil then
-            get_DPGIComponent_method = Constants.EnvironmentManager.get_DPGIComponent;
-        end
         local DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
         if DPGIComponent ~= nil then
-            if set_Enabled_method == nil then
-                set_Enabled_method = DPGIComponent["set_Enabled(System.Boolean)"];
-            end
             set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
         end
     end

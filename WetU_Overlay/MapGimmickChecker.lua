@@ -1,7 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
-local ipairs = Constants.ipairs;
+local getCurrentStageMasterPlayer_method = sdk.find_type_definition("app.PorterUtil"):get_method("getCurrentStageMasterPlayer"); -- static
 
 local GUIMapBeaconManager_type_def = sdk.find_type_definition("app.GUIMapBeaconManager");
 local findBeacon_GimmickId_method = GUIMapBeaconManager_type_def:get_method("findBeacon_GimmickId(app.GimmickDef.ID)");
@@ -18,6 +18,12 @@ local get_PopedNum_method = GimmickContext_type_def:get_method("get_PopedNum");
 
 local get_BaseState_method = get_BaseParam_method:get_return_type():get_method("get_BaseState");
 
+local STAGE_type_def = getCurrentStageMasterPlayer_method:get_return_type();
+local STAGE = {
+    ["경계의 모래 평원"] = STAGE_type_def:get_field("ST101"):get_data(nil),
+    ["주홍빛 숲"] = STAGE_type_def:get_field("ST102"):get_data(nil)
+};
+
 local BASE_STATE_type_def = get_BaseState_method:get_return_type();
 local BASE_STATE = {
     ENABLE = BASE_STATE_type_def:get_field("ENABLE"):get_data(nil),
@@ -26,12 +32,8 @@ local BASE_STATE = {
 
 local GimmickID_type_def = sdk.find_type_definition("app.GimmickDef.ID");
 local GimmickID = {
-    GimmickID_type_def:get_field("GM000_152_00"):get_data(nil),
-    GimmickID_type_def:get_field("GM000_153_00"):get_data(nil)
-};
-local GimmickName = {
-    "퀸 라플레시아",
-    "덧없는 꽃"
+    ["퀸 라플레시아"] = GimmickID_type_def:get_field("GM000_152_00"):get_data(nil),
+    ["덧없는 꽃"] = GimmickID_type_def:get_field("GM000_153_00"):get_data(nil)
 };
 
 local this = {
@@ -62,23 +64,23 @@ sdk.hook(GUIMapBeaconManager_type_def:get_method("update"), function(args)
         Constants.GUIMapBeaconManager = sdk.to_managed_object(args[2]);
     end
 end, function()
-    local curStage = Constants.curStage or Constants.getCurrentStageMasterPlayer();
-    if curStage == Constants.Stages[1] then
-        if getInteractable(findBeacon_GimmickId_method:call(Constants.GUIMapBeaconManager, GimmickID[2])) == true then
-            local msg = GimmickName[2] .. "획득 가능!";
+    local curStage = getCurrentStageMasterPlayer_method:call(nil);
+    if curStage == STAGE["경계의 모래 평원"] then
+        if getInteractable(findBeacon_GimmickId_method:call(Constants.GUIMapBeaconManager, GimmickID["덧없는 꽃"])) == true then
+            local msg = "덧없는 꽃 획득 가능!";
             if this.PoppedGimmick ~= msg then
                 this.PoppedGimmick = msg;
                 return;
             end
         end
-    elseif curStage == Constants.Stages[2] then
+    elseif curStage == STAGE["주홍빛 숲"] then
         local msg = "";
-        for i, v in ipairs(GimmickID) do
+        for k, v in Constants.pairs(GimmickID) do
             if getInteractable(findBeacon_GimmickId_method:call(Constants.GUIMapBeaconManager, v)) == true then
                 if msg ~= "" then
                     msg = msg .. "\n";
                 end
-                msg = msg .. GimmickName[i] .. " 획득 가능!";
+                msg = msg .. k .. " 획득 가능!";
             end
         end
         if msg ~= "" then

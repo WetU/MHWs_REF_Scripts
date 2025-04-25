@@ -18,10 +18,10 @@ local function restockItems()
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        Constants.addSystemLog("아이템 세트가 적용되었습니다.");
+        Constants:addSystemLog("아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        Constants.addSystemLog("아이템이 보충되었습니다.");
+        Constants:addSystemLog("아이템이 보충되었습니다.");
     end
 
     fillShellPouchItems_method:call(nil);

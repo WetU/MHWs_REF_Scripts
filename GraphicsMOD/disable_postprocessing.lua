@@ -12,6 +12,7 @@ local set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method(
 local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
 local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
 local setGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
+local AppGraphicsSettingController_field = Constants.GraphicsManager_type_def:get_field("_AppGraphicsSettingController");
 local ToneMapping_field = Constants.GraphicsManager_type_def:get_field("_ToneMapping");
 
 local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
@@ -32,13 +33,20 @@ local set_FilmGrain_Enable_method = GraphicsSetting_type_def:get_method("set_Fil
 local set_LensFlare_Enable_method = GraphicsSetting_type_def:get_method("set_LensFlare_Enable(System.Boolean)");
 local set_GodRay_Enable_method = GraphicsSetting_type_def:get_method("set_GodRay_Enable(System.Boolean)");
 local set_LensDistortionSetting_method = GraphicsSetting_type_def:get_method("set_LensDistortionSetting(via.render.RenderConfig.LensDistortionSetting)");
-_t
+local set_DynamicResolutionMode_method = GraphicsSetting_type_def:get_method("set_DynamicResolutionMode(ace.cGraphicsSetting.DYNAMIC_RESOLUTION_MODE)");
+
 local ToneMapping_type_def = ToneMapping_field:get_type();
 local setTemporalAA_method = ToneMapping_type_def:get_method("setTemporalAA(via.render.ToneMapping.TemporalAA)");
 local set_EchoEnabled_method = ToneMapping_type_def:get_method("set_EchoEnabled(System.Boolean)");
 local set_EnableLocalExposure_method = ToneMapping_type_def:get_method("set_EnableLocalExposure(System.Boolean)");
 local setLocalExposureType_method = ToneMapping_type_def:get_method("setLocalExposureType(via.render.ToneMapping.LocalExposureType)");
 local set_Contrast_method = ToneMapping_type_def:get_method("set_Contrast(System.Single)");
+
+local get_DynamicResolution_method = AppGraphicsSettingController_field:get_type():get_method("get_DynamicResolution");
+
+local GraphicsDynamicResolution_type_def = get_DynamicResolution_method:get_return_type();
+local get_Enable_method = GraphicsDynamicResolution_type_def:get_method("get_Enable");
+local set_Enable_method = GraphicsDynamicResolution_type_def:get_method("set_Enable(System.Boolean)");
 
 local TemporalAA_type_def = sdk.find_type_definition("via.render.ToneMapping.TemporalAA");
 local TemporalAA = {
@@ -57,6 +65,8 @@ local LensDistortionSetting = {
     ON = LensDistortionSetting_type_def:get_field("ON"):get_data(nil),
     OFF = LensDistortionSetting_type_def:get_field("OFF"):get_data(nil)
 };
+
+local DYNAMIC_RESOLUTION_MODE_TARGET_60 = sdk.find_type_definition("ace.cGraphicsSetting.DYNAMIC_RESOLUTION_MODE"):get_field("TARGET_60"):get_data(nil);
 
 local DisablePP = {};
 
@@ -132,6 +142,14 @@ DisablePP.ApplySettings = function()
         end
     end
 
+    local AppGraphicsSettingController = AppGraphicsSettingController_field:get_data(Constants.GraphicsManager);
+    if AppGraphicsSettingController ~= nil then
+        local GraphicsDynamicResolution = get_DynamicResolution_method:call(AppGraphicsSettingController);
+        if GraphicsDynamicResolution ~= nil and get_Enable_method:call(GraphicsDynamicResolution) == false then
+            set_Enable_method:call(GraphicsDynamicResolution, true);
+        end
+    end
+
     local NowGraphicsSetting = get_NowGraphicsSetting_method:call(Constants.GraphicsManager);
     if NowGraphicsSetting ~= nil then
         set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
@@ -140,6 +158,7 @@ DisablePP.ApplySettings = function()
         set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
         set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
         set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
+        set_DynamicResolutionMode_method:call(NowGraphicsSetting, DYNAMIC_RESOLUTION_MODE_TARGET_60);
         setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
     end
 end
