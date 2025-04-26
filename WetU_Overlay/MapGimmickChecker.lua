@@ -22,7 +22,7 @@ local get_BaseState_method = get_BaseParam_method:get_return_type():get_method("
 
 local MoonController_type_def = sdk.find_type_definition("app.MoonController");
 local getActiveMoonData_method = MoonController_type_def:get_method("getActiveMoonData");
-local MoonVariationNum = tostring(MoonController_type_def:get_field("MoonVariationNum"):get_data(nil) - 1);
+local MoonVariationNum = tostring(MoonController_type_def:get_field("MoonVariationNum"):get_data(nil));
 local FullMoonID = MoonController_type_def:get_field("FullMoonID"):get_data(nil);
 
 local get_MoonIdx_method = getActiveMoonData_method:get_return_type():get_method("get_MoonIdx");
@@ -43,6 +43,16 @@ local GimmickID_type_def = sdk.find_type_definition("app.GimmickDef.ID");
 local GimmickID = {
     ["퀸 라플레시아"] = GimmickID_type_def:get_field("GM000_152_00"):get_data(nil),
     ["덧없는 꽃"] = GimmickID_type_def:get_field("GM000_153_00"):get_data(nil)
+};
+
+local MoonPhase = {
+    "보름달",
+    "하현망",
+    "하현달",
+    "그믐달",
+    "초승달",
+    "상현달",
+    "상현망"
 };
 
 local this = {
@@ -116,11 +126,8 @@ sdk.hook(MoonController_type_def:get_method("updateData"), Constants.getObject, 
     if MoonIdx ~= nil then
         if MoonIdx ~= oldMoonIdx then
             oldMoonIdx = MoonIdx;
-            local str = "달: " .. tostring(MoonIdx) .. "/" .. MoonVariationNum;
-            if MoonIdx == FullMoonID then
-                str = str .. "(보름달)";
-            end
-            this.MoonState = str;
+            MoonIdx = MoonIdx + 1;
+            this.MoonState = MoonPhase[MoonIdx] .. ": " .. tostring(MoonIdx) .. "/" .. MoonVariationNum;
         end
     else
         if this.MoonState ~= nil then

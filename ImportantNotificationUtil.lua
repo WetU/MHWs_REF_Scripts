@@ -11,10 +11,10 @@ local GUIs_field = get_GUI020100Accessor_method:get_return_type():get_parent_typ
 
 local get_FixPanelType_method = sdk.find_type_definition("app.GUI020100"):get_method("get_FixPanelType");
 
-local getMasterPlayer_method = nil;
-local get_Character_method = nil;
+local getMasterPlayer_method = sdk.find_type_definition("app.PlayerManager"):get_method("getMasterPlayer");
+local get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
 local HunterContinueFlag_field = Constants.HunterCharacter_type_def:get_field("_HunterContinueFlag");
-local off_method = nil;
+local off_method = HunterContinueFlag_field:get_type():get_method("off(System.UInt32)");
 
 local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
 local FIX_PANEL_TYPE = {
@@ -29,6 +29,7 @@ local function saveConfig()
 end
 
 local GUI020100 = nil;
+local HunterContinueFlag = nil;
 sdk.hook(Constants.GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
     if config.enabled == true then
         if Constants.GUIManager == nil then
@@ -37,6 +38,9 @@ sdk.hook(Constants.GUIManager_type_def:get_method("updatePlCommandMask"), functi
     else
         if GUI020100 ~= nil then
             GUI020100 = nil;
+        end
+        if HunterContinueFlag ~= nil then
+            HunterContinueFlag = nil;
         end
     end
 end, function()
@@ -49,25 +53,10 @@ end, function()
             if Constants.PlayerManager == nil then
                 Constants.PlayerManager = sdk.get_managed_singleton("app.PlayerManager");
             end
-            if getMasterPlayer_method == nil then
-                getMasterPlayer_method = Constants.PlayerManager.getMasterPlayer;
+            if HunterContinueFlag == nil then
+                HunterContinueFlag = HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(Constants.PlayerManager)));
             end
-            local MasterPlayer = getMasterPlayer_method:call(Constants.PlayerManager);
-            if MasterPlayer ~= nil then
-                if get_Character_method == nil then
-                    get_Character_method = MasterPlayer.get_Character;
-                end
-                local Character = get_Character_method:call(MasterPlayer);
-                if Character ~= nil then
-                    local HunterContinueFlag = HunterContinueFlag_field:get_data(Character);
-                    if HunterContinueFlag ~= nil then
-                        if off_method == nil then
-                            off_method = HunterContinueFlag["off(System.UInt32)"];
-                        end
-                        off_method:call(HunterContinueFlag, 200);
-                    end
-                end
-            end
+            off_method:call(HunterContinueFlag, 200);
         end
     end
 end);

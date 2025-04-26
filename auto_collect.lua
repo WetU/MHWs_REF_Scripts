@@ -23,7 +23,6 @@ local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 
 local FacilityMoriver_type_def = sdk.find_type_definition("app.FacilityMoriver");
-local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
 local isEnableMoriverFacility_method = FacilityMoriver_type_def:get_method("isEnableMoriverFacility(app.NpcDef.ID)");
 local executedSharing_method = FacilityMoriver_type_def:get_method("executedSharing(app.FacilityMoriver.MoriverInfo)");
 local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
@@ -120,9 +119,15 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, function()
-    local FacilityMoriver = thread.get_hook_storage()["this"];
-    if get__HavingCampfire_method:call(FacilityMoriver) == true then
+local moriverPreHook = nil;
+local moriverMain = nil;
+sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), function(args)
+    local FacilityMoriver = sdk.to_managed_object(args[2]);
+    moriverPreHook = function(args)
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end
+    moriverMain = function()
+        local FacilityMoriver = thread.get_hook_storage()["this"];
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
         local Count = get_Count_method:call(MoriverInfos);
         if Count > 0 then
@@ -163,4 +168,10 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
             end
         end
     end
+    sdk.hook_vtable(FacilityMoriver, FacilityMoriver.update, moriverPreHook, moriverMain);
+end);
+
+sdk.hook(FacilityMoriver_type_def:get_method("endCampfire"), nil, function()
+    moriverPreHook = nil;
+    moriverMain = nil;
 end);

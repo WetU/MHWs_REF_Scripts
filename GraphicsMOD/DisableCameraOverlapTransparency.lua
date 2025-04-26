@@ -40,8 +40,12 @@ DisableCameraOverlapTransparency.Apply = function()
 	end
 end
 
-sdk.hook(CameraOverlapTransparencyControllerBase_type_def:get_method("update"), Constants.getObject, function()
-	local CameraOverlapTransparencyControllerBase = Constants.thread.get_hook_storage()["this"];
+local CameraOverlapTransparencyControllerBase = nil;
+sdk.hook(CameraOverlapTransparencyControllerBase_type_def:get_method("update"), function(args)
+	if CameraOverlapTransparencyControllerBase == nil then
+		CameraOverlapTransparencyControllerBase = sdk.to_managed_object(args[2]);
+	end
+end, function()
 	if IsDeactivateTrigger_field:get_data(CameraOverlapTransparencyControllerBase) ~= true then
 		CameraOverlapTransparencyControllerBase:set_field("_IsDeactivateTrigger", true);
 	end

@@ -36,15 +36,18 @@ local function apply_ws_setting()
     end
 end
 
+local DPGIComponent = nil;
 LiteEnvironment.apply_gi_setting = function()
     if Constants.EnvironmentManager == nil then
         Constants.EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
     end
     if Constants.EnvironmentManager ~= nil then
-        local DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
-        if DPGIComponent ~= nil then
-            set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
+        if DPGIComponent == nil then
+            DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
         end
+    end
+    if DPGIComponent ~= nil then
+        set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
     end
 end
 
