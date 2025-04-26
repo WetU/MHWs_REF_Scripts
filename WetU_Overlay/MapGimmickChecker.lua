@@ -1,6 +1,8 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
+local tostring = Constants.tostring;
+
 local getCurrentStageMasterPlayer_method = sdk.find_type_definition("app.PorterUtil"):get_method("getCurrentStageMasterPlayer"); -- static
 
 local GUIMapBeaconManager_type_def = sdk.find_type_definition("app.GUIMapBeaconManager");
@@ -17,6 +19,13 @@ local get_BaseParam_method = GimmickContext_type_def:get_method("get_BaseParam")
 local get_PopedNum_method = GimmickContext_type_def:get_method("get_PopedNum");
 
 local get_BaseState_method = get_BaseParam_method:get_return_type():get_method("get_BaseState");
+
+local MoonController_type_def = sdk.find_type_definition("app.MoonController");
+local getActiveMoonData_method = MoonController_type_def:get_method("getActiveMoonData");
+local MoonVariationNum = tostring(MoonController_type_def:get_field("MoonVariationNum"):get_data(nil) - 1);
+local FullMoonID = MoonController_type_def:get_field("FullMoonID"):get_data(nil);
+
+local get_MoonIdx_method = getActiveMoonData_method:get_return_type():get_method("get_MoonIdx");
 
 local STAGE_type_def = getCurrentStageMasterPlayer_method:get_return_type();
 local STAGE = {
@@ -37,8 +46,11 @@ local GimmickID = {
 };
 
 local this = {
-    PoppedGimmick = nil;
+    PoppedGimmick = nil,
+    MoonState = nil
 };
+
+local oldMoonIdx = nil;
 
 local function getInteractable(guiBeaconGimmick)
     if guiBeaconGimmick ~= nil and IsInstantiate_field:get_data(guiBeaconGimmick) == true then
@@ -96,6 +108,24 @@ end, function()
     end
     if this.PoppedGimmick ~= nil then
         this.PoppedGimmick = nil;
+    end
+end);
+
+sdk.hook(MoonController_type_def:get_method("updateData"), Constants.getObject, function()
+    local MoonIdx = get_MoonIdx_method:call(getActiveMoonData_method:call(Constants.thread.get_hook_storage()["this"]));
+    if MoonIdx ~= nil then
+        if MoonIdx ~= oldMoonIdx then
+            oldMoonIdx = MoonIdx;
+            local str = "달: " .. tostring(MoonIdx) .. "/" .. MoonVariationNum;
+            if MoonIdx == FullMoonID then
+                str = str .. "(보름달)";
+            end
+            this.MoonState = str;
+        end
+    else
+        if this.MoonState ~= nil then
+            this.MoonState = nil;
+        end
     end
 end);
 

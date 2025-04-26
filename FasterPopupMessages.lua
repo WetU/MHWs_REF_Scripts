@@ -11,6 +11,13 @@ local DispMinTimer_field = GUI000003_type_def:get_field("_DispMinTimer");
 local GUI010002_type_def = sdk.find_type_definition("app.GUI010002");
 local requestClose_method = GUI010002_type_def:get_method("requestClose(System.Boolean)");
 
+local GUINotifyWindowInfoApp_type_def = sdk.find_type_definition("app.cGUINotifyWindowInfoApp");
+local get_NotifyWindowId_method = GUINotifyWindowInfoApp_type_def:get_method("get_NotifyWindowId");
+local set_SelectedIndex_method = GUINotifyWindowInfoApp_type_def:get_method("set_SelectedIndex(System.Int32)");
+local executeWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("executeWindowEndFunc");
+
+local GUINotifyWindow_ID_GUI070000_DLG02 = sdk.find_type_definition("app.GUINotifyWindowDef.ID"):get_field("GUI070000_DLG02"):get_data(nil);
+
 local config = json.load_file("FasterPopupMessages.json") or {
 	enabled = true,
 	longerWaits = false,
@@ -40,6 +47,15 @@ sdk.hook(GUI010002_type_def:get_method("onOpen"), getObj, function()
 	local GUI010002 = thread.get_hook_storage()["this"];
 	if GUI010002 ~= nil then
 		requestClose_method:call(GUI010002, false);
+	end
+end);
+
+sdk.hook(sdk.find_type_definition("app.cGUISystemModuleNotifyWindowApp"):get_method("requestNotifyWindow(ace.cGUINotifyWindowInfo)"), function(args)
+	local GUINotifyWindowInfoApp = sdk.to_managed_object(args[3]);
+	if get_NotifyWindowId_method:call(GUINotifyWindowInfoApp) == GUINotifyWindow_ID_GUI070000_DLG02 then
+		set_SelectedIndex_method:call(GUINotifyWindowInfoApp, 0);
+		executeWindowEndFunc_method:call(GUINotifyWindowInfoApp);
+		return sdk.PreHookResult.SKIP_ORIGINAL;
 	end
 end);
 

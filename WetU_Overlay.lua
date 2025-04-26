@@ -40,8 +40,13 @@ re.on_frame(function()
         imgui.end_window();
     end
 
-    if SpecialGimmick.PoppedGimmick ~= nil and imgui.begin_window("특별 채취", nil, windowFlag) == true then
-        imgui.text(SpecialGimmick.PoppedGimmick);
+    if (SpecialGimmick.MoonState ~= nil or SpecialGimmick.PoppedGimmick ~= nil) and imgui.begin_window("환경", nil, windowFlag) == true then
+        if SpecialGimmick.PoppedGimmick ~= nil then
+            imgui.text(SpecialGimmick.PoppedGimmick);
+        end
+        if SpecialGimmick.MoonState ~= nil then
+            imgui.text(SpecialGimmick.MoonState);
+        end
         imgui.end_window();
     end
 end);
