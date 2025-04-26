@@ -1,7 +1,12 @@
 local Constants = _G.require("Constants/Constants");
+local sdk = Constants.sdk;
+local thread = Constants.thread;
 local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
+
+local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
+local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
 local config = json.load_file("AutoSkipKillCam.json") or {enableKillCam = true};
 if config.enableKillCam == nil then
@@ -12,8 +17,22 @@ local function saveConfig()
     json.dump_file("AutoSkipKillCam.json", config);
 end
 
-Constants.sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
+sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
     return config.enableKillCam == true and Constants.FALSE_ptr or retval;
+end);
+
+sdk.hook(HunterQuestActionController_type_def:get_method("checkQuestActionEnable(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)"), function(args)
+    if config.enableKillCam == true then
+        local storage = thread.get_hook_storage();
+        storage["this"] = sdk.to_managed_object(args[2]);
+        storage["actionType"] = sdk.to_int64(args[3]) & 0xFFFFFFFF;
+    end
+end, function(retval)
+    if config.enableKillCam == true and sdk.to_int64(retval) & 1 == 1 then
+        local storage = thread.get_hook_storage();
+        showStamp_method:call(storage["this"], storage["actionType"]);
+    end
+    return retval;
 end);
 
 re.on_config_save(saveConfig);

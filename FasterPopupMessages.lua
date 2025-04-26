@@ -16,7 +16,7 @@ local get_NotifyWindowId_method = GUINotifyWindowInfoApp_type_def:get_method("ge
 local set_SelectedIndex_method = GUINotifyWindowInfoApp_type_def:get_method("set_SelectedIndex(System.Int32)");
 local executeWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("executeWindowEndFunc");
 
-local GUINotifyWindow_ID_GUI070000_DLG02 = sdk.find_type_definition("app.GUINotifyWindowDef.ID"):get_field("GUI070000_DLG02"):get_data(nil);
+local GUI070000_DLG02 = sdk.find_type_definition("app.GUINotifyWindowDef.ID"):get_field("GUI070000_DLG02"):get_data(nil);
 
 local config = json.load_file("FasterPopupMessages.json") or {
 	enabled = true,
@@ -52,11 +52,14 @@ end);
 
 sdk.hook(sdk.find_type_definition("app.cGUISystemModuleNotifyWindowApp"):get_method("requestNotifyWindow(ace.cGUINotifyWindowInfo)"), function(args)
 	local GUINotifyWindowInfoApp = sdk.to_managed_object(args[3]);
-	if get_NotifyWindowId_method:call(GUINotifyWindowInfoApp) == GUINotifyWindow_ID_GUI070000_DLG02 then
-		set_SelectedIndex_method:call(GUINotifyWindowInfoApp, 0);
-		executeWindowEndFunc_method:call(GUINotifyWindowInfoApp);
+	if get_NotifyWindowId_method:call(GUINotifyWindowInfoApp) == GUI070000_DLG02 then
+		thread.get_hook_storage()["this"] = GUINotifyWindowInfoApp;
 		return sdk.PreHookResult.SKIP_ORIGINAL;
 	end
+end, function()
+	local GUINotifyWindowInfoApp = thread.get_hook_storage()["this"];
+	set_SelectedIndex_method:call(GUINotifyWindowInfoApp, 0);
+	executeWindowEndFunc_method:call(GUINotifyWindowInfoApp);
 end);
 
 local function tooltip(msg)

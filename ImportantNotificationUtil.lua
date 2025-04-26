@@ -22,6 +22,8 @@ local FIX_PANEL_TYPE = {
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
 
+local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
+
 local config = json.load_file("ImportantNotificationUtil.json") or {enabled = true};
 
 local function saveConfig()
@@ -50,13 +52,12 @@ end, function()
         end
         local FixPanelType = get_FixPanelType_method:call(GUI020100);
         if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
-            if Constants.PlayerManager == nil then
-                Constants.PlayerManager = sdk.get_managed_singleton("app.PlayerManager");
-            end
             if HunterContinueFlag == nil then
-                HunterContinueFlag = HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(Constants.PlayerManager)));
+                HunterContinueFlag = HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager"))));
             end
-            off_method:call(HunterContinueFlag, 200);
+            if HunterContinueFlag ~= nil then
+                off_method:call(HunterContinueFlag, DISABLE_OPEN_MAP);
+            end
         end
     end
 end);

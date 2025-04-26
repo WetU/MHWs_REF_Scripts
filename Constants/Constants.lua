@@ -20,6 +20,7 @@ local Constants = {
     json = _G.json,
     imgui = _G.imgui,
 
+    ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     CameraManager_type_def = sdk.find_type_definition("app.CameraManager"),
     GraphicsManager_type_def = sdk.find_type_definition("app.GraphicsManager"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),

@@ -8,7 +8,7 @@ local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
 
-local isArenaQuest_method = nil;
+local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
 
 local mySet = 0;
 
@@ -36,11 +36,7 @@ end
 
 sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
 sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
-    local ActiveQuestData = sdk.to_managed_object(args[3]);
-    if isArenaQuest_method == nil then
-        isArenaQuest_method = ActiveQuestData.isArenaQuest;
-    end
-    if isArenaQuest_method:call(ActiveQuestData) == false then
+    if isArenaQuest_method:call(sdk.to_managed_object(args[3])) == false then
         restockItems();
     end
 end);

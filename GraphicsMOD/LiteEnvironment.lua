@@ -38,12 +38,10 @@ end
 
 local DPGIComponent = nil;
 LiteEnvironment.apply_gi_setting = function()
-    if Constants.EnvironmentManager == nil then
-        Constants.EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
-    end
-    if Constants.EnvironmentManager ~= nil then
-        if DPGIComponent == nil then
-            DPGIComponent = get_DPGIComponent_method:call(Constants.EnvironmentManager);
+    if DPGIComponent == nil then
+        local EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
+        if EnvironmentManager ~= nil then
+            DPGIComponent = get_DPGIComponent_method:call(EnvironmentManager);
         end
     end
     if DPGIComponent ~= nil then
