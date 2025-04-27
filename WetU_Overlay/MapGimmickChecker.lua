@@ -1,5 +1,6 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
+local thread = Constants.thread;
 
 local tostring = Constants.tostring;
 
@@ -122,11 +123,11 @@ end, function()
 end);
 
 sdk.hook(MoonController_type_def:get_method("updateData"), Constants.getObject, function()
-    local MoonIdx = get_MoonIdx_method:call(getActiveMoonData_method:call(Constants.thread.get_hook_storage()["this"]));
+    local MoonIdx = get_MoonIdx_method:call(getActiveMoonData_method:call(thread.get_hook_storage()["this"]));
     if MoonIdx ~= nil then
+        MoonIdx = MoonIdx + 1;
         if MoonIdx ~= oldMoonIdx then
             oldMoonIdx = MoonIdx;
-            MoonIdx = MoonIdx + 1;
             this.MoonState = MoonPhase[MoonIdx] .. ": " .. tostring(MoonIdx) .. "/" .. MoonVariationNum;
         end
     else

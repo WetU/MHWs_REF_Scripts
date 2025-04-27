@@ -172,15 +172,17 @@ end);
 local ColorCorrect = nil;
 re.on_application_entry("LockScene", function()
     if ColorCorrect == nil then
-        if Constants.AppEffectManager == nil then
-            Constants.AppEffectManager = sdk.get_managed_singleton("app.AppEffectManager");
-        end
-        local LDRPostProcess = get_LDRPostProcess_method:call(Constants.AppEffectManager);
-        if LDRPostProcess ~= nil then
-            ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
+        local AppEffectManager = sdk.get_managed_singleton("app.AppEffectManager");
+        if AppEffectManager ~= nil then
+            local LDRPostProcess = get_LDRPostProcess_method:call(AppEffectManager);
+            if LDRPostProcess ~= nil then
+                ColorCorrect = get_ColorCorrect_method:call(LDRPostProcess);
+            end
         end
     end
-    set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
+    if ColorCorrect ~= nil then
+        set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
+    end
 end);
 
 re.on_config_save(SaveSettings);
