@@ -66,7 +66,7 @@ end, function()
         end
 
         if isUpdated == true and RallusNum ~= nil then
-            FacilityItems.Rallus = "뜸부기 둥지: " .. tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
+            FacilityItems.Rallus = tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
         end
     end
 end);

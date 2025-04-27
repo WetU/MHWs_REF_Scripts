@@ -35,7 +35,7 @@ re.on_frame(function()
         imgui.end_window();
     end
 
-    if FacilityItems.Rallus ~= nil and imgui.begin_window("시설", nil, windowFlag) == true then
+    if FacilityItems.Rallus ~= nil and imgui.begin_window("뜸부기 둥지", nil, windowFlag) == true then
         imgui.text(FacilityItems.Rallus);
         imgui.end_window();
     end
