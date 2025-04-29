@@ -8,7 +8,7 @@ local HunterMealEffect_type_def = sdk.find_type_definition("app.cHunterMealEffec
 local get_DurationTimer_method = HunterMealEffect_type_def:get_method("get_DurationTimer");
 local IsTimerActive_field = HunterMealEffect_type_def:get_field("_IsTimerActive");
 
-local NO_CANTEEN = "식사 효과 없음";
+local NO_CANTEEN = "효과 없음";
 local oldMealTimer = nil;
 
 local mealInfoTbl = {

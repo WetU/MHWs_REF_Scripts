@@ -25,28 +25,37 @@ end
 re.on_config_save(saveConfig);
 
 re.on_frame(function()
-    if QuestInfo.QuestInfoCreated == true and imgui.begin_window("퀘스트 정보", nil, windowFlag) == true then
+    local str = "";
+    if MealInfo.MealTimer ~= nil then
+        str = "식사: " .. MealInfo.MealTimer;
+    end
+    if FacilityItems.Rallus ~= nil then
+        if str ~= "" then
+            str = str .. " | ";
+        end
+        str = str .. "뜸부기: " .. FacilityItems.Rallus;
+    end
+    if SpecialGimmick.MoonState ~= nil then
+        if str ~= "" then
+            str = str .. " | ";
+        end
+        str = str .. SpecialGimmick.MoonState;
+    end
+    if SpecialGimmick.PoppedGimmick ~= nil then
+        if str ~= "" then
+            str = str .. " | ";
+        end
+        str = str .. SpecialGimmick.PoppedGimmick;
+    end
+    if str ~= "" then
+        imgui.begin_window("정보", nil, windowFlag);
+        imgui.text(str);
+        imgui.end_window();
+    end
+
+    if QuestInfo.QuestInfoCreated == true then
+        imgui.begin_window("퀘스트 정보", nil, windowFlag);
         imgui.text(QuestInfo.QuestTimer .. "\n" .. QuestInfo.DeathCount);
-        imgui.end_window();
-    end
-
-    if MealInfo.MealTimer ~= nil and imgui.begin_window("식사", nil, windowFlag) == true then
-        imgui.text(MealInfo.MealTimer);
-        imgui.end_window();
-    end
-
-    if FacilityItems.Rallus ~= nil and imgui.begin_window("뜸부기 둥지", nil, windowFlag) == true then
-        imgui.text(FacilityItems.Rallus);
-        imgui.end_window();
-    end
-
-    if (SpecialGimmick.MoonState ~= nil or SpecialGimmick.PoppedGimmick ~= nil) and imgui.begin_window("환경", nil, windowFlag) == true then
-        if SpecialGimmick.PoppedGimmick ~= nil then
-            imgui.text(SpecialGimmick.PoppedGimmick);
-        end
-        if SpecialGimmick.MoonState ~= nil then
-            imgui.text(SpecialGimmick.MoonState);
-        end
         imgui.end_window();
     end
 end);
