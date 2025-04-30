@@ -2,7 +2,6 @@ local require = _G.require;
 
 local Constants = require("Constants/Constants");
 local DisablePP = require("GraphicsMOD/disable_postprocessing");
-local DisableCameraOverlapTransparency = require("GraphicsMOD/DisableCameraOverlapTransparency");
 local LiteEnvironment = require("GraphicsMOD/LiteEnvironment");
 
 local sdk = Constants.sdk;
@@ -17,5 +16,4 @@ sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), funct
 end, function()
     DisablePP.ApplySettings();
     LiteEnvironment.apply_gi_setting();
-    DisableCameraOverlapTransparency.Apply();
 end);
