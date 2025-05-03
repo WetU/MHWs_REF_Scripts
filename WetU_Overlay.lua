@@ -8,7 +8,7 @@ local imgui = Constants.imgui;
 local FacilityItems = require("WetU_Overlay/FacilityItems");
 local MealInfo = require("WetU_Overlay/HunterMealEffect");
 local QuestInfo = require("WetU_Overlay/QuestInfo");
-local SpecialGimmick = require("WetU_Overlay/MapGimmickChecker");
+local MoonTracker = require("WetU_Overlay/MoonTracker");
 
 local windowFlag = 4096 + 64 + 512;
 local config = json.load_file("WetU_Overlay.json") or {unLock = false};;
@@ -35,17 +35,11 @@ re.on_frame(function()
         end
         str = str .. "뜸부기: " .. FacilityItems.Rallus;
     end
-    if SpecialGimmick.MoonState ~= nil then
+    if MoonTracker.MoonState ~= nil then
         if str ~= "" then
             str = str .. " | ";
         end
-        str = str .. SpecialGimmick.MoonState;
-    end
-    if SpecialGimmick.PoppedGimmick ~= nil then
-        if str ~= "" then
-            str = str .. " | ";
-        end
-        str = str .. SpecialGimmick.PoppedGimmick;
+        str = str .. MoonTracker.MoonState;
     end
     if str ~= "" then
         imgui.begin_window("정보", nil, windowFlag);
