@@ -4,8 +4,9 @@ local json = Constants.json;
 local imgui = Constants.imgui;
 local re = Constants.re;
 
-local get_GUI020100Accessor_method = Constants.GUIManager_type_def:get_method("get_GUI020100Accessor");
-local get_IsJustTimingShortcutWaiting_method = Constants.GUIManager_type_def:get_method("get_IsJustTimingShortcutWaiting");
+local GUIManager_type_def = sdk.find_type_definition("app.GUIManager");
+local get_GUI020100Accessor_method = GUIManager_type_def:get_method("get_GUI020100Accessor");
+local get_IsJustTimingShortcutWaiting_method = GUIManager_type_def:get_method("get_IsJustTimingShortcutWaiting");
 
 local GUIs_field = get_GUI020100Accessor_method:get_return_type():get_parent_type():get_field("GUIs");
 
@@ -25,6 +26,9 @@ local FIX_PANEL_TYPE = {
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
 
 local config = json.load_file("ImportantNotificationUtil.json") or {enabled = true};
+if config.enabled == nil then
+    config.enabled = true;
+end
 
 local function saveConfig()
     json.dump_file("ImportantNotificationUtil.json", config);
@@ -32,7 +36,7 @@ end
 
 local GUI020100 = nil;
 local HunterContinueFlag = nil;
-sdk.hook(Constants.GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
+sdk.hook(GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
     if config.enabled == true then
         if Constants.GUIManager == nil then
             Constants.GUIManager = sdk.to_managed_object(args[2]);

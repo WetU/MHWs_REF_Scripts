@@ -5,6 +5,9 @@ local re = Constants.re;
 local imgui = Constants.imgui;
 local thread = Constants.thread;
 
+local pairs = Constants.pairs;
+local table = Constants.table;
+
 local GUI050000_type_def = sdk.find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
 
@@ -26,7 +29,7 @@ end
 
 local file = json.load_file("remember_quest_settings.json");
 if file ~= nil then
-    for key, value in Constants.pairs(config) do
+    for key, value in pairs(config) do
         if file[key] == nil then
             file[key] = value;
         end
@@ -51,12 +54,19 @@ sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
                 if sort_type_list ~= nil then
                     local sort_type_list_size = sort_type_list:get_size();
                     if sort_type_list_size > 0 then
+                        local isApplied = false;
                         for i = 0, sort_type_list_size - 1 do
                             local sort_type = sort_type_list:get_element(i);
                             if value_field:get_data(sort_type) ~= config.sort_types[i + 1] then
                                 sort_type:set_field("value__", config.sort_types[i + 1]);
                                 sort_type_list[i] = sort_type;
+                                if isApplied == false then
+                                    isApplied = true;
+                                end
                             end
+                        end
+                        if isApplied == true then
+                            QuestCounterContext:set_field("QuestCategorySortType", sort_type_list);
                         end
                     end
                 end
@@ -79,7 +89,7 @@ sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getObject, fun
                 if sort_type_list_size > 0 then
                     config.sort_types = {};
                     for i = 0, sort_type_list_size - 1 do
-                        Constants.table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
+                        table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
                     end
                 end
             end

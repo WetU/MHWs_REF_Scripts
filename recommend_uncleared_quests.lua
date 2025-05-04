@@ -5,19 +5,15 @@ local json = Constants.json;
 local imgui = Constants.imgui;
 local re = Constants.re;
 
-local config = {
-	enabled = true
-};
+local table = Constants.table;
+
+local config = json.load_file("recommend_uncleared_quests.json") or {enabled = true};
+if config.enabled == nil then
+    config.enabled = true;
+end
 
 local function saveConfig()
     json.dump_file("recommend_uncleared_quests.json", config);
-end
-
-local file = json.load_file("recommend_uncleared_quests.json");
-if file ~= nil then
-    config = file;
-else
-    saveConfig();
 end
 
 local checkQuestClear_method = sdk.find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static

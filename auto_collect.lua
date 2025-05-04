@@ -2,6 +2,9 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
+local ipairs = Constants.ipairs;
+local table = Constants.table;
+
 local payItem_method = sdk.find_type_definition("app.FacilityUtil"):get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -103,7 +106,7 @@ local function getMoriverItems(moriverInfo, completedData)
         local gettingNum = Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
             getItems(gettingItemId, gettingNum);
-            Constants.table.insert(completedData, moriverInfo);
+            table.insert(completedData, moriverInfo);
         end
     end
 end
@@ -158,7 +161,7 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                     end
                 end
             end
-            for _, completed in Constants.ipairs(completedMoriver) do
+            for _, completed in ipairs(completedMoriver) do
                 executedSharing_method:call(FacilityMoriver, completed);
             end
         end

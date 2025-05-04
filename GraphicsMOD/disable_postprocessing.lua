@@ -9,11 +9,12 @@ local get_LDRPostProcess_method = sdk.find_type_definition("app.AppEffectManager
 local get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
 local set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");
 
-local get_DisplaySettings_method = Constants.GraphicsManager_type_def:get_method("get_DisplaySettings");
-local get_NowGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
-local setGraphicsSetting_method = Constants.GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
-local AppGraphicsSettingController_field = Constants.GraphicsManager_type_def:get_field("_AppGraphicsSettingController");
-local ToneMapping_field = Constants.GraphicsManager_type_def:get_field("_ToneMapping");
+local GraphicsManager_type_def = sdk.find_type_definition("app.GraphicsManager");
+local get_DisplaySettings_method = GraphicsManager_type_def:get_method("get_DisplaySettings");
+local get_NowGraphicsSetting_method = GraphicsManager_type_def:get_method("get_NowGraphicsSetting");
+local setGraphicsSetting_method = GraphicsManager_type_def:get_method("setGraphicsSetting(ace.cGraphicsSetting)");
+local AppGraphicsSettingController_field = GraphicsManager_type_def:get_field("_AppGraphicsSettingController");
+local ToneMapping_field = GraphicsManager_type_def:get_field("_ToneMapping");
 
 local DisplaySettings_type_def = get_DisplaySettings_method:get_return_type();
 local set_UseSDRBrightnessOptionForOverlay_method = DisplaySettings_type_def:get_method("set_UseSDRBrightnessOptionForOverlay(System.Boolean)");

@@ -10,20 +10,24 @@ local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
 
+local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
+
 local mySet = 0;
 
 local isSelfCall = false;
 
 local function restockItems()
+    if Constants.ChatManager == nil then
+        Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+    end
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        Constants:addSystemLog("아이템 세트가 적용되었습니다.");
+        addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        Constants:addSystemLog("아이템이 보충되었습니다.");
+        addSystemLog_method:call(Constants.ChatManager, "아이템이 보충되었습니다.");
     end
-
     fillShellPouchItems_method:call(nil);
 end
 
