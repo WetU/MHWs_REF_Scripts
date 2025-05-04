@@ -1,15 +1,6 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
-local get_UpTimeSecond_method = sdk.find_type_definition("via.Application"):get_method("get_UpTimeSecond"); -- static
-
-local GameFlowManagerBase_type_def = sdk.find_type_definition("ace.GameFlowManagerBase");
-local getStateName_method = GameFlowManagerBase_type_def:get_method("getStateName(ace.GameStateType)");
-local get_CurrentGameStateType_method = GameFlowManagerBase_type_def:get_method("get_CurrentGameStateType");
-
-local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
-log.debug(tostring(getStateName_method:call(GameFlowManager, get_CurrentGameStateType_method:call(GameFlowManager))))
-
 local GUI010001_type_def = sdk.find_type_definition("app.GUI010001");
 local Flow_field = GUI010001_type_def:get_field("_Flow");
 local Skip_field = GUI010001_type_def:get_field("_Skip");
