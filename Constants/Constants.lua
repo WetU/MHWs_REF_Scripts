@@ -23,6 +23,8 @@ local Constants = {
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
+    requestClose_method = sdk.find_type_definition("ace.GUIBase`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestClose(System.Boolean)"),
+
     FALSE_ptr = sdk.to_ptr(false),
 
     getObject = function(args)
