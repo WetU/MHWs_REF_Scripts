@@ -65,6 +65,8 @@ local FacilityID = {
 
 local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil); -- static
 
+local completedMoriver = nil;
+
 local function getItems(itemId, itemNum)
     changeItemNum_method:call(nil, itemId, getItemNum_method:call(nil, itemId, STOCK_TYPE.BOX) + itemNum, STOCK_TYPE.BOX);
     addItemLog_method:call(nil, itemId, itemNum, false, false, EnemyID_INVALID);
@@ -99,14 +101,14 @@ local function getFacilityItems(obj, facilityType)
     end
 end
 
-local function getMoriverItems(moriverInfo, completedData)
+local function getMoriverItems(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
             getItems(gettingItemId, gettingNum);
-            table.insert(completedData, moriverInfo);
+            table.insert(completedMoriver, moriverInfo);
         end
     end
 end
@@ -129,34 +131,36 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
         local Count = get_Count_method:call(MoriverInfos);
         if Count > 0 then
-            local completedMoriver = {};
+            completedMoriver = {};
             for i = 0, Count - 1 do
                 local MoriverInfo = get_Item_method:call(MoriverInfos, i);
                 if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
                     local FacilityId = FacilityId_field:get_data(MoriverInfo);
                     if FacilityId == FacilityID.SHARING then
-                        getMoriverItems(MoriverInfo, completedMoriver);
+                        getMoriverItems(MoriverInfo);
                     elseif FacilityId == FacilityID.SWOP then
-                        local isSuccessSWOP = true;
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                         local givingItemId = get_ItemId_method:call(ItemFromPlayer);
-                        local givingNum = Num_field:get_data(ItemFromPlayer);
-                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                        if pouchNum >= givingNum then
-                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
-                        else
-                            local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
-                            if (pouchNum + boxNum) >= givingNum then
-                                payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
-                                payItem_method:call(nil, givingItemId, givingNum - pouchNum, STOCK_TYPE.BOX);
-                            elseif boxNum >= givingNum then
-                                payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
+                        if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
+                            local isSuccessSWOP = true;
+                            local givingNum = Num_field:get_data(ItemFromPlayer);
+                            local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
+                            if pouchNum >= givingNum then
+                                payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
                             else
-                                isSuccessSWOP = false;
+                                local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
+                                if (pouchNum + boxNum) >= givingNum then
+                                    payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
+                                    payItem_method:call(nil, givingItemId, givingNum - pouchNum, STOCK_TYPE.BOX);
+                                elseif boxNum >= givingNum then
+                                    payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
+                                else
+                                    isSuccessSWOP = false;
+                                end
                             end
-                        end
-                        if isSuccessSWOP == true then
-                            getMoriverItems(MoriverInfo, completedMoriver);
+                            if isSuccessSWOP == true then
+                                getMoriverItems(MoriverInfo);
+                            end
                         end
                     end
                 end
@@ -164,6 +168,7 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
             for _, completed in ipairs(completedMoriver) do
                 executedSharing_method:call(FacilityMoriver, completed);
             end
+            completedMoriver = nil;
         end
     end
 end);
