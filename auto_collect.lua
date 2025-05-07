@@ -87,7 +87,7 @@ local function getFacilityItems(obj, facilityType)
     for i = 0, MAX_ITEM_NUM - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = get_ItemId_method:call(ItemWork);
-        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 getItems(ItemId, ItemNum);
@@ -104,7 +104,7 @@ end
 local function getMoriverItems(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
-    if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
+    if gettingItemId ~= ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
             getItems(gettingItemId, gettingNum);
@@ -141,7 +141,7 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, fun
                     elseif FacilityId == FacilityID.SWOP then
                         local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                         local givingItemId = get_ItemId_method:call(ItemFromPlayer);
-                        if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
+                        if givingItemId ~= ItemID.NONE and givingItemId < ItemID.MAX then
                             local isSuccessSWOP = true;
                             local givingNum = Num_field:get_data(ItemFromPlayer);
                             local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);

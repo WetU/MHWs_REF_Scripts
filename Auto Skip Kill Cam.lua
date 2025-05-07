@@ -9,13 +9,13 @@ local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHun
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
 local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
+local StampPanels_field = GUI020201_type_def:get_field("_StampPanels");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
 
-local TYPE_type_def = CurType_field:get_type();
-local TYPE = {
-    START = TYPE_type_def:get_field("START"):get_data(nil),
-    MAX = TYPE_type_def:get_field("MAX"):get_data(nil)
-};
+local get_Component_method = sdk.find_type_definition("via.gui.Panel"):get_method("get_Component");
+local set_PlaySpeed_method = get_Component_method:get_return_type():get_method("set_PlaySpeed(System.Single)");
+
+local GUI020201TYPE_CLEAR = CurType_field:get_type():get_field("CLEAR"):get_data(nil);
 
 local config = json.load_file("AutoSkipKillCam.json") or {enableKillCam = true, enableEndScene = true};
 if config.enableKillCam == nil then
@@ -47,17 +47,25 @@ end, function(retval)
     return retval;
 end);
 
+local nativeGUI = nil;
 sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), function(args)
     if config.enableEndScene == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
     local GUI020201 = thread.get_hook_storage()["this"];
-    if GUI020201 ~= nil then
-        local CurType = CurType_field:get_data(GUI020201);
-        if CurType ~= nil and CurType ~= TYPE.START and CurType ~= TYPE.MAX then
-            Constants.requestClose_method:call(GUI020201, false);
+    if GUI020201 ~= nil and CurType_field:get_data(GUI020201) == GUI020201TYPE_CLEAR and nativeGUI == nil then
+        nativeGUI = get_Component_method:call(StampPanels_field:get_data(GUI020201):get_element(0));
+        if nativeGUI ~= nil then
+            set_PlaySpeed_method:call(nativeGUI, 10.0);
         end
+    end
+end);
+
+sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
+    if nativeGUI ~= nil then
+        set_PlaySpeed_method:call(nativeGUI, 1.0);
+        nativeGUI = nil;
     end
 end);
 
