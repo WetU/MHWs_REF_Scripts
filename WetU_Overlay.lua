@@ -7,7 +7,9 @@ local MealInfo = require("WetU_Overlay/HunterMealEffect");
 local QuestInfo = require("WetU_Overlay/QuestInfo");
 local MoonTracker = require("WetU_Overlay/MoonTracker");
 
-Constants.re.on_frame(function()
+local re = Constants.re;
+
+re.on_frame(function()
     local str = MealInfo.MealTimer ~= nil and "식사: " .. MealInfo.MealTimer or "";
     if FacilityItems.Rallus ~= nil then
         str = str ~= "" and str .. " | " .. "뜸부기: " .. FacilityItems.Rallus or "뜸부기: " .. FacilityItems.Rallus;

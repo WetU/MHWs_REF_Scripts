@@ -8,7 +8,7 @@ local GUIManager_type_def = sdk.find_type_definition("app.GUIManager");
 local get_GUI020100Accessor_method = GUIManager_type_def:get_method("get_GUI020100Accessor");
 local get_IsJustTimingShortcutWaiting_method = GUIManager_type_def:get_method("get_IsJustTimingShortcutWaiting");
 
-local GUIs_field = get_GUI020100Accessor_method:get_return_type():get_parent_type():get_field("GUIs");
+local GUIs_field = get_GUI020100Accessor_method:get_return_type():get_field("GUIs");
 
 local get_FixPanelType_method = sdk.find_type_definition("app.GUI020100"):get_method("get_FixPanelType");
 
