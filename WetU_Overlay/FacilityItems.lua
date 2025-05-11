@@ -76,9 +76,8 @@ sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    local Gm262 = thread.get_hook_storage()["this"];
-    if Gm262 ~= nil then
-        successButtonEvent_method:call(Gm262);
+    if RallusNum > 0 then
+        successButtonEvent_method:call(thread.get_hook_storage()["this"]);
     end
 end);
 

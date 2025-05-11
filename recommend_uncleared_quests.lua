@@ -43,8 +43,8 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    local GUI050000QuestListParts = thread.get_hook_storage()["this"];
-    if GUI050000QuestListParts ~= nil then
+    if config.enabled == true then
+        local GUI050000QuestListParts = thread.get_hook_storage()["this"];
         if get_ViewCategory_method:call(GUI050000QuestListParts) == CATEGORY_FREE and should_sort == true then
             local ViewQuestDataList = get_ViewQuestDataList_method:call(GUI050000QuestListParts);
             if ViewQuestDataList ~= nil then

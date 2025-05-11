@@ -71,9 +71,8 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("applyQuestPlDie(System.Int
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    local QuestDirector = thread.get_hook_storage()["this"];
-    if QuestDirector ~= nil then
-        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector);
+    if QuestInfo.QuestInfoCreated == true then
+        local QuestPlDieCount = QuestPlDieCount_field:get_data(thread.get_hook_storage()["this"]);
         QuestInfo.DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
     end
 end);

@@ -45,9 +45,8 @@ local function getObject(args)
 end
 
 sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
-    local GUI050000 = thread.get_hook_storage()["this"];
-    if GUI050000 ~= nil then
-        local QuestCounterContext = get_QuestCounterContext_method:call(GUI050000);
+    if config.enabled == true then
+        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
         if QuestCounterContext ~= nil then
             if #config.sort_types > 0 then
                 local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
@@ -79,9 +78,8 @@ sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
 end);
 
 sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getObject, function()
-    local GUI050000 = thread.get_hook_storage()["this"];
-    if GUI050000 ~= nil then
-        local QuestCounterContext = get_QuestCounterContext_method:call(GUI050000);
+    if config.enabled == true then
+        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
         if QuestCounterContext ~= nil then
             local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
             if sort_type_list ~= nil then
