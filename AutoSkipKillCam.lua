@@ -67,7 +67,7 @@ sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), functi
     end
 end, function()
     local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
-    if GUIAppOnTimerKey ~= nil and (config.autoEndQuest == true or (config.instantKey == true and isOn_method:call(GUIAppOnTimerKey) == true)) then
+    if GUIAppOnTimerKey ~= nil and (config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true) then
         GUIAppOnTimerKey:set_field("_Success", true);
     end
 end);
@@ -80,11 +80,11 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("QuestReturnSkip"), nil, fu
 end);
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
-    if config.enableInstantQuit == true and isSkipped == true then
+    if isSkipped == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if config.enableInstantQuit == true and isSkipped == true then
+    if isSkipped == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
         if QuestFlowParam:read_byte(offsets.Enabled) == 1 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
             QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
