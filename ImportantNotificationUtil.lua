@@ -5,23 +5,22 @@ local imgui = Constants.imgui;
 local re = Constants.re;
 
 local GUIManager_type_def = sdk.find_type_definition("app.GUIManager");
-local get_GUI020100Accessor_method = GUIManager_type_def:get_method("get_GUI020100Accessor");
 local get_IsJustTimingShortcutWaiting_method = GUIManager_type_def:get_method("get_IsJustTimingShortcutWaiting");
+local getGUI_method = GUIManager_type_def:get_method("getGUI(app.GUIID.ID)");
 
-local GUIs_field = get_GUI020100Accessor_method:get_return_type():get_field("GUIs");
+local UI020100 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI020100"):get_data(nil);
 
 local get_FixPanelType_method = sdk.find_type_definition("app.GUI020100"):get_method("get_FixPanelType");
-
-local getMasterPlayer_method = sdk.find_type_definition("app.PlayerManager"):get_method("getMasterPlayer");
-local get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
-local HunterContinueFlag_field = Constants.HunterCharacter_type_def:get_field("_HunterContinueFlag");
-local off_method = HunterContinueFlag_field:get_type():get_method("off(System.UInt32)");
 
 local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
 local FIX_PANEL_TYPE = {
     IMPORTANT_LINE1 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE1"):get_data(nil),
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
+
+local getMasterPlayer_method = sdk.find_type_definition("app.PlayerManager"):get_method("getMasterPlayer");
+local get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
+local offHunterContinueFlag_method = Constants.HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
 
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
 
@@ -35,7 +34,7 @@ local function saveConfig()
 end
 
 local GUI020100 = nil;
-local HunterContinueFlag = nil;
+local HunterCharacter = nil;
 sdk.hook(GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
     if config.enabled == true then
         if Constants.GUIManager == nil then
@@ -45,22 +44,24 @@ sdk.hook(GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
         if GUI020100 ~= nil then
             GUI020100 = nil;
         end
-        if HunterContinueFlag ~= nil then
-            HunterContinueFlag = nil;
+        if HunterCharacter ~= nil then
+            HunterCharacter = nil;
         end
     end
 end, function()
     if config.enabled == true and get_IsJustTimingShortcutWaiting_method:call(Constants.GUIManager) == true then
         if GUI020100 == nil then
-            GUI020100 = GUIs_field:get_data(get_GUI020100Accessor_method:call(Constants.GUIManager)):get_element(0);
+            GUI020100 = getGUI_method:call(Constants.GUIManager, UI020100);
         end
-        local FixPanelType = get_FixPanelType_method:call(GUI020100);
-        if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
-            if HunterContinueFlag == nil then
-                HunterContinueFlag = HunterContinueFlag_field:get_data(get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager"))));
-            end
-            if HunterContinueFlag ~= nil then
-                off_method:call(HunterContinueFlag, DISABLE_OPEN_MAP);
+        if GUI020100 ~= nil then
+            local FixPanelType = get_FixPanelType_method:call(GUI020100);
+            if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
+                if HunterCharacter == nil then
+                    HunterCharacter = get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager")));
+                end
+                if HunterCharacter ~= nil then
+                    offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
+                end
             end
         end
     end

@@ -11,7 +11,7 @@ local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKe
 local isOn_method = GUIAppOnTimerKey_type_def:get_method("isOn");
 local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
-local RETURN_TIME_SKIP = Type_field:get_type():get_field("RETURN_TIME_SKIP"):get_data(nil);
+local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
 local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
@@ -86,7 +86,7 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
 end, function()
     if isSkipped == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
-        if QuestFlowParam:read_byte(offsets.Enabled) == 1 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
+        if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
             QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
             QuestFlowParam:write_byte(offsets.IsTimeOut, 1);
         end

@@ -7,14 +7,19 @@ local Flow_field = GUI010001_type_def:get_field("_Flow");
 local Skip_field = GUI010001_type_def:get_field("_Skip");
 local EnableSkip_field = GUI010001_type_def:get_field("_EnableSkip");
 
-local GUI010002_type_def = sdk.find_type_definition("app.GUI010002");
-local requestClose_method = GUI010002_type_def:get_method("requestClose(System.Boolean)");
-
 local FLOW_type_def = Flow_field:get_type();
 local FLOW = {
     STARTUP = FLOW_type_def:get_field("STARTUP"):get_data(nil),
     COPYRIGHT = FLOW_type_def:get_field("COPYRIGHT"):get_data(nil)
 };
+
+local GUI010002_type_def = sdk.find_type_definition("app.GUI010002");
+local requestClose_method = GUI010002_type_def:get_method("requestClose(System.Boolean)");
+
+local GUIAppKey_type_def = sdk.find_type_definition("app.cGUIAppKey");
+local Type_field = GUIAppKey_type_def:get_field("_Type");
+
+local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
 
 sdk.hook(GUI010001_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
     local GUI010001 = thread.get_hook_storage()["this"];
@@ -26,4 +31,16 @@ end);
 
 sdk.hook(GUI010002_type_def:get_method("onOpen"), Constants.getObject, function()
     requestClose_method:call(thread.get_hook_storage()["this"], false);
+end);
+
+sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args)
+    local GUIAppKey = sdk.to_managed_object(args[2]);
+    if Type_field:get_data(GUIAppKey) == TITLE_START then
+        thread.get_hook_storage()["this"] = GUIAppKey;
+    end
+end, function()
+    local GUIAppKey = thread.get_hook_storage()["this"];
+    if GUIAppKey ~= nil then
+        GUIAppKey:set_field("_Success", true);
+    end
 end);
