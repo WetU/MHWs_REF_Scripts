@@ -1,6 +1,8 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
+local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
+
 local fillPouchItems_method = Constants.ItemUtil_type_def:get_method("fillPouchItems"); -- static
 local fillShellPouchItems_method = Constants.ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
 
@@ -9,8 +11,6 @@ local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetTo
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
-
-local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
 
 local mySet = 0;
 

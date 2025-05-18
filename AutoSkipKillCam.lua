@@ -20,7 +20,11 @@ local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
-local GUI020201TYPE_CLEAR = CurType_field:get_type():get_field("CLEAR"):get_data(nil);
+local TYPE_type_def = CurType_field:get_type();
+local TYPES = {
+    START = TYPE_type_def:get_field("START"):get_data(nil),
+    CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
+};
 
 local GUI_type_def = GUI_field:get_type();
 local get_PlaySpeed_method = GUI_type_def:get_method("get_PlaySpeed");
@@ -108,30 +112,28 @@ end, function(retval)
     return retval;
 end);
 
-local function get_GUI020201(args)
-    if config.skipEndScene == true then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-    end
-end
-
-sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), get_GUI020201, function()
-    if config.skipEndScene == true then
-        local GUI020201 = thread.get_hook_storage()["this"];
-        if CurType_field:get_data(GUI020201) == GUI020201TYPE_CLEAR then
-            local GUI = GUI_field:get_data(GUI020201);
-            if GUI ~= nil and get_PlaySpeed_method:call(GUI) ~= 10.0 then
-                set_PlaySpeed_method:call(GUI, 10.0);
-            end
-        end
+local GUI020201_GUI = nil;
+sdk.hook(GUI020201_type_def:get_method("onOpen"), Constants.getObject, function()
+    local GUI020201 = thread.get_hook_storage()["this"];
+    local CurType = CurType_field:get_data(GUI020201);
+    if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then
+        GUI020201_GUI = GUI_field:get_data(GUI020201);
     end
 end);
 
-sdk.hook(GUI020201_type_def:get_method("onCloseApp"), get_GUI020201, function()
-    if config.skipEndScene == true then
-        local GUI = GUI_field:get_data(thread.get_hook_storage()["this"]);
-        if GUI ~= nil and get_PlaySpeed_method:call(GUI) ~= 1.0 then
-            set_PlaySpeed_method:call(GUI, 1.0);
-        end
+local isSetted = false;
+sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
+    if GUI020201_GUI ~= nil and isSetted == false then
+        set_PlaySpeed_method:call(GUI020201_GUI, 10.0);
+        isSetted = true;
+    end
+end);
+
+sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
+    if GUI020201_GUI ~= nil then
+        set_PlaySpeed_method:call(GUI020201_GUI, 1.0);
+        GUI020201_GUI = nil;
+        isSetted = false;
     end
 end);
 
