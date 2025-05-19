@@ -31,9 +31,7 @@ local function apply_ws_setting()
     if Constants.WindManager == nil then
         Constants.WindManager = sdk.get_managed_singleton("app.WindManager");
     end
-    if Constants.WindManager ~= nil then
-        set_Stop_method:call(Constants.WindManager, settings.disable_wind_simulation);
-    end
+    set_Stop_method:call(Constants.WindManager, settings.disable_wind_simulation);
 end
 
 local DPGIComponent = nil;

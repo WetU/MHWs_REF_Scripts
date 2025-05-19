@@ -26,9 +26,7 @@ local TYPES = {
     CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
 };
 
-local GUI_type_def = GUI_field:get_type();
-local get_PlaySpeed_method = GUI_type_def:get_method("get_PlaySpeed");
-local set_PlaySpeed_method = GUI_type_def:get_method("set_PlaySpeed(System.Single)");
+local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
 local offsets = {
     Timer = 0xC8,
@@ -91,7 +89,7 @@ end, function()
     if isSkipped == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
         if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
-            QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
+            --QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
             QuestFlowParam:write_byte(offsets.IsTimeOut, 1);
         end
         isSkipped = false;

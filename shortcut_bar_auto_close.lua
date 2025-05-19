@@ -25,7 +25,7 @@ sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), function(args)
 		GUI020600 = sdk.to_managed_object(args[2]);
 	end
 end, function()
-	if GUI020600 ~= nil then
+	if config.enabled == true then
 		startTime = os.clock();
 	end
 end);

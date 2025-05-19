@@ -53,16 +53,12 @@ end, function()
         if GUI020100 == nil then
             GUI020100 = getGUI_method:call(Constants.GUIManager, UI020100);
         end
-        if GUI020100 ~= nil then
-            local FixPanelType = get_FixPanelType_method:call(GUI020100);
-            if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
-                if HunterCharacter == nil then
-                    HunterCharacter = get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager")));
-                end
-                if HunterCharacter ~= nil then
-                    offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
-                end
+        local FixPanelType = get_FixPanelType_method:call(GUI020100);
+        if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
+            if HunterCharacter == nil then
+                HunterCharacter = get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager")));
             end
+            offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
         end
     end
 end);

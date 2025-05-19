@@ -39,35 +39,33 @@ sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
         Constants.FacilityManager = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if Constants.FacilityManager ~= nil then
-        local FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
-        if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
-            stroke_method:call(FacilityPugee, true);
-        end
+    local FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
+    if isEnableCoolTimer_method:call(FacilityPugee) == false then
+        stroke_method:call(FacilityPugee, true);
+    end
 
-        local FacilityRallus = get_Rallus_method:call(Constants.FacilityManager);
-        local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
-        local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
-        local isUpdated = false;
-        if isRallusStockMaxUpdated == false then
-            RallusStockMax = tostring(get_StockMax_method:call(SettingData_field:get_data(FacilityRallus)));
-            isRallusStockMaxUpdated = true;
-        end
+    local FacilityRallus = get_Rallus_method:call(Constants.FacilityManager);
+    local SupplyTimer = get_SupplyTimer_method:call(FacilityRallus);
+    local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
+    local isUpdated = false;
+    if isRallusStockMaxUpdated == false then
+        RallusStockMax = tostring(get_StockMax_method:call(SettingData_field:get_data(FacilityRallus)));
+        isRallusStockMaxUpdated = true;
+    end
 
-        if SupplyTimer ~= oldSupplyTimer then
-            oldSupplyTimer = SupplyTimer;
-            RallusTimer = Constants.string.format("%02d:%02d", math.floor(SupplyTimer / 60.0), math.modf(SupplyTimer % 60.0));
-            isUpdated = true;
-        end
+    if SupplyTimer ~= oldSupplyTimer then
+        oldSupplyTimer = SupplyTimer;
+        RallusTimer = Constants.string.format("%02d:%02d", math.floor(SupplyTimer / 60.0), math.modf(SupplyTimer % 60.0));
+        isUpdated = true;
+    end
 
-        if SupplyNum ~= RallusNum then
-            RallusNum = SupplyNum;
-            isUpdated = true;
-        end
+    if SupplyNum ~= RallusNum then
+        RallusNum = SupplyNum;
+        isUpdated = true;
+    end
 
-        if isUpdated == true and RallusNum ~= nil then
-            FacilityItems.Rallus = tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
-        end
+    if isUpdated == true and RallusNum ~= nil then
+        FacilityItems.Rallus = tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
     end
 end);
 

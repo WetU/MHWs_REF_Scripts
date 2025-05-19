@@ -118,50 +118,41 @@ DisablePP.ApplySettings = function()
         Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
     end
     local ToneMapping = ToneMapping_field:get_data(Constants.GraphicsManager);
-    if ToneMapping ~= nil then
-        setTemporalAA_method:call(ToneMapping, settings.TAA == true and TemporalAA.Strong or TemporalAA.Disable);
-        set_EchoEnabled_method:call(ToneMapping, settings.jitter);
-        set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
-        setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and LocalExposureType.BlurredLuminance or LocalExposureType.Legacy);
-        set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
-    end
+    setTemporalAA_method:call(ToneMapping, settings.TAA == true and TemporalAA.Strong or TemporalAA.Disable);
+    set_EchoEnabled_method:call(ToneMapping, settings.jitter);
+    set_EnableLocalExposure_method:call(ToneMapping, settings.localExposure);
+    setLocalExposureType_method:call(ToneMapping, settings.localExposureBlurredLuminance == true and LocalExposureType.BlurredLuminance or LocalExposureType.Legacy);
+    set_Contrast_method:call(ToneMapping, settings.customContrastEnable == true and settings.customContrast or settings.colorCorrect == false and 1.0 or 0.3);
 
     local DisplaySettings = get_DisplaySettings_method:call(Constants.GraphicsManager);
-    if DisplaySettings ~= nil then
-        set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
-        if settings.customBrightnessEnable == true or changeBrightness == true then
-            set_Gamma_method:call(DisplaySettings, settings.gamma);
-            set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
-            set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
-            set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
-            set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
-            set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
-            if get_HDRMode_method:call(DisplaySettings) == false then
-                updateRequest_method:call(DisplaySettings);
-            end
-            changeBrightness = false;
+    set_UseSDRBrightnessOptionForOverlay_method:call(DisplaySettings, settings.customBrightnessEnable);
+    if settings.customBrightnessEnable == true or changeBrightness == true then
+        set_Gamma_method:call(DisplaySettings, settings.gamma);
+        set_GammaForOverlay_method:call(DisplaySettings, settings.gammaOverlay);
+        set_OutputLowerLimit_method:call(DisplaySettings, settings.lowerLimit);
+        set_OutputUpperLimit_method:call(DisplaySettings, settings.upperLimit);
+        set_OutputLowerLimitForOverlay_method:call(DisplaySettings, settings.lowerLimitOverlay);
+        set_OutputUpperLimitForOverlay_method:call(DisplaySettings, settings.upperLimitOverlay);
+        if get_HDRMode_method:call(DisplaySettings) == false then
+            updateRequest_method:call(DisplaySettings);
         end
+        changeBrightness = false;
     end
 
-    local AppGraphicsSettingController = AppGraphicsSettingController_field:get_data(Constants.GraphicsManager);
-    if AppGraphicsSettingController ~= nil then
-        local GraphicsDynamicResolution = get_DynamicResolution_method:call(AppGraphicsSettingController);
-        if GraphicsDynamicResolution ~= nil and get_Enable_method:call(GraphicsDynamicResolution) == false then
-            set_Enable_method:call(GraphicsDynamicResolution, true);
-        end
+    local GraphicsDynamicResolution = get_DynamicResolution_method:call(AppGraphicsSettingController_field:get_data(Constants.GraphicsManager));
+    if get_Enable_method:call(GraphicsDynamicResolution) == false then
+        set_Enable_method:call(GraphicsDynamicResolution, true);
     end
 
     local NowGraphicsSetting = get_NowGraphicsSetting_method:call(Constants.GraphicsManager);
-    if NowGraphicsSetting ~= nil then
-        set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
-        set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
-        set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
-        set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
-        set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
-        set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
-        set_DynamicResolutionMode_method:call(NowGraphicsSetting, DYNAMIC_RESOLUTION_MODE_TARGET_60);
-        setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
-    end
+    set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
+    set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
+    set_FilmGrain_Enable_method:call(NowGraphicsSetting, settings.filmGrain);
+    set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
+    set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
+    set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
+    set_DynamicResolutionMode_method:call(NowGraphicsSetting, DYNAMIC_RESOLUTION_MODE_TARGET_60);
+    setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
 end
 
 sdk.hook(ToneMapping_type_def:get_method("clearHistogram"), function(args)
@@ -181,9 +172,7 @@ re.on_application_entry("LockScene", function()
             end
         end
     end
-    if ColorCorrect ~= nil then
-        set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
-    end
+    set_Enabled_method:call(ColorCorrect, settings.colorCorrect);
 end);
 
 re.on_config_save(SaveSettings);

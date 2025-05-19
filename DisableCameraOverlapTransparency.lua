@@ -33,20 +33,14 @@ local function Apply()
 	local MasterPlCamera = MasterPlCamera_field:get_data(Constants.CameraManager);
 	if MasterPlCamera ~= nil then
 		local Collision = get_Collision_method:call(MasterPlCamera);
-		if Collision ~= nil then
-			local SettingParam = SettingParam_field:get_data(Collision);
-			if SettingParam ~= nil then
-				SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
-				SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
-				SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
-				SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
-			end
+		local SettingParam = SettingParam_field:get_data(Collision);
+		local AdjusterEm = AdjusterEm_field:get_data(Collision);
+		SettingParam:set_field("OverNear_NearestDistance", config.OverNear_NearestDistance);
+		SettingParam:set_field("OverNear_NearestHeight", config.OverNear_NearestHeight);
+		SettingParam:set_field("OverNear_Alpha_Near", config.OverNear_Alpha);
+		SettingParam:set_field("OverNear_Alpha_Far", config.OverNear_Alpha);
 
-			local AdjusterEm = AdjusterEm_field:get_data(Collision);
-			if AdjusterEm ~= nil then
-				set_NearestDistance_method:call(AdjusterEm, config.OverNear_NearestDistance);
-			end
-		end
+		set_NearestDistance_method:call(AdjusterEm, config.OverNear_NearestDistance);
 	end
 end
 

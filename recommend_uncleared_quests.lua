@@ -47,27 +47,23 @@ end, function()
         local GUI050000QuestListParts = thread.get_hook_storage()["this"];
         if get_ViewCategory_method:call(GUI050000QuestListParts) == CATEGORY_FREE and should_sort == true then
             local ViewQuestDataList = get_ViewQuestDataList_method:call(GUI050000QuestListParts);
-            if ViewQuestDataList ~= nil then
-                local ViewQuestDataList_size = get_Count_method:call(ViewQuestDataList);
-                if ViewQuestDataList_size > 0 then
-                    local cleared_quests = {};
-                    local uncleared_quests = {};
-                    for i = 0, ViewQuestDataList_size - 1 do
-                        local quest_data = get_Item_method:call(ViewQuestDataList, i);
-                        if quest_data ~= nil then
-                            table.insert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
-                        end
-                    end
+            local ViewQuestDataList_size = get_Count_method:call(ViewQuestDataList);
+            if ViewQuestDataList_size > 0 then
+                local cleared_quests = {};
+                local uncleared_quests = {};
+                for i = 0, ViewQuestDataList_size - 1 do
+                    local quest_data = get_Item_method:call(ViewQuestDataList, i);
+                    table.insert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
+                end
 
-                    local unclearedCount = #uncleared_quests;
-                    local clearedCount = #cleared_quests;
-                    if unclearedCount ~= 0 and clearedCount ~= 0 then
-                        for i = 0, unclearedCount - 1 do
-                            set_Item_method:call(ViewQuestDataList, i, uncleared_quests[i + 1]);
-                        end
-                        for i = 0, clearedCount - 1 do
-                            set_Item_method:call(ViewQuestDataList, unclearedCount + i, cleared_quests[i + 1]);
-                        end
+                local unclearedCount = #uncleared_quests;
+                local clearedCount = #cleared_quests;
+                if unclearedCount ~= 0 and clearedCount ~= 0 then
+                    for i = 0, unclearedCount - 1 do
+                        set_Item_method:call(ViewQuestDataList, i, uncleared_quests[i + 1]);
+                    end
+                    for i = 0, clearedCount - 1 do
+                        set_Item_method:call(ViewQuestDataList, unclearedCount + i, cleared_quests[i + 1]);
                     end
                 end
             end

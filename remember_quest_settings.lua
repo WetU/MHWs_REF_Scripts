@@ -46,33 +46,29 @@ end
 
 sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
     if config.enabled == true then
-        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
-        if QuestCounterContext ~= nil then
-            if #config.sort_types > 0 then
-                local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
-                if sort_type_list ~= nil then
-                    local sort_type_list_size = sort_type_list:get_size();
-                    if sort_type_list_size > 0 then
-                        local isApplied = false;
-                        for i = 0, sort_type_list_size - 1 do
-                            local sort_type = sort_type_list:get_element(i);
-                            if value_field:get_data(sort_type) ~= config.sort_types[i + 1] then
-                                sort_type:set_field("value__", config.sort_types[i + 1]);
-                                sort_type_list[i] = sort_type;
-                                if isApplied == false then
-                                    isApplied = true;
-                                end
-                            end
-                        end
-                        if isApplied == true then
-                            QuestCounterContext:set_field("QuestCategorySortType", sort_type_list);
+        if #config.sort_types > 0 then
+            local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
+            local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
+            local sort_type_list_size = sort_type_list:get_size();
+            if sort_type_list_size > 0 then
+                local isApplied = false;
+                for i = 0, sort_type_list_size - 1 do
+                    local sort_type = sort_type_list:get_element(i);
+                    if value_field:get_data(sort_type) ~= config.sort_types[i + 1] then
+                        sort_type:set_field("value__", config.sort_types[i + 1]);
+                        sort_type_list[i] = sort_type;
+                        if isApplied == false then
+                            isApplied = true;
                         end
                     end
                 end
+                if isApplied == true then
+                    QuestCounterContext:set_field("QuestCategorySortType", sort_type_list);
+                end
             end
-            if QuestViewType_field:get_data(QuestCounterContext) ~= config.view_type then
-                QuestCounterContext:set_field("QuestViewType", config.view_type);
-            end
+        end
+        if QuestViewType_field:get_data(QuestCounterContext) ~= config.view_type then
+            QuestCounterContext:set_field("QuestViewType", config.view_type);
         end
     end
 end);
@@ -80,24 +76,20 @@ end);
 sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getObject, function()
     if config.enabled == true then
         local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
-        if QuestCounterContext ~= nil then
-            local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
-            if sort_type_list ~= nil then
-                local sort_type_list_size = sort_type_list:get_size();
-                if sort_type_list_size > 0 then
-                    config.sort_types = {};
-                    for i = 0, sort_type_list_size - 1 do
-                        table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
-                    end
-                end
+        local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
+        local sort_type_list_size = sort_type_list:get_size();
+        if sort_type_list_size > 0 then
+            config.sort_types = {};
+            for i = 0, sort_type_list_size - 1 do
+                table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
             end
-
-            local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
-            if QuestViewType ~= nil and QuestViewType ~= config.view_type then
-                config.view_type = QuestViewType;
-            end
-            saveConfig();
         end
+
+        local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
+        if QuestViewType ~= config.view_type then
+            config.view_type = QuestViewType;
+        end
+        saveConfig();
     end
 end);
 
