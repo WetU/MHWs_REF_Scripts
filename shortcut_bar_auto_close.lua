@@ -1,10 +1,10 @@
-local os = _G.os;
-
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
+
+local get_UpTimeSecond_method = sdk.find_type_definition("via.Application"):get_method("get_UpTimeSecond"); -- static
 
 local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
 local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
@@ -26,12 +26,12 @@ sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), function(args)
 	end
 end, function()
 	if config.enabled == true then
-		startTime = os.clock();
+		startTime = get_UpTimeSecond_method:call(nil);
 	end
 end);
 
 re.on_frame(function()
-	if startTime ~= nil and os.clock() - startTime >= 0.5 then
+	if startTime ~= nil and get_UpTimeSecond_method:call(nil) - startTime >= 0.5 then
 		onHudClose_method:call(GUI020600);
 		GUI020600 = nil;
 		startTime = nil;

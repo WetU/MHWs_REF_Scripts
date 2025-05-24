@@ -66,9 +66,9 @@ sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
                     QuestCounterContext:set_field("QuestCategorySortType", sort_type_list);
                 end
             end
-        end
-        if QuestViewType_field:get_data(QuestCounterContext) ~= config.view_type then
-            QuestCounterContext:set_field("QuestViewType", config.view_type);
+            if QuestViewType_field:get_data(QuestCounterContext) ~= config.view_type then
+                QuestCounterContext:set_field("QuestViewType", config.view_type);
+            end
         end
     end
 end);
