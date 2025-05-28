@@ -18,7 +18,6 @@ local Constants = {
     imgui = _G.imgui,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
-    CameraManager_type_def = sdk.find_type_definition("app.CameraManager"),
     GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
     HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),

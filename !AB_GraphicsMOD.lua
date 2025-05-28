@@ -9,7 +9,7 @@ local sdk = Constants.sdk;
 DisablePP.ApplySettings();
 LiteEnvironment.apply_gi_setting();
 
-sdk.hook(Constants.CameraManager_type_def:get_method("onSceneLoadFadeIn"), function(args)
+sdk.hook(sdk.find_type_definition("app.CameraManager"):get_method("onSceneLoadFadeIn"), function(args)
     if Constants.CameraManager == nil then
         Constants.CameraManager = sdk.to_managed_object(args[2]);
     end
