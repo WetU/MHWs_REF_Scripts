@@ -28,14 +28,16 @@ sdk.hook(GUI010002_type_def:get_method("onOpen"), Constants.getObject, function(
     requestClose_method:call(thread.get_hook_storage()["this"], false);
 end);
 
+local isTitleStart = nil;
 sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     local GUIAppKey = sdk.to_managed_object(args[2]);
     if Type_field:get_data(GUIAppKey) == TITLE_START then
+        isTitleStart = true;
         thread.get_hook_storage()["this"] = GUIAppKey;
     end
 end, function()
-    local GUIAppKey = thread.get_hook_storage()["this"];
-    if GUIAppKey ~= nil then
-        GUIAppKey:set_field("_Success", true);
+    if isTitleStart == true then
+        thread.get_hook_storage()["this"]:set_field("_Success", true);
+        isTitleStart = nil;
     end
 end);

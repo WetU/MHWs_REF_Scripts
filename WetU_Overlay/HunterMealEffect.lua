@@ -15,13 +15,15 @@ local mealInfoTbl = {
     MealTimer = nil
 };
 
+local isMasterHunterMeal = nil;
 sdk.hook(HunterMealEffect_type_def:get_method("update(System.Single, app.HunterCharacter)"), function(args)
     if get_IsMaster_method:call(sdk.to_managed_object(args[4])) == true then
+        isMasterHunterMeal = true;
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    local HunterMealEffect = thread.get_hook_storage()["this"];
-    if HunterMealEffect ~= nil then
+    if isMasterHunterMeal == true then
+        local HunterMealEffect = thread.get_hook_storage()["this"];
         if IsTimerActive_field:get_data(HunterMealEffect) == true then
             local DurationTimer = get_DurationTimer_method:call(HunterMealEffect);
             if DurationTimer ~= oldMealTimer then
@@ -34,6 +36,7 @@ end, function()
                 mealInfoTbl.MealTimer = NO_CANTEEN;
             end
         end
+        isMasterHunterMeal = nil;
     end
 end);
 

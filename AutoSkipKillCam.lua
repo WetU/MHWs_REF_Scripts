@@ -60,17 +60,22 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"
     return config.skipKillCam == true and Constants.FALSE_ptr or retval;
 end);
 
+local isReturnTimeSkip = nil;
 sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
         if Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
+            isReturnTimeSkip = true;
             thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
         end
     end
 end, function()
-    local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
-    if GUIAppOnTimerKey ~= nil and (config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true) then
-        GUIAppOnTimerKey:set_field("_Success", true);
+    if isReturnTimeSkip == true then
+        local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
+        if config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true then
+            GUIAppOnTimerKey:set_field("_Success", true);
+        end
+        isReturnTimeSkip = nil;
     end
 end);
 
