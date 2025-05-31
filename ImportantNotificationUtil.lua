@@ -10,7 +10,9 @@ local getGUI_method = GUIManager_type_def:get_method("getGUI(app.GUIID.ID)");
 
 local UI020100 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI020100"):get_data(nil);
 
-local get_FixPanelType_method = sdk.find_type_definition("app.GUI020100"):get_method("get_FixPanelType");
+local GUI020100_type_def = sdk.find_type_definition("app.GUI020100");
+local get_FixPanelType_method = GUI020100_type_def:get_method("get_FixPanelType");
+local getHunterCharacter_method = GUI020100_type_def:get_method("getHunterCharacter"); -- static
 
 local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
 local FIX_PANEL_TYPE = {
@@ -18,8 +20,6 @@ local FIX_PANEL_TYPE = {
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
 
-local getMasterPlayer_method = sdk.find_type_definition("app.PlayerManager"):get_method("getMasterPlayer");
-local get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
 local offHunterContinueFlag_method = Constants.HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
 
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
@@ -56,7 +56,7 @@ end, function()
         local FixPanelType = get_FixPanelType_method:call(GUI020100);
         if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
             if HunterCharacter == nil then
-                HunterCharacter = get_Character_method:call(getMasterPlayer_method:call(sdk.get_managed_singleton("app.PlayerManager")));
+                HunterCharacter = getHunterCharacter_method:call(nil);
             end
             offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
         end

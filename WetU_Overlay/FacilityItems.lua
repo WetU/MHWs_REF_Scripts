@@ -3,6 +3,7 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 
 local math = Constants.math;
+local string = Constants.string;
 local tostring = Constants.tostring;
 
 local FacilityItems = {
@@ -57,12 +58,12 @@ end, function()
 
     if SupplyTimer ~= oldSupplyTimer then
         oldSupplyTimer = SupplyTimer;
-        RallusTimer = Constants.string.format("%02d:%02d", math.floor(SupplyTimer / 60.0), math.modf(SupplyTimer % 60.0));
+        RallusTimer = string.format("%02d:%02d", math.floor(SupplyTimer / 60.0), math.modf(SupplyTimer % 60.0));
         isUpdated = true;
     end
 
     if SupplyNum ~= RallusNum then
-        if RallusNum > 0 and isExecuted == true then
+        if SupplyNum > 0 and isExecuted == true then
             isExecuted = false;
         end
         RallusNum = SupplyNum;
@@ -75,11 +76,11 @@ end, function()
 end);
 
 sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
-    if RallusNum > 0 and isExecuted == false then
+    if RallusNum ~= nil and RallusNum > 0 and isExecuted == false then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if RallusNum > 0 and isExecuted == false then
+    if RallusNum ~= nil and RallusNum > 0 and isExecuted == false then
         successButtonEvent_method:call(thread.get_hook_storage()["this"]);
         isExecuted = true;
     end

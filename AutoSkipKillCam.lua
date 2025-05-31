@@ -71,9 +71,13 @@ sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), functi
     end
 end, function()
     if isReturnTimeSkip == true then
-        local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
-        if config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true then
-            GUIAppOnTimerKey:set_field("_Success", true);
+        if config.autoEndQuest == true then
+            thread.get_hook_storage()["this"]:set_field("_Success", true);
+        else
+            local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
+            if isOn_method:call(GUIAppOnTimerKey) == true then
+                GUIAppOnTimerKey:set_field("_Success", true);
+            end
         end
         isReturnTimeSkip = nil;
     end
