@@ -29,9 +29,20 @@ local QuestInfo = {
     DeathCount = nil
 };
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObject, function()
-    local QuestDirector = thread.get_hook_storage()["this"];
+local function getQuestTimeInfo(questElapsedTime)
+    oldElapsedTime = questElapsedTime;
+    local seconds, miliseconds = math.modf(questElapsedTime % 60.0);
+    QuestInfo.QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0) .. " / " .. questTimeLimit;
+end
+
+local QuestDirector = nil;
+sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
+    if QuestDirector == nil then
+        QuestDirector = sdk.to_managed_object(args[2]);
+    end
+end, function()
     if get_IsActiveQuest_method:call(QuestDirector) == true then
+        local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector);
         if QuestInfo.QuestInfoCreated == false then
             local ActiveQuestData = get_QuestData_method:call(QuestDirector);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
@@ -40,18 +51,12 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector);
             QuestInfo.DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
 
-            local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector);
-            oldElapsedTime = QuestElapsedTime;
-            local seconds, miliseconds = math.modf(QuestElapsedTime % 60.0);
-            QuestInfo.QuestTimer = string.format("%02d'%02d\"%02d", math.floor(QuestElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0) .. " / " .. questTimeLimit;
+            getQuestTimeInfo(QuestElapsedTime);
 
             QuestInfo.QuestInfoCreated = true;
         else
-            local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector);
             if QuestElapsedTime ~= oldElapsedTime then
-                oldElapsedTime = QuestElapsedTime;
-                local seconds, miliseconds = math.modf(QuestElapsedTime % 60.0);
-                QuestInfo.QuestTimer = string.format("%02d'%02d\"%02d", math.floor(QuestElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0) .. " / " .. questTimeLimit;
+                getQuestTimeInfo(QuestElapsedTime);
             end
         end
     else
@@ -67,13 +72,19 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), Constants.getObj
 end);
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
-    if QuestInfo.QuestInfoCreated == true then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    if QuestInfo.QuestInfoCreated == true and QuestDirector == nil then
+        QuestDirector = sdk.to_managed_object(args[2]);
     end
 end, function()
     if QuestInfo.QuestInfoCreated == true then
-        local QuestPlDieCount = QuestPlDieCount_field:get_data(thread.get_hook_storage()["this"]);
+        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector);
         QuestInfo.DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
+    end
+end);
+
+sdk.hook(Constants.QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
+    if QuestInfo.QuestInfoCreated == true then
+        QuestInfo.DeathCount = "다운 횟수: 0 / " .. questMaxDeath;
     end
 end);
 

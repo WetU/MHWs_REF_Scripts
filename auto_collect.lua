@@ -125,8 +125,12 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(FacilityMoriver_type_def:get_method("update"), Constants.getObject, function()
-    local FacilityMoriver = thread.get_hook_storage()["this"];
+local FacilityMoriver = nil;
+sdk.hook(FacilityMoriver_type_def:get_method("update"), function(args)
+    if FacilityMoriver == nil then
+        FacilityMoriver = sdk.to_managed_object(args[2]);
+    end
+end, function()
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
         local Count = get_Count_method:call(MoriverInfos);
