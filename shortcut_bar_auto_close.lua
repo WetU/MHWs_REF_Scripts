@@ -20,8 +20,7 @@ sdk.hook(sdk.find_type_definition("app.GUI020600"):get_method("execute(System.In
 	end
 end, function()
 	if config.enabled == true then
-		local GUI020600 = thread.get_hook_storage()["this"];
-		GUI020600:write_float(0x344, 0.5);
+		thread.get_hook_storage()["this"]:write_float(0x344, 0.5);
 	end
 end);
 
