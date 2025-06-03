@@ -1,13 +1,9 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
+local thread = Constants.thread;
 local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
-
-local get_UpTimeSecond_method = sdk.find_type_definition("via.Application"):get_method("get_UpTimeSecond"); -- static
-
-local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
-local onHudClose_method = GUI020600_type_def:get_method("onHudClose");
 
 local config = json.load_file("ShortcutAutoClose.json") or {enabled = true};
 if config.enabled == nil then
@@ -18,23 +14,14 @@ local function saveConfig()
 	json.dump_file("ShortcutAutoClose.json", config);
 end
 
-local GUI020600 = nil;
-local startTime = nil;
-sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), function(args)
+sdk.hook(sdk.find_type_definition("app.GUI020600"):get_method("execute(System.Int32)"), function(args)
 	if config.enabled == true then
-		GUI020600 = sdk.to_managed_object(args[2]);
+		thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 	end
 end, function()
 	if config.enabled == true then
-		startTime = get_UpTimeSecond_method:call(nil);
-	end
-end);
-
-re.on_frame(function()
-	if startTime ~= nil and get_UpTimeSecond_method:call(nil) - startTime >= 0.5 then
-		onHudClose_method:call(GUI020600);
-		GUI020600 = nil;
-		startTime = nil;
+		local GUI020600 = thread.get_hook_storage()["this"];
+		GUI020600:write_float(0x344, 0.5);
 	end
 end);
 
