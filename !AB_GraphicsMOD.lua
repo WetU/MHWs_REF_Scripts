@@ -132,7 +132,11 @@ end, function()
 end);
 
 sdk.hook(DemoMediator_type_def:get_method("onPlayStart(ace.DemoMediatorBase.cParamBase)"), function(args)
-    local current_event = get_CurrentTimelineEventID_method:call(sdk.to_managed_object(args[2]));
+    if Constants.DemoMediator == nil then
+        Constants.DemoMediator = sdk.to_managed_object(args[2]);
+    end
+end, function()
+    local current_event = get_CurrentTimelineEventID_method:call(Constants.DemoMediator);
     if current_event ~= nil then
         if LiteEnvironment.cutscene_restore_GI == true and LiteEnvironment.cutscene_restore_VF == false then
             if contains(skip_hardlist_VF, current_event) == true then
