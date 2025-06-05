@@ -13,7 +13,9 @@ local LiteEnvironment = {};
 
 local settings = {
     disable_wind_simulation = true,
-    disable_global_illumination = true
+    disable_global_illumination = true,
+    cutscene_restore_GI = true,
+    cutscene_restore_VF = true
 };
 
 local function SaveSettings()
@@ -26,6 +28,8 @@ if loadedTable ~= nil then
         settings[key] = value;
     end
 end
+LiteEnvironment.cutscene_restore_GI = settings.cutscene_restore_GI;
+LiteEnvironment.cutscene_restore_VF = settings.cutscene_restore_VF;
 
 local function apply_ws_setting()
     if Constants.WindManager == nil then
@@ -35,7 +39,7 @@ local function apply_ws_setting()
 end
 
 local DPGIComponent = nil;
-LiteEnvironment.apply_gi_setting = function()
+LiteEnvironment.apply_gi_setting = function(overwrite)
     if DPGIComponent == nil then
         local EnvironmentManager = sdk.get_managed_singleton("app.EnvironmentManager");
         if EnvironmentManager ~= nil then
@@ -43,7 +47,7 @@ LiteEnvironment.apply_gi_setting = function()
         end
     end
     if DPGIComponent ~= nil then
-        set_Enabled_method:call(DPGIComponent, not settings.disable_global_illumination);
+        set_Enabled_method:call(DPGIComponent, overwrite or not settings.disable_global_illumination);
     end
 end
 
@@ -55,6 +59,8 @@ re.on_draw_ui(function()
     if imgui.tree_node("Lite Environment") == true then
         local ws_changed = false;
         local gi_changed = false;
+        local crgi_changed = false;
+        local crvf_changed = false;
         ws_changed, settings.disable_wind_simulation = imgui.checkbox("Disable Wind Simulation", settings.disable_wind_simulation);
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("Huge performance improvement.\n\nThe vegetation and tissues sway will not longer\ndepend of the wind intensity and direction.");
@@ -63,14 +69,32 @@ re.on_draw_ui(function()
         if imgui.is_item_hovered() == true then
             imgui.set_tooltip("Medium performance improvement.\n\nHighly deteriorate the visual quality.");
         end
+        if imgui.collapsing_header("Cutscenes Settings") == true then
+			imgui.indent(25);
+			crgi_changed = imgui.checkbox("Restore GI during Cutscenes", settings.cutscene_restore_GI);
+			if imgui.is_item_hovered() == true then
+				imgui.set_tooltip("Enable again the Global Illumination during Cutscenes.");
+			end
+			crvf_changed = imgui.checkbox("Restore VF during Cutscenes", settings.cutscene_restore_VF);
+			if imgui.is_item_hovered() == true then
+				imgui.set_tooltip("Enable again the Disable Volumetric during Cutscenes.");
+			end
+		end
         imgui.tree_pop();
-        if ws_changed == true or gi_changed == true then
+
+        if ws_changed == true or gi_changed == true or crgi_changed == true or crvf_changed == true then
             SaveSettings();
             if ws_changed == true then
                 apply_ws_setting();
             end
             if gi_changed == true then
                 LiteEnvironment.apply_gi_setting();
+            end
+            if crgi_changed == true then
+                LiteEnvironment.cutscene_restore_GI = settings.cutscene_restore_GI;
+            end
+            if crvf_changed == true then
+                LiteEnvironment.cutscene_restore_VF = settings.cutscene_restore_VF;
             end
         end
     end

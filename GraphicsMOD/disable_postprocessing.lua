@@ -113,6 +113,17 @@ end
 
 LoadSettings(nil);
 
+DisablePP.apply_vf_setting = function(overwrite)
+    if settings.volumetricFog == false then
+        if Constants.GraphicsManager == nil then
+            Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
+        end
+        local NowGraphicsSetting = get_NowGraphicsSetting_method:call(Constants.GraphicsManager);
+        set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, overwrite or false);
+        setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
+    end
+end
+
 DisablePP.ApplySettings = function()
     if Constants.GraphicsManager == nil then
         Constants.GraphicsManager = sdk.get_managed_singleton("app.GraphicsManager");
