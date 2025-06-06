@@ -20,7 +20,7 @@ local FIX_PANEL_TYPE = {
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
 
-local offHunterContinueFlag_method = Constants.HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
+local offHunterContinueFlag_method = getHunterCharacter_method:get_return_type():get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
 
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
 

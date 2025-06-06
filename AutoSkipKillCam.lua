@@ -123,7 +123,6 @@ local GUI020201_datas = {
     reqSkip = false,
     isSetted = false
 };
-
 sdk.hook(GUI020201_type_def:get_method("onOpen"), Constants.getObject, function()
     local this = thread.get_hook_storage()["this"];
     local CurType = CurType_field:get_data(this);

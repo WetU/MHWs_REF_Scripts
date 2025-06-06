@@ -19,7 +19,6 @@ local Constants = {
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
-    HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
