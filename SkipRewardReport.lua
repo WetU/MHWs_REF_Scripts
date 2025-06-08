@@ -3,12 +3,20 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local GUI070000_type_def = sdk.find_type_definition("app.GUI070000");
-local get_IsJudgeMode_method = GUI070000_type_def:get_method("get_IsJudgeMode");
-local get__PartsRewardItems_method = GUI070000_type_def:get_method("get__PartsRewardItems");
-local GUI_field = GUI070000_type_def:get_field("_GUI");
+local get_Component_method = sdk.find_type_definition("via.gui.PlayObject"):get_method("get_Component");
 
-local get__JudgeAnimationEnd_method = get__PartsRewardItems_method:get_return_type():get_method("get__JudgeAnimationEnd");
+local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
+local GUIPartsReward_get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
+local GUIPartsReward_get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
+local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
+local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
+local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
+
+local GUIPartsRewardItems_type_def = sdk.find_type_definition("app.cGUIPartsRewardItems");
+local GUIPartsRewardItems_get__JudgeAnimationEnd_method = GUIPartsRewardItems_type_def:get_method("get__JudgeAnimationEnd");
+local GUIPartsRewardItems_get__WaitAnimationTime_method = GUIPartsRewardItems_type_def:get_method("get__WaitAnimationTime");
+local GUIPartsRewardItems_set__WaitAnimationTime_method = GUIPartsRewardItems_type_def:get_method("set__WaitAnimationTime(System.Single)");
+local set__ControlEnable_method = GUIPartsRewardItems_type_def:get_method("set__ControlEnable(System.Boolean)");
 
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
@@ -24,10 +32,43 @@ local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("exe
 
 local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
 
-sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
-    local GUI070000 = thread.get_hook_storage()["this"];
-    if get_IsJudgeMode_method:call(GUI070000) == true then
-        Constants.set_PlaySpeed_method:call(GUI_field:get_data(GUI070000), get__JudgeAnimationEnd_method:call(get__PartsRewardItems_method:call(GUI070000)) == false and 10.0 or 1.0);
+local function applyPlaySpeed(GUI, speed)
+    if Constants.get_PlaySpeed_method:call(GUI) ~= speed then
+        Constants.set_PlaySpeed_method:call(GUI, speed);
+    end
+end
+
+local function Pre_updateItem(args)
+    local storage = thread.get_hook_storage();
+    storage.this = sdk.to_managed_object(args[2]);
+    storage.gui = sdk.to_managed_object(args[3]);
+end
+
+sdk.hook(GUIPartsReward_type_def:get_method("updateItem(via.gui.SelectItem, System.Boolean)"), Pre_updateItem, function()
+    local storage = thread.get_hook_storage();
+    if GUIPartsReward_get__JudgeAnimationEnd_method:call(storage.this) == false then
+        if GUIPartsReward_get__WaitAnimationTime_method:call(storage.this) > 0.05 then
+            GUIPartsReward_set__WaitAnimationTime_method:call(storage.this, 0.05);
+        end
+        if get__WaitControlTime_method:call(storage.this) > 0.05 then
+            set__WaitControlTime_method:call(storage.this, 0.05);
+        end
+        applyPlaySpeed(get_Component_method:call(storage.gui), 10.0);
+    else
+        applyPlaySpeed(get_Component_method:call(storage.gui), 1.0);
+    end
+end);
+
+sdk.hook(GUIPartsRewardItems_type_def:get_method("updateItem(via.gui.SelectItem)"), Pre_updateItem, function()
+    local storage = thread.get_hook_storage();
+    if GUIPartsRewardItems_get__JudgeAnimationEnd_method:call(storage.this) == false then
+        if GUIPartsRewardItems_get__WaitAnimationTime_method:call(storage.this) > 0.05 then
+            GUIPartsRewardItems_set__WaitAnimationTime_method:call(storage.this, 0.05);
+        end
+        set__ControlEnable_method:call(storage.this, true);
+        applyPlaySpeed(get_Component_method:call(storage.gui), 10.0);
+    else
+        applyPlaySpeed(get_Component_method:call(storage.gui), 1.0);
     end
 end);
 
