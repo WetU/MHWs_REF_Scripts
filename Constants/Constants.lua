@@ -22,6 +22,9 @@ local Constants = {
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
+    set_PlaySpeed_method = sdk.find_type_definition("via.gui.GUI"):get_method("set_PlaySpeed(System.Single)"),
+
+    TRUE_ptr = sdk.to_ptr(true),
     FALSE_ptr = sdk.to_ptr(false),
 
     getObject = function(args)

@@ -26,8 +26,6 @@ local TYPES = {
     CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
 };
 
-local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
-
 local offsets = {
     Timer = 0xC8,
     Limit = 0xCC,
@@ -136,7 +134,7 @@ end);
 
 sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
     if GUI020201_datas.reqSkip == true and GUI020201_datas.isSetted == false then
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
+        Constants.set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
         GUI020201_datas.isSetted = true;
         GUI020201_datas.reqSkip = false;
     end
@@ -144,7 +142,7 @@ end);
 
 sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
     if GUI020201_datas.isSetted == true then
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
+        Constants.set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
         GUI020201_datas.isSetted = false;
     end
 end);
