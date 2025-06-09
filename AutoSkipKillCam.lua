@@ -20,6 +20,8 @@ local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
+local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
+
 local TYPE_type_def = CurType_field:get_type();
 local TYPES = {
     START = TYPE_type_def:get_field("START"):get_data(nil),
@@ -58,17 +60,17 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"
     return config.skipKillCam == true and Constants.FALSE_ptr or retval;
 end);
 
-local isReturnTimeSkip = nil;
+local validReturnTimeSkip = nil;
 sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
         if Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
-            isReturnTimeSkip = true;
+            validReturnTimeSkip = true;
             thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
         end
     end
 end, function()
-    if isReturnTimeSkip == true then
+    if validReturnTimeSkip == true then
         if config.autoEndQuest == true then
             thread.get_hook_storage()["this"]:set_field("_Success", true);
         else
@@ -77,7 +79,7 @@ end, function()
                 GUIAppOnTimerKey:set_field("_Success", true);
             end
         end
-        isReturnTimeSkip = nil;
+        validReturnTimeSkip = nil;
     end
 end);
 
@@ -98,7 +100,7 @@ end, function()
         if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
             QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
         end
-        isSkipped = false;
+        isSkipped = nil;
     end
 end);
 
@@ -134,7 +136,7 @@ end);
 
 sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
     if GUI020201_datas.reqSkip == true and GUI020201_datas.isSetted == false then
-        Constants.set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
         GUI020201_datas.isSetted = true;
         GUI020201_datas.reqSkip = false;
     end
@@ -142,7 +144,7 @@ end);
 
 sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
     if GUI020201_datas.isSetted == true then
-        Constants.set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
         GUI020201_datas.isSetted = false;
     end
 end);
