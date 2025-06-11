@@ -33,11 +33,11 @@ local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("G
 sdk.hook(GUIPartsReward_type_def:get_method("updateItem(via.gui.SelectItem, System.Boolean)"), Constants.getObject, function()
     local GUIPartsReward = thread.get_hook_storage()["this"];
     if GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
-        if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.05 then
-            GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.05);
+        if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+            GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
         end
-        if get__WaitControlTime_method:call(GUIPartsReward) > 0.05 then
-            set__WaitControlTime_method:call(GUIPartsReward, 0.05);
+        if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+            set__WaitControlTime_method:call(GUIPartsReward, 0.01);
         end
     end
 end);
@@ -45,8 +45,8 @@ end);
 sdk.hook(GUIPartsRewardItems_type_def:get_method("updateItem(via.gui.SelectItem)"), Constants.getObject, function()
     local GUIPartsRewardItems = thread.get_hook_storage()["this"];
     if GUIPartsRewardItems_get__JudgeAnimationEnd_method:call(GUIPartsRewardItems) == false then
-        if GUIPartsRewardItems_get__WaitAnimationTime_method:call(GUIPartsRewardItems) > 0.05 then
-            GUIPartsRewardItems_set__WaitAnimationTime_method:call(GUIPartsRewardItems, 0.05);
+        if GUIPartsRewardItems_get__WaitAnimationTime_method:call(GUIPartsRewardItems) > 0.01 then
+            GUIPartsRewardItems_set__WaitAnimationTime_method:call(GUIPartsRewardItems, 0.01);
         end
         set__ControlEnable_method:call(GUIPartsRewardItems, true);
     end

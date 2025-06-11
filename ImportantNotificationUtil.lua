@@ -20,7 +20,9 @@ local FIX_PANEL_TYPE = {
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
 
-local offHunterContinueFlag_method = getHunterCharacter_method:get_return_type():get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
+local HunterCharacter_type_def = getHunterCharacter_method:get_return_type();
+local checkHunterContinueFlag_method = HunterCharacter_type_def:get_method("checkHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
+local offHunterContinueFlag_method = HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
 
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
 
@@ -35,7 +37,7 @@ end
 
 local GUI020100 = nil;
 local HunterCharacter = nil;
-sdk.hook(GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
+sdk.hook(GUIManager_type_def:get_method("updateHunterContinueFlag"), function(args)
     if config.enabled == true then
         if Constants.GUIManager == nil then
             Constants.GUIManager = sdk.to_managed_object(args[2]);
@@ -58,7 +60,9 @@ end, function()
             if HunterCharacter == nil then
                 HunterCharacter = getHunterCharacter_method:call(nil);
             end
-            offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
+            if checkHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP) == true then
+                offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
+            end
         end
     end
 end);
