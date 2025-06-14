@@ -10,12 +10,6 @@ local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get
 local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 
-local GUIPartsRewardItems_type_def = sdk.find_type_definition("app.cGUIPartsRewardItems");
-local GUIPartsRewardItems_get__JudgeAnimationEnd_method = GUIPartsRewardItems_type_def:get_method("get__JudgeAnimationEnd");
-local GUIPartsRewardItems_get__WaitAnimationTime_method = GUIPartsRewardItems_type_def:get_method("get__WaitAnimationTime");
-local GUIPartsRewardItems_set__WaitAnimationTime_method = GUIPartsRewardItems_type_def:get_method("set__WaitAnimationTime(System.Single)");
-local set__ControlEnable_method = GUIPartsRewardItems_type_def:get_method("set__ControlEnable(System.Boolean)");
-
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
@@ -39,16 +33,6 @@ sdk.hook(GUIPartsReward_type_def:get_method("updateItem(via.gui.SelectItem, Syst
         if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
             set__WaitControlTime_method:call(GUIPartsReward, 0.01);
         end
-    end
-end);
-
-sdk.hook(GUIPartsRewardItems_type_def:get_method("updateItem(via.gui.SelectItem)"), Constants.getObject, function()
-    local GUIPartsRewardItems = thread.get_hook_storage()["this"];
-    if GUIPartsRewardItems_get__JudgeAnimationEnd_method:call(GUIPartsRewardItems) == false then
-        if GUIPartsRewardItems_get__WaitAnimationTime_method:call(GUIPartsRewardItems) > 0.01 then
-            GUIPartsRewardItems_set__WaitAnimationTime_method:call(GUIPartsRewardItems, 0.01);
-        end
-        set__ControlEnable_method:call(GUIPartsRewardItems, true);
     end
 end);
 

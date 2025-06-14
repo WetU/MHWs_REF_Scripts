@@ -73,30 +73,39 @@ local function getItems(itemId, itemNum)
 end
 
 local function getFacilityItems(obj, facilityType)
-    local getItemsArray_method = get_Rewards_method;
-    local clearItem_method = clearRewardItem_method;
-    local MAX_ITEM_NUM = LargeWorkshop_MAX_ITEM_NUM;
-
     if facilityType == 1 then
-        getItemsArray_method = get_CollectionItem_method;
-        clearItem_method = clearCollectionItem_method;
-        MAX_ITEM_NUM = Collection_MAX_ITEM_NUM;
-    end
-
-    local ItemWorks_array = getItemsArray_method:call(obj);
-    for i = 0, MAX_ITEM_NUM - 1 do
-        local ItemWork = ItemWorks_array:get_element(i);
-        local ItemId = get_ItemId_method:call(ItemWork);
-        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = Num_field:get_data(ItemWork);
-            if ItemNum > 0 then
-                getItems(ItemId, ItemNum);
-                clearItem_method:call(obj, i);
+        local ItemWorks_array = get_CollectionItem_method:call(obj);
+        for i = 0, Collection_MAX_ITEM_NUM - 1 do
+            local ItemWork = ItemWorks_array:get_element(i);
+            local ItemId = get_ItemId_method:call(ItemWork);
+            if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+                local ItemNum = Num_field:get_data(ItemWork);
+                if ItemNum > 0 then
+                    getItems(ItemId, ItemNum);
+                    clearCollectionItem_method:call(obj, i);
+                else
+                    break;
+                end
             else
                 break;
             end
-        else
-            break;
+        end
+    elseif facilityType == 2 then
+        local ItemWorks_array = get_Rewards_method:call(obj);
+        for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
+            local ItemWork = ItemWorks_array:get_element(i);
+            local ItemId = get_ItemId_method:call(ItemWork);
+            if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+                local ItemNum = Num_field:get_data(ItemWork);
+                if ItemNum > 0 then
+                    getItems(ItemId, ItemNum);
+                    clearRewardItem_method:call(obj, i);
+                else
+                    break;
+                end
+            else
+                break;
+            end
         end
     end
 end

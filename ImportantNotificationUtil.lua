@@ -20,9 +20,8 @@ local FIX_PANEL_TYPE = {
     IMPORTANT_LINE2 = FIX_PANEL_TYPE_type_def:get_field("IMPORTANT_LINE2"):get_data(nil)
 };
 
-local HunterCharacter_type_def = getHunterCharacter_method:get_return_type();
-local checkHunterContinueFlag_method = HunterCharacter_type_def:get_method("checkHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
-local offHunterContinueFlag_method = HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
+local checkHunterContinueFlag_method = Constants.HunterCharacter_type_def:get_method("checkHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
+local offHunterContinueFlag_method = Constants.HunterCharacter_type_def:get_method("offHunterContinueFlag(app.HunterDef.CONTINUE_FLAG)");
 
 local DISABLE_OPEN_MAP = sdk.find_type_definition("app.HunterDef.CONTINUE_FLAG"):get_field("DISABLE_OPEN_MAP"):get_data(nil);
 
@@ -36,8 +35,7 @@ local function saveConfig()
 end
 
 local GUI020100 = nil;
-local HunterCharacter = nil;
-sdk.hook(GUIManager_type_def:get_method("updateHunterContinueFlag"), function(args)
+sdk.hook(GUIManager_type_def:get_method("updatePlCommandMask"), function(args)
     if config.enabled == true then
         if Constants.GUIManager == nil then
             Constants.GUIManager = sdk.to_managed_object(args[2]);
@@ -45,9 +43,6 @@ sdk.hook(GUIManager_type_def:get_method("updateHunterContinueFlag"), function(ar
     else
         if GUI020100 ~= nil then
             GUI020100 = nil;
-        end
-        if HunterCharacter ~= nil then
-            HunterCharacter = nil;
         end
     end
 end, function()
@@ -57,11 +52,11 @@ end, function()
         end
         local FixPanelType = get_FixPanelType_method:call(GUI020100);
         if FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE1 or FixPanelType == FIX_PANEL_TYPE.IMPORTANT_LINE2 then
-            if HunterCharacter == nil then
-                HunterCharacter = getHunterCharacter_method:call(nil);
+            if Constants.HunterCharacter == nil then
+                Constants.HunterCharacter = getHunterCharacter_method:call(nil);
             end
-            if checkHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP) == true then
-                offHunterContinueFlag_method:call(HunterCharacter, DISABLE_OPEN_MAP);
+            if checkHunterContinueFlag_method:call(Constants.HunterCharacter, DISABLE_OPEN_MAP) == true then
+                offHunterContinueFlag_method:call(Constants.HunterCharacter, DISABLE_OPEN_MAP);
             end
         end
     end

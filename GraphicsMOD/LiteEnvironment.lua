@@ -4,7 +4,9 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local set_Stop_method = sdk.find_type_definition("app.WindManager"):get_method("set_Stop(System.Boolean)");
+local WindManager_type_def = sdk.find_type_definition("app.WindManager");
+local set_IsEnable_method = WindManager_type_def:get_method("set_IsEnable(System.Boolean)");
+local set_Stop_method = WindManager_type_def:get_method("set_Stop(System.Boolean)");
 
 local get_DPGIComponent_method = sdk.find_type_definition("app.EnvironmentManager"):get_method("get_DPGIComponent");
 local set_Enabled_method = get_DPGIComponent_method:get_return_type():get_method("set_Enabled(System.Boolean)");
@@ -31,6 +33,7 @@ local function apply_ws_setting()
     if Constants.WindManager == nil then
         Constants.WindManager = sdk.get_managed_singleton("app.WindManager");
     end
+    set_IsEnable_method:call(Constants.WindManager, not settings.disable_wind_simulation);
     set_Stop_method:call(Constants.WindManager, settings.disable_wind_simulation);
 end
 
