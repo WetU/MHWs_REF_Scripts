@@ -23,6 +23,7 @@ local Constants = {
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
+    TRUE_ptr = sdk.to_ptr(true),
     FALSE_ptr = sdk.to_ptr(false),
 
     getObject = function(args)

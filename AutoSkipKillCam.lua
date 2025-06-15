@@ -65,8 +65,8 @@ sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), functi
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
         if Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
-            validReturnTimeSkip = true;
             thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
+            validReturnTimeSkip = true;
         end
     end
 end, function()

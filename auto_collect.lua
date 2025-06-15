@@ -72,44 +72,6 @@ local function getItems(itemId, itemNum)
     addItemLog_method:call(nil, itemId, itemNum, false, false, EnemyID_INVALID);
 end
 
-local function getFacilityItems(obj, facilityType)
-    if facilityType == 1 then
-        local ItemWorks_array = get_CollectionItem_method:call(obj);
-        for i = 0, Collection_MAX_ITEM_NUM - 1 do
-            local ItemWork = ItemWorks_array:get_element(i);
-            local ItemId = get_ItemId_method:call(ItemWork);
-            if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-                local ItemNum = Num_field:get_data(ItemWork);
-                if ItemNum > 0 then
-                    getItems(ItemId, ItemNum);
-                    clearCollectionItem_method:call(obj, i);
-                else
-                    break;
-                end
-            else
-                break;
-            end
-        end
-    elseif facilityType == 2 then
-        local ItemWorks_array = get_Rewards_method:call(obj);
-        for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
-            local ItemWork = ItemWorks_array:get_element(i);
-            local ItemId = get_ItemId_method:call(ItemWork);
-            if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-                local ItemNum = Num_field:get_data(ItemWork);
-                if ItemNum > 0 then
-                    getItems(ItemId, ItemNum);
-                    clearRewardItem_method:call(obj, i);
-                else
-                    break;
-                end
-            else
-                break;
-            end
-        end
-    end
-end
-
 local function getMoriverItems(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
@@ -123,11 +85,43 @@ local function getMoriverItems(moriverInfo)
 end
 
 sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
-    getFacilityItems(thread.get_hook_storage()["this"], 1);
+    local CollectionNPCParam = thread.get_hook_storage()["this"];
+    local ItemWorks_array = get_CollectionItem_method:call(CollectionNPCParam);
+    for i = 0, Collection_MAX_ITEM_NUM - 1 do
+        local ItemWork = ItemWorks_array:get_element(i);
+        local ItemId = get_ItemId_method:call(ItemWork);
+        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+            local ItemNum = Num_field:get_data(ItemWork);
+            if ItemNum > 0 then
+                getItems(ItemId, ItemNum);
+                clearCollectionItem_method:call(CollectionNPCParam, i);
+            else
+                break;
+            end
+        else
+            break;
+        end
+    end
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
-    getFacilityItems(thread.get_hook_storage()["this"], 2);
+    local LargeWorkshopParam = thread.get_hook_storage()["this"];
+    local ItemWorks_array = get_Rewards_method:call(LargeWorkshopParam);
+    for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
+        local ItemWork = ItemWorks_array:get_element(i);
+        local ItemId = get_ItemId_method:call(ItemWork);
+        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+            local ItemNum = Num_field:get_data(ItemWork);
+            if ItemNum > 0 then
+                getItems(ItemId, ItemNum);
+                clearRewardItem_method:call(LargeWorkshopParam, i);
+            else
+                break;
+            end
+        else
+            break;
+        end
+    end
 end);
 
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject, function()
