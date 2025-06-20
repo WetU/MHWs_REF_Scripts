@@ -30,7 +30,7 @@ local successButtonEvent_method = Gm262_type_def:get_method("successButtonEvent"
 
 local oldSupplyTimer = nil;
 
-local RallusStockMax = "5";
+local RallusStockMax = nil;
 local isRallusStockMaxUpdated = false;
 
 local RallusTimer = nil;
@@ -52,7 +52,8 @@ end, function()
     local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
     local isUpdated = false;
     if isRallusStockMaxUpdated == false then
-        RallusStockMax = tostring(get_StockMax_method:call(SettingData_field:get_data(FacilityRallus)));
+        local StockMax = get_StockMax_method:call(SettingData_field:get_data(FacilityRallus));
+        RallusStockMax = StockMax ~= nil and tostring(StockMax) or "5";
         isRallusStockMaxUpdated = true;
     end
 
@@ -70,7 +71,7 @@ end, function()
         isUpdated = true;
     end
 
-    if isUpdated == true and RallusNum ~= nil then
+    if isUpdated == true and RallusTimer ~= nil and RallusNum ~= nil then
         FacilityItems.Rallus = tostring(RallusNum) .. "/" .. RallusStockMax .. "(" .. RallusTimer .. ")";
     end
 end);
