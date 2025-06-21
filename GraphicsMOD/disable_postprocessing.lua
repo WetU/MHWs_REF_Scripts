@@ -67,7 +67,18 @@ local LensDistortionSetting = {
     OFF = LensDistortionSetting_type_def:get_field("OFF"):get_data(nil)
 };
 
-local DYNAMIC_RESOLUTION_MODE_TARGET_60 = sdk.find_type_definition("ace.cGraphicsSetting.DYNAMIC_RESOLUTION_MODE"):get_field("TARGET_60"):get_data(nil);
+local DYNAMIC_RESOLUTION_MODE_type_def = sdk.find_type_definition("ace.cGraphicsSetting.DYNAMIC_RESOLUTION_MODE");
+local DYNAMIC_RESOLUTION_MODE = {
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_60"):get_data(nil)] = "TARGET_60",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_55"):get_data(nil)] = "TARGET_55",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_50"):get_data(nil)] = "TARGET_50",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_30"):get_data(nil)] = "TARGET_30",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_120"):get_data(nil)] = "TARGET_120",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_25"):get_data(nil)] = "TARGET_25",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_28"):get_data(nil)] = "TARGET_28",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_60_LOW"):get_data(nil)] = "TARGET_60_LOW",
+    [DYNAMIC_RESOLUTION_MODE_type_def:get_field("TARGET_40"):get_data(nil)] = "TARGET_40"
+};
 
 local DisablePP = {};
 
@@ -92,7 +103,9 @@ local settings = {
     lowerLimit = 0.0,
     upperLimit = 1.0,
     lowerLimitOverlay = 0.0,
-    upperLimitOverlay = 1.0
+    upperLimitOverlay = 1.0,
+    dynResolutionEnable = true,
+    dynResolutionTarget = 1
 };
 
 local changeBrightness = false;
@@ -151,10 +164,6 @@ DisablePP.ApplySettings = function()
     end
 
     local GraphicsDynamicResolution = get_DynamicResolution_method:call(AppGraphicsSettingController_field:get_data(Constants.GraphicsManager));
-    if get_Enable_method:call(GraphicsDynamicResolution) == false then
-        set_Enable_method:call(GraphicsDynamicResolution, true);
-    end
-
     local NowGraphicsSetting = get_NowGraphicsSetting_method:call(Constants.GraphicsManager);
     set_Fog_Enable_method:call(NowGraphicsSetting, settings.fog);
     set_VolumetricFogControl_Enable_method:call(NowGraphicsSetting, settings.volumetricFog);
@@ -162,7 +171,16 @@ DisablePP.ApplySettings = function()
     set_LensFlare_Enable_method:call(NowGraphicsSetting, settings.lensFlare);
     set_GodRay_Enable_method:call(NowGraphicsSetting, settings.godRay);
     set_LensDistortionSetting_method:call(NowGraphicsSetting, settings.lensDistortionEnable == true and LensDistortionSetting.ON or LensDistortionSetting.OFF);
-    set_DynamicResolutionMode_method:call(NowGraphicsSetting, DYNAMIC_RESOLUTION_MODE_TARGET_60);
+    if settings.dynResolutionEnable == true then
+        if get_Enable_method:call(GraphicsDynamicResolution) == false then
+            set_Enable_method:call(GraphicsDynamicResolution, true);
+        end
+        set_DynamicResolutionMode_method:call(NowGraphicsSetting, settings.dynResolutionTarget);
+    else
+        if get_Enable_method:call(GraphicsDynamicResolution) == true then
+            set_Enable_method:call(GraphicsDynamicResolution, false);
+        end 
+    end
     setGraphicsSetting_method:call(Constants.GraphicsManager, NowGraphicsSetting);
 end
 
@@ -322,6 +340,16 @@ re.on_draw_ui(function()
         changed, settings.godRay = imgui.checkbox("Godray", settings.godRay);
         if changed == true and requireSave ~= true then
             requireSave = true;
+        end
+        changed, settings.dynResolutionEnable = imgui.checkbox("Dynamic Resolution", settings.dynResolutionEnable);
+        if changed == true and requireSave ~= true then
+            requireSave = true;
+        end
+        if settings.dynResolutionEnable == true then
+            changed, settings.dynResolutionTarget = imgui.combo("Target Resolution", settings.dynResolutionTarget, DYNAMIC_RESOLUTION_MODE);
+            if changed == true and requireSave ~= true then
+                requireSave = true;
+            end
         end
         imgui.spacing();
 
