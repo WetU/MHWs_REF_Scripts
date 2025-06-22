@@ -3,6 +3,9 @@ local _G = _G;
 local sdk = _G.sdk;
 local thread = _G.thread;
 
+local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
+local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
+
 local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
@@ -18,6 +21,7 @@ local Constants = {
     imgui = _G.imgui,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
+    GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
     GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
     HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
@@ -28,6 +32,9 @@ local Constants = {
 
     getObject = function(args)
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end,
+    getOnTimerKey_Type = function(obj)
+        return Type_field:get_data(obj);
     end
 };
 

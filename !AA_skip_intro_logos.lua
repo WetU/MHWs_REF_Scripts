@@ -2,30 +2,20 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local GUI010001_type_def = sdk.find_type_definition("app.GUI010001");
-local Skip_field = GUI010001_type_def:get_field("_Skip");
-local EnableSkip_field = GUI010001_type_def:get_field("_EnableSkip");
-
-local GUI010002_type_def = sdk.find_type_definition("app.GUI010002");
-local requestClose_method = GUI010002_type_def:get_method("requestClose(System.Boolean)");
-
 local GUIAppKey_type_def = sdk.find_type_definition("app.cGUIAppKey");
 local Type_field = GUIAppKey_type_def:get_field("_Type");
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
 
-sdk.hook(GUI010001_type_def:get_method("onOpen"), function(args)
-    local GUI010001 = sdk.to_managed_object(args[2]);
-    sdk.hook_vtable(GUI010001, GUI010001.doUpdateApp, Constants.getObject, function()
-        local GUI010001 = thread.get_hook_storage()["this"];
-        if EnableSkip_field:get_data(GUI010001) == true and Skip_field:get_data(GUI010001) == false then
-            GUI010001:set_field("_Skip", true);
-        end
-    end);
+sdk.hook(sdk.find_type_definition("app.GUI010001"):get_method("onOpen"), Constants.getObject, function()
+    local GUI010001 = thread.get_hook_storage()["this"];
+    GUI010001:set_field("_Flow", sdk.find_type_definition("app.GUI010001.FLOW"):get_field("COPYRIGHT"):get_data(nil));
+    GUI010001:set_field("_Skip", true);
 end);
 
-sdk.hook(GUI010002_type_def:get_method("onOpen"), Constants.getObject, function()
-    requestClose_method:call(thread.get_hook_storage()["this"], false);
+sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), Constants.getObject, function()
+    local GUI010002 = thread.get_hook_storage()["this"];
+    GUI010002:write_float(0x220, GUI010002:read_float(0x224));
 end);
 
 local isTitleStart = nil;

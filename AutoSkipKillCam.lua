@@ -7,9 +7,7 @@ local imgui = Constants.imgui;
 
 local get_Param_method = Constants.QuestDirector_type_def:get_method("get_Param");
 
-local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local isOn_method = GUIAppOnTimerKey_type_def:get_method("isOn");
-local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
+local isOn_method = Constants.GUIAppOnTimerKey_type_def:get_method("isOn");
 
 local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
@@ -61,23 +59,19 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"
 end);
 
 local validReturnTimeSkip = nil;
-sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
+sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-        if Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
+        if Constants.getOnTimerKey_Type(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
             thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
             validReturnTimeSkip = true;
         end
     end
 end, function()
     if validReturnTimeSkip == true then
-        if config.autoEndQuest == true then
-            thread.get_hook_storage()["this"]:set_field("_Success", true);
-        else
-            local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
-            if isOn_method:call(GUIAppOnTimerKey) == true then
-                GUIAppOnTimerKey:set_field("_Success", true);
-            end
+        local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
+        if config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true then
+            GUIAppOnTimerKey:set_field("_Success", true);
         end
         validReturnTimeSkip = nil;
     end
