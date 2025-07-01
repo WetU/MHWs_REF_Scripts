@@ -14,7 +14,6 @@ local addItemLog_method = sdk.find_type_definition("app.ChatLogUtil"):get_method
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
-local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clearCollectionItem(System.Int32)");
 local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
 local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
