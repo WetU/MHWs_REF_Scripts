@@ -36,7 +36,6 @@ local isRallusStockMaxUpdated = false;
 local RallusTimer = nil;
 local RallusNum = nil;
 
-local isExecuted = false;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
     if Constants.FacilityManager == nil then
         Constants.FacilityManager = sdk.to_managed_object(args[2]);
@@ -64,9 +63,6 @@ end, function()
     end
 
     if SupplyNum ~= RallusNum then
-        if SupplyNum > 0 and isExecuted == true then
-            isExecuted = false;
-        end
         RallusNum = SupplyNum;
         isUpdated = true;
     end
@@ -77,13 +73,12 @@ end, function()
 end);
 
 sdk.hook(Gm262_type_def:get_method("doUpdateBegin"), function(args)
-    if RallusNum ~= nil and RallusNum > 0 and isExecuted == false then
+    if RallusNum ~= nil and RallusNum > 0 then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if RallusNum ~= nil and RallusNum > 0 and isExecuted == false then
+    if RallusNum ~= nil and RallusNum > 0 then
         successButtonEvent_method:call(thread.get_hook_storage()["this"]);
-        isExecuted = true;
     end
 end);
 

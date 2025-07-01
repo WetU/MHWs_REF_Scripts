@@ -15,6 +15,7 @@ local addItemLog_method = sdk.find_type_definition("app.ChatLogUtil"):get_method
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clearCollectionItem(System.Int32)");
+local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
 local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
@@ -94,7 +95,6 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
             local ItemNum = Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 getItems(ItemId, ItemNum);
-                clearCollectionItem_method:call(CollectionNPCParam, i);
             else
                 break;
             end
@@ -102,6 +102,7 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
             break;
         end
     end
+    clearAllCollectionItem_method:call(CollectionNPCParam);
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()

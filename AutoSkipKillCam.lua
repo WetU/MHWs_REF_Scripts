@@ -77,24 +77,24 @@ end, function()
     end
 end);
 
-local isSkipped = nil;
+local skipped = nil;
 sdk.hook(Constants.QuestDirector_type_def:get_method("QuestReturnSkip"), nil, function()
     if config.enableInstantQuit == true then
-        isSkipped = true;
+        skipped = true;
     end
 end);
 
 sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
-    if isSkipped == true then
+    if skipped == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if isSkipped == true then
+    if skipped == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
         if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
             QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
         end
-        isSkipped = nil;
+        skipped = nil;
     end
 end);
 
@@ -140,6 +140,12 @@ sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
     if GUI020201_datas.isSetted == true then
         set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
         GUI020201_datas.isSetted = false;
+    end
+end);
+
+re.on_script_reset(function()
+    if GUI020201_datas.isSetted == true then
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
     end
 end);
 
