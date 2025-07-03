@@ -38,6 +38,7 @@ local function getAppliedSet(setVar)
     end
 end
 
+sdk.hook(sdk.find_type_definition("app.Gm170_002"):get_method("buttonPushEvent"), nil, restockItems);
 sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
 sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
     if isArenaQuest_method:call(sdk.to_managed_object(args[3])) == false then

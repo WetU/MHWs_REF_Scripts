@@ -4,6 +4,8 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
+local pairs = Constants.pairs;
+
 local WindManager_type_def = sdk.find_type_definition("app.WindManager");
 local set_IsEnable_method = WindManager_type_def:get_method("set_IsEnable(System.Boolean)");
 local set_Stop_method = WindManager_type_def:get_method("set_Stop(System.Boolean)");

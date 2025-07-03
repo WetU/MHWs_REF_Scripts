@@ -5,6 +5,8 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
+local pairs = Constants.pairs;
+
 local get_LDRPostProcess_method = sdk.find_type_definition("app.AppEffectManager"):get_method("get_LDRPostProcess");
 local get_ColorCorrect_method = get_LDRPostProcess_method:get_return_type():get_method("get_ColorCorrect");
 local set_Enabled_method = get_ColorCorrect_method:get_return_type():get_method("set_Enabled(System.Boolean)");

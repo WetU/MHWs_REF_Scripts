@@ -5,7 +5,7 @@ local thread = Constants.thread;
 local StatusIconManager_type_def = sdk.find_type_definition("app.StatusIconManager");
 local StatusIconInfoList_field = StatusIconManager_type_def:get_field("_StatusIconInfoList");
 
-local get_IsMaster_method = Constants.HunterCharacter_type_def:get_method("get_IsMaster");
+local get_IsMaster_method = sdk.find_type_definition("app.HunterCharacter"):get_method("get_IsMaster");
 
 local StatusIconInfo_type_def = sdk.find_type_definition("app.StatusIconInfo");
 local get_TimerText_method = StatusIconInfo_type_def:get_method("get_TimerText");
