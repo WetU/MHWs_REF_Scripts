@@ -22,8 +22,8 @@ local isTitleStart = nil;
 sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     local GUIAppKey = sdk.to_managed_object(args[2]);
     if Type_field:get_data(GUIAppKey) == TITLE_START then
-        isTitleStart = true;
         thread.get_hook_storage()["this"] = GUIAppKey;
+        isTitleStart = true;
     end
 end, function()
     if isTitleStart == true then

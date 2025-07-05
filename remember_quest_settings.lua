@@ -2,7 +2,6 @@ local Constants = _G.require("Constants/Constants");
 local json = Constants.json;
 local sdk = Constants.sdk;
 local re = Constants.re;
-local imgui = Constants.imgui;
 local thread = Constants.thread;
 
 local pairs = Constants.pairs;
@@ -18,7 +17,6 @@ local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("Ques
 local value_field = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE"):get_field("value__");
 
 local config = {
-	enabled = true,
     view_type = 0,
     sort_types = {}
 };
@@ -29,23 +27,16 @@ end
 
 local file = json.load_file("remember_quest_settings.json");
 if file ~= nil then
-    for key, value in pairs(config) do
-        if file[key] == nil then
-            file[key] = value;
+    for key, value in pairs(file) do
+        if config[key] == nil then
+            config[key] = value;
         end
     end
-    config = file;
 end
 saveConfig();
 
-local function getObject(args)
-    if config.enabled == true then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-    end
-end
-
-sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
-    if config.enabled == true and #config.sort_types > 0 then
+sdk.hook(GUI050000_type_def:get_method("onOpen"), Constants.getObject, function()
+    if #config.sort_types > 0 then
         local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
         local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
         local sort_type_list_size = sort_type_list:get_size();
@@ -71,35 +62,22 @@ sdk.hook(GUI050000_type_def:get_method("onOpen"), getObject, function()
     end
 end);
 
-sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getObject, function()
-    if config.enabled == true then
-        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
-        local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
-        local sort_type_list_size = sort_type_list:get_size();
-        if sort_type_list_size > 0 then
-            config.sort_types = {};
-            for i = 0, sort_type_list_size - 1 do
-                table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
-            end
+sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), Constants.getObject, function()
+    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
+    local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
+    local sort_type_list_size = sort_type_list:get_size();
+    if sort_type_list_size > 0 then
+        config.sort_types = {};
+        for i = 0, sort_type_list_size - 1 do
+            table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
         end
-
-        local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
-        if QuestViewType ~= config.view_type then
-            config.view_type = QuestViewType;
-        end
-        saveConfig();
     end
+
+    local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
+    if QuestViewType ~= config.view_type then
+        config.view_type = QuestViewType;
+    end
+    saveConfig();
 end);
 
 re.on_config_save(saveConfig);
-
-re.on_draw_ui(function()
-	if imgui.tree_node("Remember Quest Settings##remember_quest_settings_Config") == true then
-        local changed = false;
-		changed, config.enabled = imgui.checkbox("Enabled##remember_quest_settings_Enabled", config.enabled);
-        if changed == true then
-            saveConfig();
-        end
-        imgui.tree_pop();
-	end
-end);

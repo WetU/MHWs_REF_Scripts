@@ -1,20 +1,8 @@
 local Constants = _G.require("Constants.Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
-local json = Constants.json;
-local imgui = Constants.imgui;
-local re = Constants.re;
 
 local table = Constants.table;
-
-local config = json.load_file("recommend_uncleared_quests.json") or {enabled = true};
-if config.enabled == nil then
-    config.enabled = true;
-end
-
-local function saveConfig()
-    json.dump_file("recommend_uncleared_quests.json", config);
-end
 
 local checkQuestClear_method = sdk.find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
 
@@ -30,11 +18,9 @@ local get_MissionID_method = get_Item_method:get_return_type():get_method("get_M
 
 local CATEGORY_FREE = sdk.find_type_definition("app.GUI050000.CATEGORY"):get_field("FREE"):get_data(nil); -- static
 
-local should_sort = false;
+local should_sort = nil;
 sdk.hook(GUI050000QuestListParts_type_def:get_method("initQuestDataInCategory(app.GUI050000.CATEGORY)"), function(args)
-    if config.enabled == true and (sdk.to_int64(args[3]) & 0xFFFFFFFF) == CATEGORY_FREE then
-        should_sort = true;
-    end
+    should_sort = (sdk.to_int64(args[3]) & 0xFFFFFFFF) == CATEGORY_FREE;
 end);
 
 sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), function(args)
@@ -64,19 +50,6 @@ end, function()
                 end
             end
         end
-        should_sort = false;
+        should_sort = nil;
     end
-end);
-
-re.on_config_save(saveConfig);
-
-re.on_draw_ui(function()
-	if imgui.tree_node("Recommend Uncleared Quests##Recommend_Uncleared_Quests_Config") == true then
-        local changed = false;
-		changed, config.enabled = imgui.checkbox("Enabled##Recommend_Uncleared_Quests_Enabled", config.enabled);
-        if changed == true then
-            saveConfig();
-        end
-        imgui.tree_pop();
-	end
 end);
