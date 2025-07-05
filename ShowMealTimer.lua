@@ -23,16 +23,12 @@ local ACTIVE = DispState_field:get_type():get_field("ACTIVE"):get_data(nil);
 
 local isValid = nil;
 sdk.hook(StatusIconManager_type_def:get_method("buffTimerUpdate(app.HunterCharacter, app.IconDef.STATUS, System.Boolean)"), function(args)
-    local HunterCharacter = sdk.to_managed_object(args[3]);
-    if get_IsMaster_method:call(HunterCharacter) == true then
-        if Constants.HunterCharacter == nil then
-            Constants.HunterCharacter = HunterCharacter;
-        end
-        if (sdk.to_int64(args[4]) & 0xFFFFFFFF) == STATUS_0019 then
+    if get_IsMaster_method:call(sdk.to_managed_object(args[3])) == true and (sdk.to_int64(args[4]) & 0xFFFFFFFF) == STATUS_0019 then
+        if (sdk.to_int64(args[5]) & 1) == 0 then
             args[5] = Constants.TRUE_ptr;
-            thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-            isValid = true;
         end
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        isValid = true;
     end
 end, function()
     if isValid == true then
