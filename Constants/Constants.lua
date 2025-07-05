@@ -19,6 +19,7 @@ local Constants = {
     thread = thread,
     json = _G.json,
     imgui = _G.imgui,
+    draw = _G.draw,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
