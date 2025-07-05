@@ -55,8 +55,8 @@ local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
     if Constants.getOnTimerKey_Type(GUIAppOnTimerKey) == RESULT_SKIP then
-        isResultSkip = true;
         thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
+        isResultSkip = true;
     end
 end, function()
     if isResultSkip == true then
