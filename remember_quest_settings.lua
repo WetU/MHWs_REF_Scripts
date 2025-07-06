@@ -16,24 +16,17 @@ local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("Ques
 
 local value_field = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE"):get_field("value__");
 
-local config = {
-    view_type = 0,
-    sort_types = {}
-};
+local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {}};
+if config.view_type == nil then
+    config.view_type = 0;
+end
+if config.sort_types == nil then
+    config.sort_types = {};
+end
 
 local function saveConfig()
     json.dump_file("remember_quest_settings.json", config);
 end
-
-local file = json.load_file("remember_quest_settings.json");
-if file ~= nil then
-    for key, value in pairs(file) do
-        if config[key] == nil then
-            config[key] = value;
-        end
-    end
-end
-saveConfig();
 
 sdk.hook(GUI050000_type_def:get_method("onOpen"), Constants.getObject, function()
     if #config.sort_types > 0 then

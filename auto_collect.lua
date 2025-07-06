@@ -9,12 +9,6 @@ local payItem_method = sdk.find_type_definition("app.FacilityUtil"):get_method("
 
 local changeItemNumFromDialogue_method = Constants.ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
-local changeItemNum_method = Constants.ItemUtil_type_def:get_method("changeItemNum(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
-local sendItemToBox_method = Constants.ItemUtil_type_def:get_method("sendItemToBox(app.ItemDef.LOG_CATEGORY, app.cSendItemInfo, System.Boolean, app.EnemyDef.ID, System.Boolean)"); -- static
-local sellItem_method = Constants.ItemUtil_type_def:get_method("sellItem(app.ItemDef.ID, System.Int16)"); -- static
-local getItemCapacity_method = Constants.ItemUtil_type_def:get_method("getItemCapacity(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
-
-local addItemLog_method = sdk.find_type_definition("app.ChatLogUtil"):get_method("addItemLog(app.ItemDef.ID, System.Int16, System.Boolean, System.Boolean, app.EnemyDef.ID)"); -- static
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
@@ -36,10 +30,10 @@ local executedSharing_method = FacilityMoriver_type_def:get_method("executedShar
 local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
 
 local MoriverInfos_type_def = MoriverInfos_field:get_type();
-local get_Count_method = MoriverInfos_type_def:get_method("get_Count");
-local get_Item_method = MoriverInfos_type_def:get_method("get_Item(System.Int32)");
+local Moriver_get_Count_method = MoriverInfos_type_def:get_method("get_Count");
+local Moriver_get_Item_method = MoriverInfos_type_def:get_method("get_Item(System.Int32)");
 
-local MoriverInfo_type_def = get_Item_method:get_return_type();
+local MoriverInfo_type_def = Moriver_get_Item_method:get_return_type();
 local NpcId_field = MoriverInfo_type_def:get_field("_NpcId");
 local FacilityId_field = MoriverInfo_type_def:get_field("_FacilityId");
 local ItemFromMoriver_field = MoriverInfo_type_def:get_field("ItemFromMoriver");
@@ -47,7 +41,7 @@ local ItemFromPlayer_field = MoriverInfo_type_def:get_field("ItemFromPlayer");
 
 local ItemWork_type_def = ItemFromMoriver_field:get_type();
 local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
-local Num_field = ItemWork_type_def:get_field("Num");
+local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
 local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
 local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
@@ -65,12 +59,13 @@ local execute_method = Event_field:get_type():get_method("execute");
 
 local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)");
 
-local get_Item_method = getRewardItemData_method:get_return_type():get_method("get_Item(System.Int32)");
+local SendItemInfoList_type_def = getRewardItemData_method:get_return_type();
+local SendItemInfo_get_Count_method = SendItemInfoList_type_def:get_method("get_Count");
+local SendItemInfo_get_Item_method = SendItemInfoList_type_def:get_method("get_Item(System.Int32)");
 
-local SendItemInfo_type_def = get_Item_method:get_return_type();
-local get_LogType_method = SendItemInfo_type_def:get_method("get_LogType");
+local SendItemInfo_type_def = SendItemInfo_get_Item_method:get_return_type();
 local ItemId_field = SendItemInfo_type_def:get_field("<ItemId>k__BackingField");
-local Num_field = SendItemInfo_type_def:get_field("<Num>k__BackingField");
+local SendItemInfo_Num_field = SendItemInfo_type_def:get_field("<Num>k__BackingField");
 
 local ItemID_type_def = get_ItemId_method:get_return_type();
 local ItemID = {
@@ -94,20 +89,23 @@ local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("I
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil);
 
-local completedMoriver = nil;
+local RallusItemCount = {
+    [1] = 0,
+    [2] = -1,
+    [3] = -2,
+    [4] = -3,
+    [5] = -4
+};
 
-local function getItems(itemId, itemNum)
-    changeItemNum_method:call(nil, itemId, getItemNum_method:call(nil, itemId, STOCK_TYPE.BOX) + itemNum, STOCK_TYPE.BOX);
-    addItemLog_method:call(nil, itemId, itemNum, false, false, EnemyID_INVALID);
-end
+local completedMoriver = nil;
 
 local function getMoriverItems(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
     if gettingItemId ~= ItemID.NONE and gettingItemId < ItemID.MAX then
-        local gettingNum = Num_field:get_data(ItemFromMoriver);
+        local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
-            getItems(gettingItemId, gettingNum);
+            changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE.BOX, true);
             table.insert(completedMoriver, moriverInfo);
         end
     end
@@ -120,9 +118,9 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = get_ItemId_method:call(ItemWork);
         if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = Num_field:get_data(ItemWork);
+            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                getItems(ItemId, ItemNum);
+                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
             else
                 break;
             end
@@ -140,9 +138,9 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = get_ItemId_method:call(ItemWork);
         if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = Num_field:get_data(ItemWork);
+            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                getItems(ItemId, ItemNum);
+                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
             else
                 break;
@@ -165,11 +163,11 @@ sdk.hook(FacilityMoriver_type_def:get_method("update"), function(args)
 end, function()
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         local MoriverInfos = MoriverInfos_field:get_data(FacilityMoriver);
-        local Count = get_Count_method:call(MoriverInfos);
+        local Count = Moriver_get_Count_method:call(MoriverInfos);
         if Count > 0 then
             completedMoriver = {};
             for i = 0, Count - 1 do
-                local MoriverInfo = get_Item_method:call(MoriverInfos, i);
+                local MoriverInfo = Moriver_get_Item_method:call(MoriverInfos, i);
                 if isEnableMoriverFacility_method:call(FacilityMoriver, NpcId_field:get_data(MoriverInfo)) == true then
                     local FacilityId = FacilityId_field:get_data(MoriverInfo);
                     if FacilityId == FacilityID.SHARING then
@@ -179,7 +177,7 @@ end, function()
                         local givingItemId = get_ItemId_method:call(ItemFromPlayer);
                         if givingItemId ~= ItemID.NONE and givingItemId < ItemID.MAX then
                             local isSuccessSWOP = true;
-                            local givingNum = Num_field:get_data(ItemFromPlayer);
+                            local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
                             local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
                             if pouchNum >= givingNum then
                                 payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
@@ -222,23 +220,14 @@ end);
 
 sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), Constants.getObject, function()
     local FacilityRallus = thread.get_hook_storage()["this"];
-    local SupplyNum = get_SupplyNum_method:call(FacilityRallus);
-    while SupplyNum > 0 do
-        SupplyNum = SupplyNum - 1;
-        local SendItemInfo = get_Item_method:call(getRewardItemData_method:call(nil, GM262_000_00, ST502, nil, nil), 0);
+    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, RallusItemCount[get_SupplyNum_method:call(FacilityRallus)]);
+    for i = 0, SendItemInfo_get_Count_method:call(SendItemInfo_List) - 1 do
+        local SendItemInfo = SendItemInfo_get_Item_method:call(SendItemInfo_List, i);
         local ItemId = ItemId_field:get_data(SendItemInfo);
         if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
-            local Num = Num_field:get_data(SendItemInfo);
+            local Num = SendItemInfo_Num_field:get_data(SendItemInfo);
             if Num > 0 then
-                local newItemNum = Num + getItemNum_method:call(nil, ItemId, STOCK_TYPE.BOX);
-                local capacity = getItemCapacity_method:call(nil, ItemId, STOCK_TYPE.BOX);
-                if newItemNum > capacity then
-                    sendItemToBox_method:call(nil, get_LogType_method:call(SendItemInfo), SendItemInfo, true, EnemyID_INVALID, false);
-                    changeItemNumFromDialogue_method:call(nil, ItemId, Num, STOCK_TYPE.BOX, true);
-                    sellItem_method:call(nil, ItemId, newItemNum - capacity);
-                else
-                    sendItemToBox_method:call(nil, get_LogType_method:call(SendItemInfo), SendItemInfo, true, EnemyID_INVALID, true);
-                end
+                changeItemNumFromDialogue_method:call(nil, ItemId, Num, STOCK_TYPE.BOX, true);
             end
         end
     end
