@@ -2,6 +2,8 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
+local COPYRIGHT = sdk.find_type_definition("app.GUI010001.FLOW"):get_field("COPYRIGHT"):get_data(nil);
+
 local GUIAppKey_type_def = sdk.find_type_definition("app.cGUIAppKey");
 local Type_field = GUIAppKey_type_def:get_field("_Type");
 
@@ -9,7 +11,7 @@ local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get
 
 sdk.hook(sdk.find_type_definition("app.GUI010001"):get_method("onOpen"), Constants.getObject, function()
     local GUI010001 = thread.get_hook_storage()["this"];
-    GUI010001:set_field("_Flow", sdk.find_type_definition("app.GUI010001.FLOW"):get_field("COPYRIGHT"):get_data(nil));
+    GUI010001:set_field("_Flow", COPYRIGHT);
     GUI010001:set_field("_Skip", true);
 end);
 
