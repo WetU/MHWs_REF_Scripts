@@ -96,7 +96,6 @@ local FacilityID = {
     SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
 };
 
-local EnemyID_INVALID = sdk.find_type_definition("app.EnemyDef.ID"):get_field("INVALID"):get_data(nil);
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil);
 
