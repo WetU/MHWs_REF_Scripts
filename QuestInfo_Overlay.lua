@@ -3,6 +3,7 @@ local sdk = Constants.sdk;
 
 local re = Constants.re;
 local draw = Constants.draw;
+local imgui = Constants.imgui;
 
 local tostring = Constants.tostring;
 local string = Constants.string;
@@ -88,8 +89,12 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("notifyQuestRetry"), nil, f
     end
 end);
 
+local font = imgui.load_font(nil, 20);
+
 re.on_frame(function()
     if QuestInfoCreated == true then
+        imgui.push_font(font);
         draw.text(QuestTimer .. "\n" .. DeathCount, 3719, 257, 0xFFFFFFFF);
+        imgui.pop_font();
     end
 end);
