@@ -5,6 +5,7 @@ local thread = Constants.thread;
 
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
 local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
+local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
 local GUIPartsReward_get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local GUIPartsReward_get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
 local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
@@ -46,31 +47,30 @@ local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get
 
 sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), Constants.getObject, function()
     local GUIPartsReward = thread.get_hook_storage()["this"];
-    local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
-    local partsCount = get_Count_method:call(ItemGridParts);
-    if partsCount > 0 then
-        local hasNewItem = false;
-        for i = 0, partsCount - 1 do
-            local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                hasNewItem = true;
-                break;
+    if get__IsViewMode_method:call(GUIPartsReward) == false then
+        local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
+        local partsCount = get_Count_method:call(ItemGridParts);
+        if partsCount > 0 then
+            local hasNewItem = false;
+            for i = 0, partsCount - 1 do
+                local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                    hasNewItem = true;
+                    break;
+                end
             end
-        end
-        if hasNewItem == false then
-            receiveAll_method:call(GUIPartsReward);
-        end
-    end
-end);
-
-sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), Constants.getObject, function()
-    local GUIPartsReward = thread.get_hook_storage()["this"];
-    if get__Mode_method:call(GUIPartsReward) == JUDGE and GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
-        if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
-            GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
-        end
-        if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
-            set__WaitControlTime_method:call(GUIPartsReward, 0.01);
+            if hasNewItem == true then
+                if get__Mode_method:call(GUIPartsReward) == JUDGE and GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
+                    if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+                        GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
+                    end
+                    if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+                        set__WaitControlTime_method:call(GUIPartsReward, 0.01);
+                    end
+                end
+            else
+                receiveAll_method:call(GUIPartsReward);
+            end
         end
     end
 end);
