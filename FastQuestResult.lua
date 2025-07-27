@@ -19,8 +19,8 @@ local get_Count_method = ItemGridParts_type_def:get_method("get_Count");
 local get_Item_method = ItemGridParts_type_def:get_method("get_Item(System.Int32)");
 
 local GUIItemGridPartsFluent_type_def = get_Item_method:get_return_type();
-local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
-local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark");
+local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui-SelectItem
+local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark"); -- via.gui.Panel
 
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
@@ -44,6 +44,18 @@ local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("exe
 local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
 
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
+
+local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
+local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
+local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__24_0");
+
+local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
+local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
+local get_MyOwner_method = GUI020100PanelQuestResultList_type_def:get_method("get_MyOwner");
+
+local hasContribution_method = get_MyOwner_method:get_return_type():get_method("hasContribution");
+
+local terminateQuestResult_method = sdk.find_type_definition("app.GUIManager"):get_method("terminateQuestResult");
 
 sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), Constants.getObject, function()
     local GUIPartsReward = thread.get_hook_storage()["this"];
@@ -96,7 +108,21 @@ sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)
     end
 end, function()
     if isResultSkip == true then
-        thread.get_hook_storage()["this"]:set_field("_Success", true);
         isResultSkip = nil;
+        thread.get_hook_storage()["this"]:set_field("_Success", true);
+    end
+end);
+
+sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), Constants.getObject, function()
+    local GUI020100PanelQuestRewardItem = thread.get_hook_storage()["this"];
+    Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
+    Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem);
+end);
+
+sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
+    local GUI020100PanelQuestResultList = thread.get_hook_storage()["this"];
+    Result_endFix_method:call(GUI020100PanelQuestResultList);
+    if hasContribution_method:call(get_MyOwner_method:call(GUI020100PanelQuestResultList)) == false then
+        terminateQuestResult_method:call(sdk.get_managed_singleton("app.GUIManager"));
     end
 end);

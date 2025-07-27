@@ -32,6 +32,7 @@ sdk.hook(StatusIconManager_type_def:get_method("buffTimerUpdate(app.HunterCharac
     end
 end, function()
     if isValid == true then
+        isValid = nil;
         local StatusIconInfoList = StatusIconInfoList_field:get_data(thread.get_hook_storage()["this"]);
         for i = 0, StatusIconInfoList:get_size() - 1 do
             local StatusIconInfo = StatusIconInfoList:get_element(i);
@@ -45,6 +46,5 @@ end, function()
                 break;
             end
         end
-        isValid = nil;
     end
 end);

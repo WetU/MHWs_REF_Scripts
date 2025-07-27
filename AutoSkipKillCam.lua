@@ -16,7 +16,7 @@ local showStamp_method = HunterQuestActionController_type_def:get_method("showSt
 
 local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
-local GUI_field = GUI020201_type_def:get_field("_GUI");
+local GUI_field = GUI020201_type_def:get_field("_GUI"); -- via.gui.GUI
 
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
@@ -69,11 +69,11 @@ sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)
     end
 end, function()
     if validReturnTimeSkip == true then
+        validReturnTimeSkip = nil;
         local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
         if config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true then
             GUIAppOnTimerKey:set_field("_Success", true);
         end
-        validReturnTimeSkip = nil;
     end
 end);
 
@@ -90,11 +90,11 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
     end
 end, function()
     if skipped == true then
+        skipped = nil;
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
         if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
             QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
         end
-        skipped = nil;
     end
 end);
 
@@ -130,16 +130,16 @@ end);
 
 sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
     if GUI020201_datas.reqSkip == true and GUI020201_datas.isSetted == false then
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
         GUI020201_datas.isSetted = true;
         GUI020201_datas.reqSkip = false;
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
     end
 end);
 
 sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
     if GUI020201_datas.isSetted == true then
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
         GUI020201_datas.isSetted = false;
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
     end
 end);
 

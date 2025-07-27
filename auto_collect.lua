@@ -236,12 +236,12 @@ sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), C
     execMoriver(thread.get_hook_storage()["this"]);
 end);
 
+local FacilityPugee = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if Constants.FacilityManager == nil then
-        Constants.FacilityManager = sdk.to_managed_object(args[2]);
+    if FacilityPugee == nil then
+        FacilityPugee = get_Pugee_method:call(sdk.to_managed_object(args[2]));
     end
 end, function()
-    local FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
     if isEnableCoolTimer_method:call(FacilityPugee) == false then
         stroke_method:call(FacilityPugee, true);
     end
