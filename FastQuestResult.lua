@@ -5,7 +5,6 @@ local thread = Constants.thread;
 
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
 local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
-local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
 local GUIPartsReward_get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local GUIPartsReward_get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
 local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
@@ -51,15 +50,24 @@ local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_met
 
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
-local get_MyOwner_method = GUI020100PanelQuestResultList_type_def:get_method("get_MyOwner");
 
-local hasContribution_method = get_MyOwner_method:get_return_type():get_method("hasContribution");
+local GUIManager_type_def = sdk.find_type_definition("app.GUIManager");
+local terminateQuestResult_method = GUIManager_type_def:get_method("terminateQuestResult");
+local isQuestResultFlowActive_method = GUIManager_type_def:get_method("isQuestResultFlowActive");
 
-local terminateQuestResult_method = sdk.find_type_definition("app.GUIManager"):get_method("terminateQuestResult");
-
-sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), Constants.getObject, function()
-    local GUIPartsReward = thread.get_hook_storage()["this"];
-    if get__IsViewMode_method:call(GUIPartsReward) == false then
+local validReport = nil;
+sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), function(args)
+    if Constants.GUIManager == nil then
+        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+    end
+    if isQuestResultFlowActive_method:call(Constants.GUIManager) == true then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        validReport = true;
+    end
+end, function()
+    if validReport == true then
+        validReport = nil;
+        local GUIPartsReward = thread.get_hook_storage()["this"];
         local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
         local partsCount = get_Count_method:call(ItemGridParts);
         if partsCount > 0 then
@@ -120,9 +128,9 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), Constants.g
 end);
 
 sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
-    local GUI020100PanelQuestResultList = thread.get_hook_storage()["this"];
-    Result_endFix_method:call(GUI020100PanelQuestResultList);
-    if hasContribution_method:call(get_MyOwner_method:call(GUI020100PanelQuestResultList)) == false then
-        terminateQuestResult_method:call(sdk.get_managed_singleton("app.GUIManager"));
+    Result_endFix_method:call(thread.get_hook_storage()["this"]);
+    if Constants.GUIManager == nil then
+        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
     end
+    terminateQuestResult_method:call(Constants.GUIManager);
 end);
