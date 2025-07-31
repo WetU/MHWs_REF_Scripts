@@ -118,11 +118,11 @@ local GUI020201_datas = {
     isSetted = false
 };
 sdk.hook(GUI020201_type_def:get_method("onOpen"), Constants.getObject, function()
-    local this = thread.get_hook_storage()["this"];
-    local CurType = CurType_field:get_data(this);
+    local GUI020201 = thread.get_hook_storage()["this"];
+    local CurType = CurType_field:get_data(GUI020201);
     if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then
         if GUI020201_datas.GUI == nil then
-            GUI020201_datas.GUI = GUI_field:get_data(this);
+            GUI020201_datas.GUI = GUI_field:get_data(GUI020201);
         end
         GUI020201_datas.reqSkip = true;
     end
