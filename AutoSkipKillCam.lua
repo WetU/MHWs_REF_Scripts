@@ -28,9 +28,7 @@ local TYPES = {
 
 local offsets = {
     Timer = 0xC8,
-    Limit = 0xCC,
-    Enabled = 0xD3,
-    IsTimeOut = 0xD6
+    Limit = 0xCC
 };
 
 local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
@@ -77,24 +75,14 @@ end, function()
     end
 end);
 
-local skipped = nil;
-sdk.hook(Constants.QuestDirector_type_def:get_method("QuestReturnSkip"), nil, function()
+sdk.hook(Constants.QuestDirector_type_def:get_method("QuestReturnSkip"), function(args)
     if config.enableInstantQuit == true then
-        skipped = true;
-    end
-end);
-
-sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
-    if skipped == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
 end, function()
-    if skipped == true then
-        skipped = nil;
+    if config.enableInstantQuit == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this"]);
-        if QuestFlowParam:read_byte(offsets.Enabled) ~= 0 and QuestFlowParam:read_byte(offsets.IsTimeOut) == 0 then
-            QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
-        end
+        QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
     end
 end);
 

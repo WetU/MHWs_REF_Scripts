@@ -17,9 +17,7 @@ local addPoint_method = sdk.find_type_definition("app.PointUtil"):get_method("ad
 local getPoint_method = sdk.find_type_definition("app.BasicParamUtil"):get_method("getPoint"); -- static
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
-local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
-local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
@@ -49,7 +47,7 @@ local ItemFromMoriver_field = MoriverInfo_type_def:get_field("ItemFromMoriver");
 local ItemFromPlayer_field = MoriverInfo_type_def:get_field("ItemFromPlayer");
 
 local ItemWork_type_def = ItemFromMoriver_field:get_type();
-local get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
+local ItemWork_get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
 local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
@@ -83,7 +81,7 @@ local SendItemInfo_get_Item_method = SendItemInfoList_type_def:get_method("get_I
 local SendItemInfo_Clear_method = SendItemInfoList_type_def:get_method("Clear");
 
 local SendItemInfo_type_def = SendItemInfo_get_Item_method:get_return_type();
-local ItemId_field = SendItemInfo_type_def:get_field("<ItemId>k__BackingField");
+local SendItemInfo_ItemId_field = SendItemInfo_type_def:get_field("<ItemId>k__BackingField");
 local SendItemInfo_Num_field = SendItemInfo_type_def:get_field("<Num>k__BackingField");
 
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
@@ -108,7 +106,7 @@ local get_Point_method = SupportShipData_Data_type_def:get_method("get_Point");
 
 local SupportShip_CATEGORY_MISC = get_Category_method:get_return_type():get_field("CATEGORY_03"):get_data(nil);
 
-local ItemID_type_def = get_ItemId_method:get_return_type();
+local ItemID_type_def = ItemWork_get_ItemId_method:get_return_type();
 local ItemID = {
     NONE = ItemID_type_def:get_field("NONE"):get_data(nil),
     MAX = ItemID_type_def:get_field("MAX"):get_data(nil)
@@ -141,7 +139,7 @@ local completedMorivers = {
 
 local function getItemFromMoriver(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
-    local gettingItemId = get_ItemId_method:call(ItemFromMoriver);
+    local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
@@ -164,7 +162,7 @@ local function execMoriver(facilityMoriver)
                 table.insert(completedMorivers.Sharing, MoriverInfo);
             elseif FacilityId == FacilityID.SWOP then
                 local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
-                local givingItemId = get_ItemId_method:call(ItemFromPlayer);
+                local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
                     local isSuccessSWOP = true;
                     local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
@@ -207,24 +205,15 @@ local function execMoriver(facilityMoriver)
     end
 end
 
-sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
-    local CollectionNPCParam = thread.get_hook_storage()["this"];
-    local ItemWorks_array = get_CollectionItem_method:call(CollectionNPCParam);
-    for i = 0, Collection_MAX_ITEM_NUM - 1 do
-        local ItemWork = ItemWorks_array:get_element(i);
-        local ItemId = get_ItemId_method:call(ItemWork);
-        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
-            if ItemNum > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
-            else
-                break;
-            end
-        else
-            break;
-        end
-    end
-    clearAllCollectionItem_method:call(CollectionNPCParam);
+sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), function(args)
+    local hook_storage = thread.get_hook_storage();
+    hook_storage.this = sdk.to_managed_object(args[2]);
+    hook_storage.ItemId = sdk.to_int64(args[3]) & 0xFFFFFFFF;
+    hook_storage.Num = sdk.to_int64(args[4]) & 0xFFFF;
+end, function()
+    local hook_storage = thread.get_hook_storage();
+    changeItemNumFromDialogue_method:call(nil, hook_storage.ItemId, hook_storage.Num, STOCK_TYPE.BOX, true);
+    clearAllCollectionItem_method:call(hook_storage.this);
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
@@ -232,17 +221,13 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
     local ItemWorks_array = get_Rewards_method:call(LargeWorkshopParam);
     for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
-        local ItemId = get_ItemId_method:call(ItemWork);
+        local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
-            else
-                break;
             end
-        else
-            break;
         end
     end
 end);
@@ -279,19 +264,22 @@ end);
 sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), Constants.getObject, function()
     local FacilityRallus = thread.get_hook_storage()["this"];
     local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, RallusItemCount[get_SupplyNum_method:call(FacilityRallus)]);
-    for i = 0, SendItemInfo_get_Count_method:call(SendItemInfo_List) - 1 do
-        local SendItemInfo = SendItemInfo_get_Item_method:call(SendItemInfo_List, i);
-        local ItemId = ItemId_field:get_data(SendItemInfo);
-        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-            local Num = SendItemInfo_Num_field:get_data(SendItemInfo);
-            if Num > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, Num, STOCK_TYPE.BOX, true);
+    local SendItemInfo_Count = SendItemInfo_get_Count_method:call(SendItemInfo_List);
+    if SendItemInfo_Count > 0 then
+        for i = 0, SendItemInfo_Count - 1 do
+            local SendItemInfo = SendItemInfo_get_Item_method:call(SendItemInfo_List, i);
+            local ItemId = SendItemInfo_ItemId_field:get_data(SendItemInfo);
+            if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+                local Num = SendItemInfo_Num_field:get_data(SendItemInfo);
+                if Num > 0 then
+                    changeItemNumFromDialogue_method:call(nil, ItemId, Num, STOCK_TYPE.BOX, true);
+                end
             end
         end
+        execute_method:call(Event_field:get_data(FacilityRallus));
+        SendItemInfo_Clear_method:call(SendItemInfo_List);
+        resetSupplyNum_method:call(FacilityRallus);
     end
-    execute_method:call(Event_field:get_data(FacilityRallus));
-    SendItemInfo_Clear_method:call(SendItemInfo_List);
-    resetSupplyNum_method:call(FacilityRallus);
 end);
 
 sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), Constants.getObject, function()
