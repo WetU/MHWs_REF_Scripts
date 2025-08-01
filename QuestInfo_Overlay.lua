@@ -9,6 +9,8 @@ local tostring = Constants.tostring;
 local string = Constants.string;
 local math = Constants.math;
 
+local font = imgui.load_font(nil, 20);
+
 local get_IsActiveQuest_method = Constants.QuestDirector_type_def:get_method("get_IsActiveQuest");
 local get_QuestData_method = Constants.QuestDirector_type_def:get_method("get_QuestData");
 local get_QuestElapsedTime_method = Constants.QuestDirector_type_def:get_method("get_QuestElapsedTime");
@@ -88,8 +90,6 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("notifyQuestRetry"), nil, f
         DeathCount = "다운 횟수: 0 / " .. questMaxDeath;
     end
 end);
-
-local font = imgui.load_font(nil, 20);
 
 re.on_frame(function()
     if QuestInfoCreated == true then
