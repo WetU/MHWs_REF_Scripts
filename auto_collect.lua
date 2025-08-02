@@ -5,19 +5,22 @@ local thread = Constants.thread;
 local ipairs = Constants.ipairs;
 local table = Constants.table;
 
-local payItem_method = sdk.find_type_definition("app.FacilityUtil"):get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
+local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
+local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
+local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
+local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
+local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local changeItemNumFromDialogue_method = Constants.ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
-local getSellItem_method = sdk.find_type_definition("app.ItemUtil"):get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)");
-local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)");
-local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_method("Data(app.WeaponDef.TYPE, System.Int32)");
-local addPoint_method = sdk.find_type_definition("app.PointUtil"):get_method("addPoint(System.Int32)");
-local getPoint_method = sdk.find_type_definition("app.BasicParamUtil"):get_method("getPoint"); -- static
+local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
+local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_method("Data(app.WeaponDef.TYPE, System.Int32)"); -- static
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
+local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
+local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
@@ -73,7 +76,7 @@ local Event_field = FacilityRallus_type_def:get_field("_Event");
 
 local execute_method = Event_field:get_type():get_method("execute");
 
-local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)");
+local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
 
 local SendItemInfoList_type_def = getRewardItemData_method:get_return_type();
 local SendItemInfo_get_Count_method = SendItemInfoList_type_def:get_method("get_Count");
@@ -84,8 +87,8 @@ local SendItemInfo_type_def = SendItemInfo_get_Item_method:get_return_type();
 local SendItemInfo_ItemId_field = SendItemInfo_type_def:get_field("<ItemId>k__BackingField");
 local SendItemInfo_Num_field = SendItemInfo_type_def:get_field("<Num>k__BackingField");
 
-local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
-local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil);
+local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
+local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
 
 local ShipParam_type_def = sdk.find_type_definition("app.savedata.cShipParam");
 local getItem_method = ShipParam_type_def:get_method("getItem(System.Int32)");
@@ -95,7 +98,7 @@ local ShipItemParam_type_def = getItem_method:get_return_type();
 local DataId_field = ShipItemParam_type_def:get_field("DataId");
 local ShipItem_Num_field = ShipItemParam_type_def:get_field("Num");
 
-local getShipDataFromDataId_method = sdk.find_type_definition("app.ShipUtil"):get_method("getShipDataFromDataId(System.Int16)");
+local getShipDataFromDataId_method = sdk.find_type_definition("app.ShipUtil"):get_method("getShipDataFromDataId(System.Int16)"); -- static
 
 local SupportShipData_Data_type_def = getShipDataFromDataId_method:get_return_type();
 local get_Category_method = SupportShipData_Data_type_def:get_method("get_Category");
@@ -104,7 +107,7 @@ local get_WeaponType_method = SupportShipData_Data_type_def:get_method("get_Weap
 local get_ParamId_method = SupportShipData_Data_type_def:get_method("get_ParamId");
 local get_Point_method = SupportShipData_Data_type_def:get_method("get_Point");
 
-local SupportShip_CATEGORY_MISC = get_Category_method:get_return_type():get_field("CATEGORY_03"):get_data(nil);
+local SupportShip_CATEGORY_MISC = get_Category_method:get_return_type():get_field("CATEGORY_03"):get_data(nil); -- static
 
 local ItemID_type_def = ItemWork_get_ItemId_method:get_return_type();
 local ItemID = {
@@ -205,15 +208,20 @@ local function execMoriver(facilityMoriver)
     end
 end
 
-sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), function(args)
-    local hook_storage = thread.get_hook_storage();
-    hook_storage.this = sdk.to_managed_object(args[2]);
-    hook_storage.ItemId = sdk.to_int64(args[3]) & 0xFFFFFFFF;
-    hook_storage.Num = sdk.to_int64(args[4]) & 0xFFFF;
-end, function()
-    local hook_storage = thread.get_hook_storage();
-    changeItemNumFromDialogue_method:call(nil, hook_storage.ItemId, hook_storage.Num, STOCK_TYPE.BOX, true);
-    clearAllCollectionItem_method:call(hook_storage.this);
+sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
+    local CollectionNPCParam = thread.get_hook_storage()["this"];
+    local ItemWorks_array = get_CollectionItem_method:call(CollectionNPCParam);
+    for i = 0, Collection_MAX_ITEM_NUM - 1 do
+        local ItemWork = ItemWorks_array:get_element(i);
+        local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
+        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
+            if ItemNum > 0 then
+                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
+            end
+        end
+    end
+    clearAllCollectionItem_method:call(CollectionNPCParam);
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
@@ -308,18 +316,18 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                     local num = ShipItem_Num_field:get_data(ItemParam);
                     if num > 0 then
                         local totalCost = get_Point_method:call(ShipData) * num;
-                        if getPoint_method:call(nil) >= totalCost then
+                        if isEnoughPoint_method:call(nil, totalCost) == true then
                             getSellItem_method:call(nil, ItemId, num, STOCK_TYPE.BOX);
-                            addPoint_method:call(nil, -totalCost);
+                            payPoint_method:call(nil, totalCost);
                             ItemParam:set_field("Num", 0);
                         end
                     end
                 else
                     local cost = get_Point_method:call(ShipData);
-                    if getPoint_method:call(nil) >= cost then
+                    if isEnoughPoint_method:call(nil, cost) == true then
                         local weaponType = get_WeaponType_method:call(ShipData);
                         addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"))), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))));
-                        addPoint_method:call(nil, -cost);
+                        payPoint_method:call(nil, cost);
                         ItemParam:set_field("Num", 0);
                     end
                 end
@@ -327,11 +335,11 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                 local num = ShipItem_Num_field:get_data(ItemParam);
                 if num > 0 then
                     local totalCost = get_Point_method:call(ShipData) * num;
-                    if getPoint_method:call(nil) >= totalCost then
+                    if isEnoughPoint_method:call(nil, totalCost) == true then
                         local ItemId = Ship_get_ItemId_method:call(ShipData);
                         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
                             getSellItem_method:call(nil, ItemId, num, STOCK_TYPE.BOX);
-                            addPoint_method:call(nil, -totalCost);
+                            payPoint_method:call(nil, totalCost);
                             ItemParam:set_field("Num", 0);
                         end
                     end
