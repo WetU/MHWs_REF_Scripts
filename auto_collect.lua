@@ -95,19 +95,17 @@ local getItem_method = ShipParam_type_def:get_method("getItem(System.Int32)");
 local getEnableItemNum_method = ShipParam_type_def:get_method("getEnableItemNum");
 
 local ShipItemParam_type_def = getItem_method:get_return_type();
+local Ship_addNum_method = ShipItemParam_type_def:get_method("addNum(System.Int16)");
 local DataId_field = ShipItemParam_type_def:get_field("DataId");
 local ShipItem_Num_field = ShipItemParam_type_def:get_field("Num");
 
 local getShipDataFromDataId_method = sdk.find_type_definition("app.ShipUtil"):get_method("getShipDataFromDataId(System.Int16)"); -- static
 
 local SupportShipData_Data_type_def = getShipDataFromDataId_method:get_return_type();
-local get_Category_method = SupportShipData_Data_type_def:get_method("get_Category");
 local Ship_get_ItemId_method = SupportShipData_Data_type_def:get_method("get_ItemId");
 local get_WeaponType_method = SupportShipData_Data_type_def:get_method("get_WeaponType");
 local get_ParamId_method = SupportShipData_Data_type_def:get_method("get_ParamId");
 local get_Point_method = SupportShipData_Data_type_def:get_method("get_Point");
-
-local SupportShip_CATEGORY_MISC = get_Category_method:get_return_type():get_field("CATEGORY_03"):get_data(nil); -- static
 
 local ItemID_type_def = ItemWork_get_ItemId_method:get_return_type();
 local ItemID = {
@@ -125,6 +123,12 @@ local FacilityID_type_def = FacilityId_field:get_type();
 local FacilityID = {
     SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil),
     SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
+};
+
+local WeaponType_type_def = get_WeaponType_method:get_return_type();
+local WeaponType = {
+    INVALID = WeaponType_type_def:get_field("INVALID"):get_data(nil),
+    MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
 local RallusItemCount = {
@@ -295,12 +299,17 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
     local EnableItemNum = getEnableItemNum_method:call(ShipParam);
     if EnableItemNum > 0 then
         for i = 0, EnableItemNum - 1 do
-            local ItemParam = getItem_method:call(ShipParam, i);
-            if ItemParam == nil then
+            local ShipItemParam = getItem_method:call(ShipParam, i);
+            if ShipItemParam == nil then
                 goto continue;
             end
 
-            local DataId = DataId_field:get_data(ItemParam);
+            local Num = ShipItem_Num_field:get_data(ShipItemParam);
+            if Num <= 0 then
+                goto continue;
+            end
+
+            local DataId = DataId_field:get_data(ShipItemParam);
             if DataId == -1 then
                 goto continue;
             end
@@ -310,37 +319,23 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                 goto continue;
             end
 
-            if get_Category_method:call(ShipData) == SupportShip_CATEGORY_MISC then
-                local ItemId = Ship_get_ItemId_method:call(ShipData);
-                if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                    local num = ShipItem_Num_field:get_data(ItemParam);
-                    if num > 0 then
-                        local totalCost = get_Point_method:call(ShipData) * num;
-                        if isEnoughPoint_method:call(nil, totalCost) == true then
-                            getSellItem_method:call(nil, ItemId, num, STOCK_TYPE.BOX);
-                            payPoint_method:call(nil, totalCost);
-                            ItemParam:set_field("Num", 0);
-                        end
-                    end
-                else
-                    local cost = get_Point_method:call(ShipData);
-                    if isEnoughPoint_method:call(nil, cost) == true then
+            local cost = get_Point_method:call(ShipData);
+            for j = Num, 1, -1 do
+                local totalCost = cost * j;
+                if isEnoughPoint_method:call(nil, totalCost) == true then
+                    local ItemId = Ship_get_ItemId_method:call(ShipData);
+                    if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
+                        payPoint_method:call(nil, totalCost);
+                        Ship_addNum_method:call(ShipItemParam, -j);
+                        break;
+                    else
                         local weaponType = get_WeaponType_method:call(ShipData);
-                        addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"))), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))));
-                        payPoint_method:call(nil, cost);
-                        ItemParam:set_field("Num", 0);
-                    end
-                end
-            else
-                local num = ShipItem_Num_field:get_data(ItemParam);
-                if num > 0 then
-                    local totalCost = get_Point_method:call(ShipData) * num;
-                    if isEnoughPoint_method:call(nil, totalCost) == true then
-                        local ItemId = Ship_get_ItemId_method:call(ShipData);
-                        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                            getSellItem_method:call(nil, ItemId, num, STOCK_TYPE.BOX);
+                        if weaponType > WeaponType.INVALID and WeaponType < Weapon_TYPE.MAX then
+                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"))), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))));
                             payPoint_method:call(nil, totalCost);
-                            ItemParam:set_field("Num", 0);
+                            Ship_addNum_method:call(ShipItemParam, -j);
+                            break;
                         end
                     end
                 end
