@@ -173,16 +173,16 @@ local function execMoriver(facilityMoriver)
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
                     local isSuccessSWOP = true;
                     local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
-                    local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                    if pouchNum >= givingNum then
-                        payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
+                    local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
+                    if boxNum >= givingNum then
+                        payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
                     else
-                        local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
-                        if (pouchNum + boxNum) >= givingNum then
-                            payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
-                            payItem_method:call(nil, givingItemId, givingNum - pouchNum, STOCK_TYPE.BOX);
-                        elseif boxNum >= givingNum then
-                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
+                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
+                        if pouchNum >= givingNum then
+                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
+                        elseif (boxNum + pouchNum) >= givingNum then
+                            payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
+                            payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
                         else
                             isSuccessSWOP = false;
                         end
