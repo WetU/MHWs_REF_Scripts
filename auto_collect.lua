@@ -248,9 +248,8 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), function(args)
+sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
     Constants:loadObjects();
-end, function()
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
