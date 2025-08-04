@@ -38,4 +38,11 @@ local Constants = {
     end
 };
 
+function Constants:loadObjects()
+    self.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+    self.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
+    self.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+    self.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+end
+
 return Constants;

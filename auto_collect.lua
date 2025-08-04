@@ -63,7 +63,7 @@ local BasicParam_type_def = get_BasicData_method:get_return_type();
 local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
 local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
 
-local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData)");
+local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
 
 local FacilityPugee_type_def = get_Pugee_method:get_return_type();
 local isEnableCoolTimer_method = FacilityPugee_type_def:get_method("isEnableCoolTimer");
@@ -207,7 +207,7 @@ local function execMoriver(facilityMoriver)
             end
         end
         completedMorivers.SWOP = nil;
-        local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager")));
+        local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
 end
@@ -248,10 +248,9 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
-    if Constants.FacilityManager == nil then
-        Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
-    end
+sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), function(args)
+    Constants:loadObjects();
+end, function()
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
@@ -305,7 +304,7 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
             end
 
             local Num = ShipItem_Num_field:get_data(ShipItemParam);
-            if Num <= 0 then
+            if Num < 1 then
                 goto continue;
             end
 
@@ -331,8 +330,8 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                         break;
                     else
                         local weaponType = get_WeaponType_method:call(ShipData);
-                        if weaponType > WeaponType.INVALID and WeaponType < Weapon_TYPE.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"))), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))));
+                        if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
+                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
                             Ship_addNum_method:call(ShipItemParam, -j);
                             break;

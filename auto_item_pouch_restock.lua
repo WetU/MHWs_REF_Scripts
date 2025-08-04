@@ -17,9 +17,6 @@ local mySet = 0;
 local isSelfCall = false;
 
 local function restockItems()
-    if Constants.ChatManager == nil then
-        Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
-    end
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
