@@ -213,9 +213,6 @@ local function execMoriver(facilityMoriver)
             end
         end
         completedMorivers.SWOP = nil;
-        if Constants.SaveDataManager == nil then
-            Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
-        end
         local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
@@ -257,10 +254,7 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
-    if Constants.FacilityManager == nil then
-        Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
-    end
+sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), Constants.init, function()
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
@@ -273,14 +267,11 @@ end);
 
 local FacilityPugee = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if Constants.FacilityManager == nil then
-        Constants.FacilityManager = sdk.to_managed_object(args[2]);
-    end
-    if FacilityPugee == nil then
+    if Constants.FacilityManager ~= nil and FacilityPugee == nil then
         FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
     end
 end, function()
-    if isEnableCoolTimer_method:call(FacilityPugee) == false then
+    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
         stroke_method:call(FacilityPugee, true);
     end
 end);
@@ -336,9 +327,6 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                     else
                         local weaponType = get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            if Constants.SaveDataManager == nil then
-                                Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
-                            end
                             addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
                             Ship_addNum_method:call(ShipItemParam, -j);

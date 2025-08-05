@@ -57,9 +57,6 @@ local isQuestResultFlowActive_method = GUIManager_type_def:get_method("isQuestRe
 
 local validReport = nil;
 sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), function(args)
-    if Constants.GUIManager == nil then
-        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    end
     if isQuestResultFlowActive_method:call(Constants.GUIManager) == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
         validReport = true;
@@ -129,8 +126,5 @@ end);
 
 sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
     Result_endFix_method:call(thread.get_hook_storage()["this"]);
-    if Constants.GUIManager == nil then
-        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    end
     terminateQuestResult_method:call(Constants.GUIManager);
 end);

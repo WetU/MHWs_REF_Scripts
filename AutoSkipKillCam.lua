@@ -141,9 +141,9 @@ re.on_config_save(saveConfig);
 
 re.on_draw_ui(function()
     if imgui.tree_node("Auto Skip Kill Cam") == true then
-		local changed = false;
+        local changed = false;
         local reqSave = false;
-		changed, config.skipKillCam = imgui.checkbox("Enable skip kill-Cam", config.skipKillCam);
+        changed, config.skipKillCam = imgui.checkbox("Enable skip kill-Cam", config.skipKillCam);
         if changed == true and reqSave ~= true then
             reqSave = true;
         end
@@ -174,9 +174,9 @@ re.on_draw_ui(function()
         if changed == true and reqSave ~= true then
             reqSave = true;
         end
-		if reqSave == true then
-			saveConfig();
-		end
-		imgui.tree_pop();
-	end
+        if reqSave == true then
+            saveConfig();
+        end
+        imgui.tree_pop();
+    end
 end);

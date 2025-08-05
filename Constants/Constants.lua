@@ -38,4 +38,13 @@ local Constants = {
     end
 };
 
+Constants.init = function()
+    Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+    Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
+    Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+    Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+end
+
+Constants.init();
+
 return Constants;
