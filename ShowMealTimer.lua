@@ -24,9 +24,7 @@ local ACTIVE = DispState_field:get_type():get_field("ACTIVE"):get_data(nil);
 local isValid = nil;
 sdk.hook(StatusIconManager_type_def:get_method("buffTimerUpdate(app.HunterCharacter, app.IconDef.STATUS, System.Boolean)"), function(args)
     if get_IsMaster_method:call(sdk.to_managed_object(args[3])) == true and (sdk.to_int64(args[4]) & 0xFFFFFFFF) == STATUS_0019 then
-        if (sdk.to_int64(args[5]) & 1) == 0 then
-            args[5] = Constants.TRUE_ptr;
-        end
+        args[5] = Constants.TRUE_ptr;
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
         isValid = true;
     end
@@ -34,16 +32,19 @@ end, function()
     if isValid == true then
         isValid = nil;
         local StatusIconInfoList = StatusIconInfoList_field:get_data(thread.get_hook_storage()["this"]);
-        for i = 0, StatusIconInfoList:get_size() - 1 do
-            local StatusIconInfo = StatusIconInfoList:get_element(i);
-            if StatusIcon_field:get_data(StatusIconInfo) == STATUS_0019 then
-                if DispState_field:get_data(StatusIconInfo) == ACTIVE then
-                    local TimerText_Control = get_Parent_method:call(get_TimerText_method:call(StatusIconInfo));
-                    if get_PlayState_method:call(TimerText_Control) ~= "DEFAULT" then
-                        set_PlayState_method:call(TimerText_Control, "DEFAULT");
+        local list_size = StatusIconInfoList:get_size();
+        if list_size > 0 then
+            for i = 0, list_size - 1 do
+                local StatusIconInfo = StatusIconInfoList:get_element(i);
+                if StatusIcon_field:get_data(StatusIconInfo) == STATUS_0019 then
+                    if DispState_field:get_data(StatusIconInfo) == ACTIVE then
+                        local TimerText_Control = get_Parent_method:call(get_TimerText_method:call(StatusIconInfo));
+                        if get_PlayState_method:call(TimerText_Control) ~= "DEFAULT" then
+                            set_PlayState_method:call(TimerText_Control, "DEFAULT");
+                        end
                     end
+                    break;
                 end
-                break;
             end
         end
     end

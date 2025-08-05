@@ -4,7 +4,7 @@ local sdk = _G.sdk;
 local thread = _G.thread;
 
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local OnTimerKey_Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
+local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
 local Constants = {
     pairs = _G.pairs,
@@ -23,7 +23,7 @@ local Constants = {
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
-    GUIFunc_TYPE_type_def = OnTimerKey_Type_field:get_type(),
+    GUIFunc_TYPE_type_def = Type_field:get_type(),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
@@ -33,16 +33,9 @@ local Constants = {
     getObject = function(args)
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end,
-    getOnTimerKey_Type = function(obj)
-        return OnTimerKey_Type_field:get_data(obj);
+    getGUIAppKey_Type = function(obj)
+        return Type_field:get_data(obj);
     end
 };
-
-function Constants:loadObjects()
-    self.ChatManager = sdk.get_managed_singleton("app.ChatManager");
-    self.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
-    self.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    self.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
-end
 
 return Constants;

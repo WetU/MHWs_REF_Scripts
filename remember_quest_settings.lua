@@ -28,7 +28,11 @@ local function saveConfig()
     json.dump_file("remember_quest_settings.json", config);
 end
 
-sdk.hook(GUI050000_type_def:get_method("onOpen"), Constants.getObject, function()
+sdk.hook(GUI050000_type_def:get_method("onOpen"), function(args)
+    if #config.sort_types > 0 then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end
+end, function()
     if #config.sort_types > 0 then
         local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
         local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);

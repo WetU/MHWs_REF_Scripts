@@ -178,13 +178,19 @@ local function execMoriver(facilityMoriver)
                         payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
                     else
                         local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                        if pouchNum >= givingNum then
-                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
-                        elseif (boxNum + pouchNum) >= givingNum then
-                            payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
-                            payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
+                        if boxNum > 0 then
+                            if (boxNum + pouchNum) >= givingNum then
+                                payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
+                                payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
+                            else
+                                isSuccessSWOP = false;
+                            end
                         else
-                            isSuccessSWOP = false;
+                            if pouchNum >= givingNum then
+                                payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
+                            else
+                                isSuccessSWOP = false;
+                            end
                         end
                     end
                     if isSuccessSWOP == true then
@@ -207,6 +213,9 @@ local function execMoriver(facilityMoriver)
             end
         end
         completedMorivers.SWOP = nil;
+        if Constants.SaveDataManager == nil then
+            Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+        end
         local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
@@ -249,7 +258,9 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject,
 end);
 
 sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
-    Constants:loadObjects();
+    if Constants.FacilityManager == nil then
+        Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
+    end
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
@@ -262,8 +273,11 @@ end);
 
 local FacilityPugee = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
+    if Constants.FacilityManager == nil then
+        Constants.FacilityManager = sdk.to_managed_object(args[2]);
+    end
     if FacilityPugee == nil then
-        FacilityPugee = get_Pugee_method:call(sdk.to_managed_object(args[2]));
+        FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
     end
 end, function()
     if isEnableCoolTimer_method:call(FacilityPugee) == false then
@@ -298,10 +312,6 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
     if EnableItemNum > 0 then
         for i = 0, EnableItemNum - 1 do
             local ShipItemParam = getItem_method:call(ShipParam, i);
-            if ShipItemParam == nil then
-                goto continue;
-            end
-
             local Num = ShipItem_Num_field:get_data(ShipItemParam);
             if Num < 1 then
                 goto continue;
@@ -313,10 +323,6 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
             end
 
             local ShipData = getShipDataFromDataId_method:call(nil, DataId)
-            if ShipData == nil then
-                goto continue;
-            end
-
             local cost = get_Point_method:call(ShipData);
             for j = Num, 1, -1 do
                 local totalCost = cost * j;
@@ -330,6 +336,9 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                     else
                         local weaponType = get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
+                            if Constants.SaveDataManager == nil then
+                                Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+                            end
                             addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
                             Ship_addNum_method:call(ShipItemParam, -j);
