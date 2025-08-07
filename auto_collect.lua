@@ -10,7 +10,6 @@ local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID,
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
-local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local changeItemNumFromDialogue_method = Constants.ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
@@ -83,9 +82,7 @@ local SendItemInfo_get_Count_method = SendItemInfoList_type_def:get_method("get_
 local SendItemInfo_get_Item_method = SendItemInfoList_type_def:get_method("get_Item(System.Int32)");
 local SendItemInfo_Clear_method = SendItemInfoList_type_def:get_method("Clear");
 
-local SendItemInfo_type_def = SendItemInfo_get_Item_method:get_return_type();
-local SendItemInfo_ItemId_field = SendItemInfo_type_def:get_field("<ItemId>k__BackingField");
-local SendItemInfo_Num_field = SendItemInfo_type_def:get_field("<Num>k__BackingField");
+local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_method("getReward(System.Boolean)");
 
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
@@ -227,7 +224,7 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
         if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
+                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, false);
             end
         end
     end
@@ -243,7 +240,7 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, true);
+                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, false);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
             end
         end
@@ -282,14 +279,7 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     local SendItemInfo_Count = SendItemInfo_get_Count_method:call(SendItemInfo_List);
     if SendItemInfo_Count > 0 then
         for i = 0, SendItemInfo_Count - 1 do
-            local SendItemInfo = SendItemInfo_get_Item_method:call(SendItemInfo_List, i);
-            local ItemId = SendItemInfo_ItemId_field:get_data(SendItemInfo);
-            if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                local Num = SendItemInfo_Num_field:get_data(SendItemInfo);
-                if Num > 0 then
-                    changeItemNumFromDialogue_method:call(nil, ItemId, Num, STOCK_TYPE.BOX, true);
-                end
-            end
+            getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true);
         end
         execute_method:call(Event_field:get_data(FacilityRallus));
         SendItemInfo_Clear_method:call(SendItemInfo_List);
@@ -320,7 +310,7 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                 if isEnoughPoint_method:call(nil, totalCost) == true then
                     local ItemId = Ship_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
+                        changeItemNumFromDialogue_method:call(nil, ItemId, j, STOCK_TYPE.BOX, false);
                         payPoint_method:call(nil, totalCost);
                         Ship_addNum_method:call(ShipItemParam, -j);
                         break;
