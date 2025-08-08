@@ -10,6 +10,7 @@ local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID,
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
+local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local changeItemNumFromDialogue_method = Constants.ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
 local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
@@ -18,7 +19,7 @@ local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_metho
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
-local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
+local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clearCollectionItem(System.Int32)");
 local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
@@ -141,6 +142,8 @@ local completedMorivers = {
     SWOP = nil
 };
 
+local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
+
 local function getItemFromMoriver(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
@@ -224,11 +227,11 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
         if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, false);
+                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX);
+                clearCollectionItem_method:call(CollectionNPCParam, i);
             end
         end
     end
-    clearAllCollectionItem_method:call(CollectionNPCParam);
 end);
 
 sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
@@ -240,7 +243,7 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
-                changeItemNumFromDialogue_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX, false);
+                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
             end
         end
@@ -310,7 +313,7 @@ sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List
                 if isEnoughPoint_method:call(nil, totalCost) == true then
                     local ItemId = Ship_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                        changeItemNumFromDialogue_method:call(nil, ItemId, j, STOCK_TYPE.BOX, false);
+                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                         payPoint_method:call(nil, totalCost);
                         Ship_addNum_method:call(ShipItemParam, -j);
                         break;
