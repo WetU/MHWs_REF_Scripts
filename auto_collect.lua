@@ -142,8 +142,6 @@ local completedMorivers = {
     SWOP = nil
 };
 
-local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
-
 local function getItemFromMoriver(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
