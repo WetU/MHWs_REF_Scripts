@@ -10,6 +10,7 @@ local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
     tostring = _G.tostring,
+    type = _G.type,
     math = _G.math,
     string = _G.string,
     table = _G.table,
@@ -24,6 +25,7 @@ local Constants = {
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
     GUIFunc_TYPE_type_def = Type_field:get_type(),
+    GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 

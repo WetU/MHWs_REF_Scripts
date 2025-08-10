@@ -222,7 +222,7 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
     for i = 0, Collection_MAX_ITEM_NUM - 1 do
         local ItemWork = ItemWorks_array:get_element(i);
         local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
-        if ItemId ~= ItemID.NONE and ItemId < ItemID.MAX then
+        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local ItemNum = ItemWork_Num_field:get_data(ItemWork);
             if ItemNum > 0 then
                 getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX);

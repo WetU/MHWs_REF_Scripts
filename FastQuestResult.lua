@@ -51,9 +51,8 @@ local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_met
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
 
-local GUIManager_type_def = sdk.find_type_definition("app.GUIManager");
-local terminateQuestResult_method = GUIManager_type_def:get_method("terminateQuestResult");
-local isQuestResultFlowActive_method = GUIManager_type_def:get_method("isQuestResultFlowActive");
+local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
+local isQuestResultFlowActive_method = Constants.GUIManager_type_def:get_method("isQuestResultFlowActive");
 
 local validReport = nil;
 sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), function(args)
