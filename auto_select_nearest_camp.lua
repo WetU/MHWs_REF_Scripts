@@ -5,6 +5,7 @@ local type = Constants.type;
 local sdk = Constants.sdk;
 local json = Constants.json;
 local re = Constants.re;
+local imgui = Constants.imgui;
 
 local distance_method = sdk.find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
@@ -28,7 +29,7 @@ local GUI050001_type_def = sdk.find_type_definition("app.GUI050001");
 local get_CurrentStartPointList_method = GUI050001_type_def:get_method("get_CurrentStartPointList");
 local get_QuestOrderParam_method = GUI050001_type_def:get_method("get_QuestOrderParam");
 local setCurrentSelectStartPointIndex_method = GUI050001_type_def:get_method("setCurrentSelectStartPointIndex(System.Int32)");
-local setFocusStartPointIcon_method = GUI050001_type_def:get_method("setFocusStartPointIcon(System.Int32)");
+local StartPointList_field = GUI050001_type_def:get_field("_StartPointList");
 
 local StartPointInfoList_type_def = get_CurrentStartPointList_method:get_return_type();
 local StartPointInfoList_get_Count_method = StartPointInfoList_type_def:get_method("get_Count");
@@ -38,13 +39,19 @@ local get_BeaconGimmick_method = StartPointInfoList_get_Item_method:get_return_t
 
 local getPos_method = get_BeaconGimmick_method:get_return_type():get_method("getPos");
 
-local QuestViewData_field = get_QuestOrderParam_method:get_return_type():get_field("QuestViewData");
+local ActiveQuestData_field = get_QuestOrderParam_method:get_return_type():get_field("ActiveQuestData");
 
-local GUIQuestViewData_type_def = QuestViewData_field:get_type();
-local get_TargetEmStartArea_method = GUIQuestViewData_type_def:get_method("get_TargetEmStartArea");
-local get_Stage_method = GUIQuestViewData_type_def:get_method("get_Stage");
+local ActiveQuestData_type_def = ActiveQuestData_field:get_type();
+local getTargetEmSetAreaNo_method = ActiveQuestData_type_def:get_method("getTargetEmSetAreaNo");
+local getStage_method = ActiveQuestData_type_def:get_method("getStage");
 
-local m_value_field = get_AreaNum_method:get_return_type():get_field("m_value");
+local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
+
+local FluentScrollList_type_def = sdk.find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>");
+local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelectedIndex");
+local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
+
+local Int32_value_field = getSelectedIndex_method:get_return_type():get_field("m_value");
 
 local config = json.load_file("auto_select_nearest_camp.json") or {isEnabled = true};
 if config.isEnabled == nil or type(config.isEnabled) ~= "boolean" then
@@ -55,11 +62,11 @@ local function save_config()
     json.dump_file("auto_select_nearest_camp.json", config);
 end
 
-local function get_target_pos(quest_accept_ui)
-    local quest_view_data = QuestViewData_field:get_data(get_QuestOrderParam_method:call(quest_accept_ui));
-    local target_em_start_area = m_value_field:get_data(get_TargetEmStartArea_method:call(quest_view_data):get_element(0)) or nil;
+local function get_target_pos(GUI050001)
+    local ActiveQuestData = ActiveQuestData_field:get_data(get_QuestOrderParam_method:call(GUI050001));
+    local target_em_start_area = Int32_value_field:get_data(getTargetEmSetAreaNo_method:call(ActiveQuestData):get_element(0)) or nil;
     if target_em_start_area ~= nil then
-        local stage_draw_data = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), get_Stage_method:call(quest_view_data));
+        local stage_draw_data = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), getStage_method:call(ActiveQuestData));
         if stage_draw_data ~= nil then
             local area_icon_pos_list = get_AreaIconPosList_method:call(stage_draw_data);
             for i = 0, AreaIconPosList_get_Count_method:call(area_icon_pos_list) - 1 do
@@ -85,37 +92,48 @@ local function get_index_of_nearest_start_point(target_pos, start_point_list, li
     return nearest_index;
 end
 
-local hook_Datas = {
+local hook_datas = {
+    hasData = false,
     obj = nil,
-    nearest_start_point_index = 0
+    nearest_start_point_index = nil
 };
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
     if config.isEnabled == true then
-        hook_Datas.obj = sdk.to_managed_object(args[2]);
+        hook_datas.obj = sdk.to_managed_object(args[2]);
     end
 end, function()
     if config.isEnabled == true then
-        local start_point_list = get_CurrentStartPointList_method:call(hook_Datas.obj);
+        local start_point_list = get_CurrentStartPointList_method:call(hook_datas.obj);
         local list_size = StartPointInfoList_get_Count_method:call(start_point_list);
-        if list_size > 0 then
-            local target_pos = get_target_pos(hook_Datas.obj);
+        if list_size > 1 then
+            local target_pos = get_target_pos(hook_datas.obj);
             if target_pos ~= nil then
-                local nearest_start_point_index = get_index_of_nearest_start_point(target_pos, start_point_list, list_size);
-                if nearest_start_point_index > 0 then
-                    hook_Datas.nearest_start_point_index = nearest_start_point_index;
-                    setCurrentSelectStartPointIndex_method:call(hook_Datas.obj, nearest_start_point_index);
-                else
-                    hook_Datas = {obj = nil, nearest_start_point_index = 0};
+                hook_datas.nearest_start_point_index = get_index_of_nearest_start_point(target_pos, start_point_list, list_size);
+                if hook_datas.nearest_start_point_index > 0 then
+                    setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.nearest_start_point_index);
+                    local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
+                    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
+                        selectNextItem_method:call(InputCtrl);
+                    end
+                    hook_datas.hasData = true;
                 end
             end
         end
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI050001_StartPointList"):get_method("initStartPointList"), nil, function()
-    if config.isEnabled == true and hook_Datas.obj ~= nil and hook_Datas.nearest_start_point_index > 0 then
-        setFocusStartPointIcon_method:call(hook_Datas.obj, hook_Datas.nearest_start_point_index);
-        hook_Datas = {obj = nil, nearest_start_point_index = 0};
+sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
+    if config.isEnabled == true and hook_datas.hasData == true then
+        local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
+        if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
+            selectNextItem_method:call(InputCtrl);
+        end
+    end
+end);
+
+sdk.hook(GUI050001_type_def:get_method("onClose"), nil, function()
+    if config.isEnabled == true then
+        hook_datas = {hasData = false, obj = nil, nearest_start_point_index = nil};
     end
 end);
 
