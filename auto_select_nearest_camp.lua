@@ -97,6 +97,14 @@ local hook_datas = {
     obj = nil,
     nearest_start_point_index = nil
 };
+
+local function select_next_camp()
+    local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
+    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
+        selectNextItem_method:call(InputCtrl);
+    end
+end
+
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
     if config.isEnabled == true then
         hook_datas.obj = sdk.to_managed_object(args[2]);
@@ -111,11 +119,8 @@ end, function()
                 hook_datas.nearest_start_point_index = get_index_of_nearest_start_point(target_pos, start_point_list, list_size);
                 if hook_datas.nearest_start_point_index > 0 then
                     setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.nearest_start_point_index);
-                    local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
-                    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
-                        selectNextItem_method:call(InputCtrl);
-                    end
                     hook_datas.hasData = true;
+                    select_next_camp()
                 end
             end
         end
@@ -124,10 +129,7 @@ end);
 
 sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
     if config.isEnabled == true and hook_datas.hasData == true then
-        local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
-        if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
-            selectNextItem_method:call(InputCtrl);
-        end
+        select_next_camp()
     end
 end);
 
