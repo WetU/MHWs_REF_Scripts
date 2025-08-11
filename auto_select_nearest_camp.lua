@@ -89,8 +89,7 @@ end, function()
             local ActiveQuestData = ActiveQuestData_field:get_data(get_QuestOrderParam_method:call(hook_datas.obj));
             local targetEmStartArea = Int32_value_field:get_data(getTargetEmSetAreaNo_method:call(ActiveQuestData):get_element(0)) or nil;
             if targetEmStartArea ~= nil then
-                local Stage = getStage_method:call(ActiveQuestData);
-                local stageDrawData = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage);
+                local stageDrawData = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), getStage_method:call(ActiveQuestData));
                 if stageDrawData ~= nil then
                     local areaIconPosList = get_AreaIconPosList_method:call(stageDrawData);
                     local targetPos = nil;
@@ -104,7 +103,7 @@ end, function()
                     if targetPos ~= nil then
                         local shortest_distance = nil;
                         for i = 0, list_size - 1 do
-                            local distance = distance_method:call(nil, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, i))), targetPos);
+                            local distance = distance_method:call(nil, targetPos, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, i))));
                             if i == 0 or distance < shortest_distance then
                                 shortest_distance = distance;
                                 hook_datas.targetCampIdx = i;
