@@ -62,46 +62,18 @@ local function save_config()
     json.dump_file("auto_select_nearest_camp.json", config);
 end
 
-local function get_target_pos(GUI050001)
-    local ActiveQuestData = ActiveQuestData_field:get_data(get_QuestOrderParam_method:call(GUI050001));
-    local target_em_start_area = Int32_value_field:get_data(getTargetEmSetAreaNo_method:call(ActiveQuestData):get_element(0)) or nil;
-    if target_em_start_area ~= nil then
-        local stage_draw_data = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), getStage_method:call(ActiveQuestData));
-        if stage_draw_data ~= nil then
-            local area_icon_pos_list = get_AreaIconPosList_method:call(stage_draw_data);
-            for i = 0, AreaIconPosList_get_Count_method:call(area_icon_pos_list) - 1 do
-                local AreaIconData = AreaIconPosList_get_Item_method:call(area_icon_pos_list, i);
-                if get_AreaNum_method:call(AreaIconData) == target_em_start_area then
-                    return get_AreaIconPos_method:call(AreaIconData);
-                end
-            end
-        end
-    end
-end
+local hook_datas = {hasData = false, obj = nil, targetCampIdx = nil};
 
-local function get_index_of_nearest_start_point(target_pos, start_point_list, list_size)
-    local shortest_distance = nil;
-    local nearest_index = 0;
-    for i = 0, list_size - 1 do
-        local distance = distance_method:call(nil, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(start_point_list, i))), target_pos);
-        if i == 0 or distance < shortest_distance then
-            shortest_distance = distance;
-            nearest_index = i;
-        end
-    end
-    return nearest_index;
+local function clear_datas()
+    hook_datas = {hasData = false, obj = nil, targetCampIdx = nil};
 end
-
-local hook_datas = {
-    hasData = false,
-    obj = nil,
-    nearest_start_point_index = nil
-};
 
 local function select_next_camp()
     local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
-    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.nearest_start_point_index then
+    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.targetCampIdx then
         selectNextItem_method:call(InputCtrl);
+    else
+        clear_datas();
     end
 end
 
@@ -111,16 +83,39 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
     end
 end, function()
     if config.isEnabled == true then
-        local start_point_list = get_CurrentStartPointList_method:call(hook_datas.obj);
-        local list_size = StartPointInfoList_get_Count_method:call(start_point_list);
+        local startPoint_list = get_CurrentStartPointList_method:call(hook_datas.obj);
+        local list_size = StartPointInfoList_get_Count_method:call(startPoint_list);
         if list_size > 1 then
-            local target_pos = get_target_pos(hook_datas.obj);
-            if target_pos ~= nil then
-                hook_datas.nearest_start_point_index = get_index_of_nearest_start_point(target_pos, start_point_list, list_size);
-                if hook_datas.nearest_start_point_index > 0 then
-                    setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.nearest_start_point_index);
-                    hook_datas.hasData = true;
-                    select_next_camp()
+            local ActiveQuestData = ActiveQuestData_field:get_data(get_QuestOrderParam_method:call(hook_datas.obj));
+            local targetEmStartArea = Int32_value_field:get_data(getTargetEmSetAreaNo_method:call(ActiveQuestData):get_element(0)) or nil;
+            if targetEmStartArea ~= nil then
+                local Stage = getStage_method:call(ActiveQuestData);
+                local stageDrawData = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage);
+                if stageDrawData ~= nil then
+                    local areaIconPosList = get_AreaIconPosList_method:call(stageDrawData);
+                    local targetPos = nil;
+                    for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
+                        local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
+                        if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
+                            targetPos = get_AreaIconPos_method:call(AreaIconData);
+                            break;
+                        end
+                    end
+                    if targetPos ~= nil then
+                        local shortest_distance = nil;
+                        for i = 0, list_size - 1 do
+                            local distance = distance_method:call(nil, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, i))), targetPos);
+                            if i == 0 or distance < shortest_distance then
+                                shortest_distance = distance;
+                                hook_datas.targetCampIdx = i;
+                            end
+                        end
+                        if hook_datas.targetCampIdx > 0 then
+                            setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.targetCampIdx);
+                            hook_datas.hasData = true;
+                            select_next_camp();
+                        end
+                    end
                 end
             end
         end
@@ -134,8 +129,8 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
 end);
 
 sdk.hook(GUI050001_type_def:get_method("onClose"), nil, function()
-    if config.isEnabled == true then
-        hook_datas = {hasData = false, obj = nil, nearest_start_point_index = nil};
+    if hook_datas.hasData == true then
+        clear_datas();
     end
 end);
 
