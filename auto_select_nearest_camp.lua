@@ -49,6 +49,7 @@ local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
 
 local FluentScrollList_type_def = sdk.find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelectedIndex");
+local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
 
 local Int32_value_field = getSelectedIndex_method:get_return_type():get_field("m_value");
@@ -62,16 +63,16 @@ local function save_config()
     json.dump_file("auto_select_nearest_camp.json", config);
 end
 
-local hook_datas = {hasData = false, obj = nil, targetCampIdx = nil};
+local hook_datas = {hasData = false, obj = nil, targetCampIdx = nil, selectMethod = nil};
 
 local function clear_datas()
-    hook_datas = {hasData = false, obj = nil, targetCampIdx = nil};
+    hook_datas = {hasData = false, obj = nil, targetCampIdx = nil, selectMethod = nil};
 end
 
 local function select_next_camp()
     local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
     if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.targetCampIdx then
-        selectNextItem_method:call(InputCtrl);
+        hook_datas.selectMethod:call(InputCtrl);
     else
         clear_datas();
     end
@@ -111,6 +112,7 @@ end, function()
                         end
                         if hook_datas.targetCampIdx > 0 then
                             setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.targetCampIdx);
+                            hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectNextItem_method or selectPrevItem_method;
                             hook_datas.hasData = true;
                             select_next_camp();
                         end
