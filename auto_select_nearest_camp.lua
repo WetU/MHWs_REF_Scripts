@@ -63,19 +63,10 @@ local function save_config()
     json.dump_file("auto_select_nearest_camp.json", config);
 end
 
-local hook_datas = {hasData = false, obj = nil, targetCampIdx = nil, selectMethod = nil};
+local hook_datas = {hasData = false, obj = nil, inputCtrl = nil, targetCampIdx = nil, selectMethod = nil};
 
 local function clear_datas()
-    hook_datas = {hasData = false, obj = nil, targetCampIdx = nil, selectMethod = nil};
-end
-
-local function select_next_camp()
-    local InputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
-    if getSelectedIndex_method:call(InputCtrl) ~= hook_datas.targetCampIdx then
-        hook_datas.selectMethod:call(InputCtrl);
-    else
-        clear_datas();
-    end
+    hook_datas = {hasData = false, obj = nil, inputCtrl = nil, targetCampIdx = nil, selectMethod = nil};
 end
 
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
@@ -112,9 +103,9 @@ end, function()
                         end
                         if hook_datas.targetCampIdx > 0 then
                             setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.targetCampIdx);
+                            hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
                             hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectNextItem_method or selectPrevItem_method;
                             hook_datas.hasData = true;
-                            select_next_camp();
                         end
                     end
                 end
@@ -125,7 +116,11 @@ end);
 
 sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
     if config.isEnabled == true and hook_datas.hasData == true then
-        select_next_camp()
+        if getSelectedIndex_method:call(hook_datas.inputCtrl) ~= hook_datas.targetCampIdx then
+            hook_datas.selectMethod:call(hook_datas.inputCtrl);
+        else
+            clear_datas();
+        end
     end
 end);
 
