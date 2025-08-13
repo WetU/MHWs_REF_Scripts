@@ -46,7 +46,7 @@ local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get
 
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__24_0");
+local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");

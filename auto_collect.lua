@@ -83,7 +83,7 @@ local SendItemInfo_get_Count_method = SendItemInfoList_type_def:get_method("get_
 local SendItemInfo_get_Item_method = SendItemInfoList_type_def:get_method("get_Item(System.Int32)");
 local SendItemInfo_Clear_method = SendItemInfoList_type_def:get_method("Clear");
 
-local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_method("getReward(System.Boolean)");
+local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_method("getReward(System.Boolean, System.Boolean)");
 
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
@@ -280,7 +280,7 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     local SendItemInfo_Count = SendItemInfo_get_Count_method:call(SendItemInfo_List);
     if SendItemInfo_Count > 0 then
         for i = 0, SendItemInfo_Count - 1 do
-            getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true);
+            getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
         end
         execute_method:call(Event_field:get_data(FacilityRallus));
         SendItemInfo_Clear_method:call(SendItemInfo_List);

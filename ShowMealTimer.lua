@@ -1,51 +1,20 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
-local thread = Constants.thread;
-
-local StatusIconManager_type_def = sdk.find_type_definition("app.StatusIconManager");
-local StatusIconInfoList_field = StatusIconManager_type_def:get_field("_StatusIconInfoList");
 
 local get_IsMaster_method = sdk.find_type_definition("app.HunterCharacter"):get_method("get_IsMaster");
 
-local StatusIconInfo_type_def = sdk.find_type_definition("app.StatusIconInfo");
-local get_TimerText_method = StatusIconInfo_type_def:get_method("get_TimerText");
-local StatusIcon_field = StatusIconInfo_type_def:get_field("_StatusIcon");
-local DispState_field = StatusIconInfo_type_def:get_field("_DispState");
+local StatusIconManager_type_def = sdk.find_type_definition("app.StatusIconManager");
 
-local get_Parent_method = get_TimerText_method:get_return_type():get_method("get_Parent");
-
-local gui_Control_type_def = get_Parent_method:get_return_type();
-local get_PlayState_method = gui_Control_type_def:get_method("get_PlayState");
-local set_PlayState_method = gui_Control_type_def:get_method("set_PlayState(System.String)");
+local StatusIcon_field = sdk.find_type_definition("app.StatusIconInfo"):get_field("_StatusIcon");
 
 local STATUS_0019 = StatusIcon_field:get_type():get_field("STATUS_0019"):get_data(nil); -- MealEffect
-local ACTIVE = DispState_field:get_type():get_field("ACTIVE"):get_data(nil);
 
-local isValid = nil;
 sdk.hook(StatusIconManager_type_def:get_method("buffTimerUpdate(app.HunterCharacter, app.IconDef.STATUS, System.Boolean)"), function(args)
     if get_IsMaster_method:call(sdk.to_managed_object(args[3])) == true and (sdk.to_int64(args[4]) & 0xFFFFFFFF) == STATUS_0019 then
         args[5] = Constants.TRUE_ptr;
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-        isValid = true;
     end
-end, function()
-    if isValid == true then
-        isValid = nil;
-        local StatusIconInfoList = StatusIconInfoList_field:get_data(thread.get_hook_storage()["this"]);
-        local list_size = StatusIconInfoList:get_size();
-        if list_size > 0 then
-            for i = 0, list_size - 1 do
-                local StatusIconInfo = StatusIconInfoList:get_element(i);
-                if StatusIcon_field:get_data(StatusIconInfo) == STATUS_0019 then
-                    if DispState_field:get_data(StatusIconInfo) == ACTIVE then
-                        local TimerText_Control = get_Parent_method:call(get_TimerText_method:call(StatusIconInfo));
-                        if get_PlayState_method:call(TimerText_Control) ~= "DEFAULT" then
-                            set_PlayState_method:call(TimerText_Control, "DEFAULT");
-                        end
-                    end
-                    break;
-                end
-            end
-        end
-    end
+end);
+
+sdk.hook(StatusIconManager_type_def:get_method("forceHideTimer(app.StatusIconInfo)"), function(args)
+    return StatusIcon_field:get_data(sdk.to_managed_object(args[3])) == STATUS_0019 and sdk.PreHookResult.SKIP_ORIGINAL or sdk.PreHookResult.CALL_ORIGINAL;
 end);

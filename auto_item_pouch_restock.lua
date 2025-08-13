@@ -42,7 +42,17 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQue
         restockItems();
     end
 end);
-sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onClose"), nil, restockItems);
+
+sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onClose"), nil, function()
+    if isValidData_method:call(nil, mySet) == true then
+        isSelfCall = true;
+        applyMySetToPouch_method:call(nil, mySet);
+    else
+        fillPouchItems_method:call(nil);
+    end
+    fillShellPouchItems_method:call(nil);
+end);
+
 sdk.hook(applyMySetToPouch_method, function(args)
     if isSelfCall == true then
         isSelfCall = false;
@@ -50,6 +60,7 @@ sdk.hook(applyMySetToPouch_method, function(args)
         getAppliedSet(args[2]);
     end
 end);
+
 sdk.hook(sdk.find_type_definition("app.GUI030203"):get_method("applyMySet(System.Int32)"), function(args)
     getAppliedSet(args[3]);
 end);
