@@ -3,8 +3,19 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
-local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
+local GUI070000_type_def = sdk.find_type_definition("app.GUI070000");
+local get_IsViewMode_method = GUI070000_type_def:get_method("get_IsViewMode");
+local get__PartsRewardItems_method = GUI070000_type_def:get_method("get__PartsRewardItems");
+local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
+local JudgeMode_field = GUI070000_type_def:get_field("JudgeMode");
+
+local JUDGE_MODE_type_def = JudgeMode_field:get_type();
+local JUDGE_MODE = {
+    MODE01 = JUDGE_MODE_type_def:get_field("MODE01"):get_data(nil),
+    MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)
+};
+
+local GUIPartsReward_type_def = get__PartsRewardItems_method:get_return_type();
 local GUIPartsReward_get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local GUIPartsReward_get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
 local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
@@ -24,8 +35,6 @@ local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
-
-local JUDGE = get__Mode_method:get_return_type():get_field("JUDGE"):get_data(nil);
 
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
@@ -52,41 +61,50 @@ local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGU
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
-local isQuestResultFlowActive_method = Constants.GUIManager_type_def:get_method("isQuestResultFlowActive");
 
-local validReport = nil;
-sdk.hook(GUIPartsReward_type_def:get_method("setupRewardList"), function(args)
-    if isQuestResultFlowActive_method:call(Constants.GUIManager) == true then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
-        validReport = true;
+local function receiveAll(GUI070000, GUIPartsReward)
+    if get_CurCtrlInputPriority_method:call(GUI070000) == 0 then
+        receiveAll_method:call(GUIPartsReward);
     end
-end, function()
-    if validReport == true then
-        validReport = nil;
-        local GUIPartsReward = thread.get_hook_storage()["this"];
-        local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
-        local partsCount = get_Count_method:call(ItemGridParts);
-        if partsCount > 0 then
-            local hasNewItem = false;
-            for i = 0, partsCount - 1 do
-                local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-                if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                    hasNewItem = true;
-                    break;
-                end
+end
+
+local function skipJudgeAnimation(GUIPartsReward)
+    if GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
+        if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+            GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
+        end
+        if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+            set__WaitControlTime_method:call(GUIPartsReward, 0.01);
+        end
+    end
+end
+
+local function processItems(GUI070000, GUIPartsReward)
+    local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
+    local partsCount = get_Count_method:call(ItemGridParts);
+    if partsCount > 0 then
+        for i = 0, partsCount - 1 do
+            local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                return;
             end
-            if hasNewItem == true then
-                if get__Mode_method:call(GUIPartsReward) == JUDGE and GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
-                    if GUIPartsReward_get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
-                        GUIPartsReward_set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
-                    end
-                    if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
-                        set__WaitControlTime_method:call(GUIPartsReward, 0.01);
-                    end
-                end
-            else
-                receiveAll_method:call(GUIPartsReward);
-            end
+        end
+    end
+    receiveAll(GUI070000, GUIPartsReward);
+end
+
+sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
+    local GUI070000 = thread.get_hook_storage()["this"];
+    if get_IsViewMode_method:call(GUI070000) == false then
+        local GUIPartsReward = get__PartsRewardItems_method:call(GUI070000);
+        local JudgeMode = JudgeMode_field:get_data(GUI070000);
+        if JudgeMode == JUDGE_MODE.MODE01 then
+            skipJudgeAnimation(GUIPartsReward);
+            processItems(GUI070000, GUIPartsReward);
+        elseif JudgeMode == JUDGE_MODE.MODE02 then
+            skipJudgeAnimation(GUIPartsReward);
+        else
+            processItems(GUI070000, GUIPartsReward);
         end
     end
 end);
