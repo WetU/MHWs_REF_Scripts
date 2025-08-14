@@ -53,12 +53,32 @@ local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("G
 
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
 
-local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
+local GUI020100_type_def = sdk.find_type_definition("app.GUI020100");
+local get__PartsQuestRewardItem_method = GUI020100_type_def:get_method("get__PartsQuestRewardItem");
+local get__PartsQuestResultList_method = GUI020100_type_def:get_method("get__PartsQuestResultList");
+local get__State_method = GUI020100_type_def:get_method("get__State");
+local get_FixPanelType_method = GUI020100_type_def:get_method("get_FixPanelType");
+local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
+
+local GUI020100PanelQuestRewardItem_type_def = get__PartsQuestRewardItem_method:get_return_type();
 local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
 local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
+local GUI020100_JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
-local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
-local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
+local Result_endFix_method = get__PartsQuestResultList_method:get_return_type():get_method("endFix");
+
+local GUI020100_State_type_def = get__State_method:get_return_type();
+local GUI020100_State = {
+    QuestRewardItem = GUI020100_State_type_def:get_field("QuestRewardItem"):get_data(nil),
+    QuestJudgeItem = GUI020100_State_type_def:get_field("QuestJudgeItem"):get_data(nil),
+    QuestResultList = GUI020100_State_type_def:get_field("QuestResultList"):get_data(nil)
+};
+
+local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
+local FIX_PANEL_TYPE = {
+    REWARD_ITEMS = FIX_PANEL_TYPE_type_def:get_field("REWARD_ITEMS"):get_data(nil),
+    RESULT_LIST = FIX_PANEL_TYPE_type_def:get_field("RESULT_LIST"):get_data(nil)
+};
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
 
@@ -141,13 +161,32 @@ end, function()
     end
 end);
 
-sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), Constants.getObject, function()
-    local GUI020100PanelQuestRewardItem = thread.get_hook_storage()["this"];
-    Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
-    Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem);
-end);
+local function Reward_endFix(PartsQuestRewardItem)
+    Reward_endFix_method:call(PartsQuestRewardItem);
+    Reward_endFix_Post_method:call(PartsQuestRewardItem);
+end
 
-sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
-    Result_endFix_method:call(thread.get_hook_storage()["this"]);
-    terminateQuestResult_method:call(Constants.GUIManager);
+local GUI020100 = nil;
+sdk.hook(GUI020100_type_def:get_method("guiHudUpdate"), function(args)
+    if GUI020100 == nil then
+        GUI020100 = sdk.to_managed_object(args[2]);
+    end
+end, function()
+    local State = get__State_method:call(GUI020100);
+    local FixPanelType = get_FixPanelType_method:call(GUI020100);
+    if FixPanelType == FIX_PANEL_TYPE.REWARD_ITEMS then
+        local PartsQuestRewardItem = get__PartsQuestRewardItem_method:call(GUI020100);
+        if State == GUI020100_State.QuestRewardItem then
+            Reward_endFix(PartsQuestRewardItem);
+        elseif State == GUI020100_State.QuestJudgeItem then
+            if GUI020100_JudgeMode_field:get_data(PartsQuestRewardItem) == JUDGE_MODE.MODE02 then
+                jumpFixQuestJudge_method:call(GUI020100);
+            else
+                Reward_endFix(PartsQuestRewardItem);
+            end
+        end
+    elseif FixPanelType == FIX_PANEL_TYPE.RESULT_LIST and State == GUI020100_State.QuestResultList then
+        Result_endFix_method:call(get__PartsQuestResultList_method:call(GUI020100));
+        terminateQuestResult_method:call(Constants.GUIManager);
+    end
 end);
