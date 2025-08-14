@@ -90,20 +90,20 @@ local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):
 
 local ShipParam_type_def = sdk.find_type_definition("app.savedata.cShipParam");
 local getItem_method = ShipParam_type_def:get_method("getItem(System.Int32)");
-local getEnableItemNum_method = ShipParam_type_def:get_method("getEnableItemNum");
 
-local ShipItemParam_type_def = getItem_method:get_return_type();
-local Ship_addNum_method = ShipItemParam_type_def:get_method("addNum(System.Int16)");
-local DataId_field = ShipItemParam_type_def:get_field("DataId");
-local ShipItem_Num_field = ShipItemParam_type_def:get_field("Num");
+local Ship_addNum_method = getItem_method:get_return_type():get_method("addNum(System.Int16)");
 
-local getShipDataFromDataId_method = sdk.find_type_definition("app.ShipUtil"):get_method("getShipDataFromDataId(System.Int16)"); -- static
+local SupportShipData_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
+local SupportShipData_get_Count_method = SupportShipData_List_type_def:get_method("get_Count");
+local SupportShipData_get_Item_method = SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
 
-local SupportShipData_Data_type_def = getShipDataFromDataId_method:get_return_type();
-local Ship_get_ItemId_method = SupportShipData_Data_type_def:get_method("get_ItemId");
-local get_WeaponType_method = SupportShipData_Data_type_def:get_method("get_WeaponType");
-local get_ParamId_method = SupportShipData_Data_type_def:get_method("get_ParamId");
-local get_Point_method = SupportShipData_Data_type_def:get_method("get_Point");
+local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
+local SupportShipData_get_DataId_method = SupportShipData_type_def:get_method("get_DataId");
+local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
+local SupportShipData_get_WeaponType_method = SupportShipData_type_def:get_method("get_WeaponType");
+local SupportShipData_get_ParamId_method = SupportShipData_type_def:get_method("get_ParamId");
+local SupportShipData_get_StockNum_method = SupportShipData_type_def:get_method("get_StockNum");
+local SupportShipData_get_Point_method = SupportShipData_type_def:get_method("get_Point");
 
 local ItemID_type_def = ItemWork_get_ItemId_method:get_return_type();
 local ItemID = {
@@ -123,7 +123,7 @@ local FacilityID = {
     SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
 };
 
-local WeaponType_type_def = get_WeaponType_method:get_return_type();
+local WeaponType_type_def = SupportShipData_get_WeaponType_method:get_return_type();
 local WeaponType = {
     INVALID = WeaponType_type_def:get_field("INVALID"):get_data(nil),
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
@@ -288,45 +288,37 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     end
 end);
 
-sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), Constants.getObject, function()
-    local ShipParam = thread.get_hook_storage()["this"];
-    local EnableItemNum = getEnableItemNum_method:call(ShipParam);
-    if EnableItemNum > 0 then
-        for i = 0, EnableItemNum - 1 do
-            local ShipItemParam = getItem_method:call(ShipParam, i);
-            local Num = ShipItem_Num_field:get_data(ShipItemParam);
-            if Num < 1 then
-                goto continue;
-            end
-
-            local DataId = DataId_field:get_data(ShipItemParam);
-            if DataId == -1 then
-                goto continue;
-            end
-
-            local ShipData = getShipDataFromDataId_method:call(nil, DataId)
-            local cost = get_Point_method:call(ShipData);
-            for j = Num, 1, -1 do
-                local totalCost = cost * j;
+sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
+    local hook_storage = thread.get_hook_storage();
+    hook_storage.this = sdk.to_managed_object(args[2]);
+    hook_storage.dataList = sdk.to_managed_object(args[3]);
+end, function()
+    local hook_storage = thread.get_hook_storage();
+    local dataList = hook_storage.dataList;
+    local count = SupportShipData_get_Count_method:call(dataList);
+    if count > 0 then
+        for i = 0, count - 1 do
+            local ShipData = SupportShipData_get_Item_method:call(dataList, i);
+            for j = SupportShipData_get_StockNum_method:call(ShipData), 1, -1 do
+                local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
                 if isEnoughPoint_method:call(nil, totalCost) == true then
-                    local ItemId = Ship_get_ItemId_method:call(ShipData);
+                    local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
                         getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                         payPoint_method:call(nil, totalCost);
-                        Ship_addNum_method:call(ShipItemParam, -j);
+                        Ship_addNum_method:call(getItem_method:call(hook_storage.this, i), -j);
                         break;
                     else
-                        local weaponType = get_WeaponType_method:call(ShipData);
+                        local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, get_ParamId_method:call(ShipData))), nil);
+                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
-                            Ship_addNum_method:call(ShipItemParam, -j);
+                            Ship_addNum_method:call(getItem_method:call(hook_storage.this, i), -j);
                             break;
                         end
                     end
                 end
             end
-            ::continue::
         end
     end
 end);

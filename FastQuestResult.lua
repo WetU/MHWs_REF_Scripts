@@ -79,32 +79,38 @@ local function skipJudgeAnimation(GUIPartsReward)
     end
 end
 
-local function processItems(GUI070000, GUIPartsReward)
-    local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
-    local partsCount = get_Count_method:call(ItemGridParts);
-    if partsCount > 0 then
-        for i = 0, partsCount - 1 do
-            local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                return;
-            end
-        end
-    end
-    receiveAll(GUI070000, GUIPartsReward);
-end
-
 sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
     local GUI070000 = thread.get_hook_storage()["this"];
     if get_IsViewMode_method:call(GUI070000) == false then
         local GUIPartsReward = get__PartsRewardItems_method:call(GUI070000);
         local JudgeMode = JudgeMode_field:get_data(GUI070000);
         if JudgeMode == JUDGE_MODE.MODE01 then
-            skipJudgeAnimation(GUIPartsReward);
-            processItems(GUI070000, GUIPartsReward);
+            local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
+            local partsCount = get_Count_method:call(ItemGridParts);
+            if partsCount > 0 then
+                for i = 0, partsCount - 1 do
+                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                        skipJudgeAnimation(GUIPartsReward);
+                        return;
+                    end
+                end
+            end
+            receiveAll(GUI070000, GUIPartsReward);
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             skipJudgeAnimation(GUIPartsReward);
         else
-            processItems(GUI070000, GUIPartsReward);
+            local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
+            local partsCount = get_Count_method:call(ItemGridParts);
+            if partsCount > 0 then
+                for i = 0, partsCount - 1 do
+                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                        return;
+                    end
+                end
+            end
+            receiveAll(GUI070000, GUIPartsReward);
         end
     end
 end);
