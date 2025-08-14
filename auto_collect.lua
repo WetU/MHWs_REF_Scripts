@@ -88,13 +88,11 @@ local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_meth
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
 
-local ShipParam_type_def = sdk.find_type_definition("app.savedata.cShipParam");
-local getItem_method = ShipParam_type_def:get_method("getItem(System.Int32)");
-
-local Ship_addNum_method = getItem_method:get_return_type():get_method("addNum(System.Int16)");
+local ShipParam_setItems_method = sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)");
 
 local SupportShipData_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 local SupportShipData_get_Count_method = SupportShipData_List_type_def:get_method("get_Count");
+local SupportShipData_set_item_method = SupportShipData_List_type_def:get_method("set_Item(System.Int32, app.user_data.SupportShipData.cData)");
 local SupportShipData_get_Item_method = SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
 
 local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
@@ -288,37 +286,58 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     end
 end);
 
-sdk.hook(ShipParam_type_def:get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
-    local hook_storage = thread.get_hook_storage();
-    hook_storage.this = sdk.to_managed_object(args[2]);
-    hook_storage.dataList = sdk.to_managed_object(args[3]);
+local isSelfCall = nil;
+sdk.hook(ShipParam_setItems_method, function(args)
+    if isSelfCall ~= true then
+        local hook_storage = thread.get_hook_storage();
+        hook_storage.this = sdk.to_managed_object(args[2]);
+        hook_storage.dataList = sdk.to_managed_object(args[3]);
+    end
 end, function()
-    local hook_storage = thread.get_hook_storage();
-    local dataList = hook_storage.dataList;
-    local count = SupportShipData_get_Count_method:call(dataList);
-    if count > 0 then
-        for i = 0, count - 1 do
-            local ShipData = SupportShipData_get_Item_method:call(dataList, i);
-            for j = SupportShipData_get_StockNum_method:call(ShipData), 1, -1 do
-                local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
-                if isEnoughPoint_method:call(nil, totalCost) == true then
-                    local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
-                    if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
-                        payPoint_method:call(nil, totalCost);
-                        Ship_addNum_method:call(getItem_method:call(hook_storage.this, i), -j);
-                        break;
-                    else
-                        local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
-                        if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+    if isSelfCall ~= true then
+        local hook_storage = thread.get_hook_storage();
+        local dataList = hook_storage.dataList;
+        local count = SupportShipData_get_Count_method:call(dataList);
+        if count > 0 then
+            local isBuy = false;
+            for i = 0, count - 1 do
+                local ShipData = SupportShipData_get_Item_method:call(dataList, i);
+                local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
+                for j = StockNum, 1, -1 do
+                    local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
+                    if isEnoughPoint_method:call(nil, totalCost) == true then
+                        local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
+                        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+                            getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                             payPoint_method:call(nil, totalCost);
-                            Ship_addNum_method:call(getItem_method:call(hook_storage.this, i), -j);
+                            ShipData:set_field("_StockNum", StockNum - j);
+                            SupportShipData_set_item_method:call(dataList, i, ShipData);
+                            if isBuy ~= true then
+                                isBuy = true;
+                            end
                             break;
+                        else
+                            local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
+                            if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
+                                addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+                                payPoint_method:call(nil, totalCost);
+                                ShipData:set_field("_StockNum", StockNum - j);
+                                SupportShipData_set_item_method:call(dataList, i, ShipData);
+                                if isBuy ~= true then
+                                    isBuy = true;
+                                end
+                                break;
+                            end
                         end
                     end
                 end
             end
+            if isBuy == true then
+                isSelfCall = true;
+                ShipParam_setItems_method:call(hook_storage.this, dataList);
+            end
         end
+    else
+        isSelfCall = nil;
     end
 end);

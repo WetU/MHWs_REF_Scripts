@@ -22,19 +22,6 @@ local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get
 local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
-local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
-
-local ItemGridParts_type_def = ItemGridParts_field:get_type();
-local get_Count_method = ItemGridParts_type_def:get_method("get_Count");
-local get_Item_method = ItemGridParts_type_def:get_method("get_Item(System.Int32)");
-
-local GUIItemGridPartsFluent_type_def = get_Item_method:get_return_type();
-local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui-SelectItem
-local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark"); -- via.gui.Panel
-
-local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
-
-local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
 
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
@@ -82,8 +69,13 @@ local FIX_PANEL_TYPE = {
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
 
-local function receiveAll(GUI070000, GUIPartsReward)
-    if get_CurCtrlInputPriority_method:call(GUI070000) == 0 then
+local hook_datas = {
+    GUI070000 = nil,
+    oldJudgeMode = nil,
+    isShowAttentionMark = nil
+};
+local function receiveAll(GUIPartsReward)
+    if get_CurCtrlInputPriority_method:call(hook_datas.GUI070000) == 0 then
         receiveAll_method:call(GUIPartsReward);
     end
 end
@@ -99,40 +91,45 @@ local function skipJudgeAnimation(GUIPartsReward)
     end
 end
 
-sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), Constants.getObject, function()
-    local GUI070000 = thread.get_hook_storage()["this"];
-    if get_IsViewMode_method:call(GUI070000) == false then
-        local GUIPartsReward = get__PartsRewardItems_method:call(GUI070000);
-        local JudgeMode = JudgeMode_field:get_data(GUI070000);
+sdk.hook(GUI070000_type_def:get_method("onOpen"), Constants.getObject, function()
+    local this = thread.get_hook_storage()["this"];
+    if get_IsViewMode_method:call(this) == false then
+        hook_datas.GUI070000 = this;
+    end
+end);
+
+sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), nil, function()
+    if hook_datas.GUI070000 ~= nil then
+        local GUIPartsReward = get__PartsRewardItems_method:call(hook_datas.GUI070000);
+        local JudgeMode = JudgeMode_field:get_data(hook_datas.GUI070000);
+        if JudgeMode ~= hook_datas.oldJudgeMode then
+            hook_datas.oldJudgeMode = JudgeMode;
+            hook_datas.isShowAttentionMark = nil;
+        end
         if JudgeMode == JUDGE_MODE.MODE01 then
-            local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
-            local partsCount = get_Count_method:call(ItemGridParts);
-            if partsCount > 0 then
-                for i = 0, partsCount - 1 do
-                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                        skipJudgeAnimation(GUIPartsReward);
-                        return;
-                    end
-                end
+            if hook_datas.isShowAttentionMark == true then
+                skipJudgeAnimation(GUIPartsReward);
+            else
+                receiveAll(GUIPartsReward);
             end
-            receiveAll(GUI070000, GUIPartsReward);
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             skipJudgeAnimation(GUIPartsReward);
         else
-            local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
-            local partsCount = get_Count_method:call(ItemGridParts);
-            if partsCount > 0 then
-                for i = 0, partsCount - 1 do
-                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                        return;
-                    end
-                end
+            if hook_datas.isShowAttentionMark ~= true then
+                receiveAll(GUIPartsReward);
             end
-            receiveAll(GUI070000, GUIPartsReward);
         end
     end
+end);
+
+sdk.hook(GUIPartsReward_type_def:get_method("showAttentionMark(via.gui.SelectItem)"), nil, function()
+    if hook_datas.isShowAttentionMark ~= true then
+        hook_datas.isShowAttentionMark = true;
+    end
+end);
+
+sdk.hook(GUI070000_type_def:get_method("onClose"), nil, function()
+    hook_datas = {GUI070000 = nil, oldJudgeMode = nil, isShowAttentionMark = nil};
 end);
 
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), Constants.getObject, function()

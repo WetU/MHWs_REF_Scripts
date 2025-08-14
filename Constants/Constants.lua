@@ -14,7 +14,7 @@ local Constants = {
     thread = _G.thread,
     json = _G.json,
     imgui = _G.imgui,
-    draw = _G.draw,
+    draw = _G.draw
 };
 
 Constants.TRUE_ptr = Constants.sdk.to_ptr(true);
@@ -39,10 +39,10 @@ Constants.getGUIAppKey_Type = function(obj)
 end
 
 Constants.init = function()
-    Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
-    Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
-    Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+    Constants.ChatManager = Constants.sdk.get_managed_singleton("app.ChatManager");
+    Constants.FacilityManager = Constants.sdk.get_managed_singleton("app.FacilityManager");
+    Constants.GUIManager = Constants.sdk.get_managed_singleton("app.GUIManager");
+    Constants.SaveDataManager = Constants.sdk.get_managed_singleton("app.SaveDataManager");
 end
 
 Constants.init();
