@@ -3,26 +3,39 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local GUI070000_type_def = sdk.find_type_definition("app.GUI070000");
-local get_IsViewMode_method = GUI070000_type_def:get_method("get_IsViewMode");
-local get__PartsRewardItems_method = GUI070000_type_def:get_method("get__PartsRewardItems");
-local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
-local JudgeMode_field = GUI070000_type_def:get_field("JudgeMode");
+local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil);
 
-local JUDGE_MODE_type_def = JudgeMode_field:get_type();
-local JUDGE_MODE = {
-    MODE01 = JUDGE_MODE_type_def:get_field("MODE01"):get_data(nil),
-    MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)
-};
-
-local GUIPartsReward_type_def = get__PartsRewardItems_method:get_return_type();
+local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
+local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
+local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
 local GUIPartsReward_get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local GUIPartsReward_get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
 local GUIPartsReward_set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
 local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
+local get__isRandomAmuletMode_method = GUIPartsReward_type_def:get_method("get__isRandomAmuletMode");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
+local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
+local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
+local REWARD = get__Mode_method:get_return_type():get_field("REWARD"):get_data(nil);
+
+local GUIBaseApp_type_def = get_Owner_method:get_return_type();
+local get_IDInt_method = GUIBaseApp_type_def:get_method("get_IDInt");
+local get_CurCtrlInputPriority_method = GUIBaseApp_type_def:get_method("get_CurCtrlInputPriority");
+
+local ItemGridParts_type_def = ItemGridParts_field:get_type();
+local get_Count_method = ItemGridParts_type_def:get_method("get_Count");
+local get_Item_method = ItemGridParts_type_def:get_method("get_Item(System.Int32)");
+
+local GUIItemGridPartsFluent_type_def = get_Item_method:get_return_type();
+local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
+local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark"); -- via.gui.Panel
+
+local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
+
+local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
+--
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
@@ -37,48 +50,22 @@ local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(Syst
 local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
 
 local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
-
+--
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
+--
+local jumpFixQuestJudge_method = sdk.find_type_definition("app.GUI020100"):get_method("jumpFixQuestJudge");
 
-local GUI020100_type_def = sdk.find_type_definition("app.GUI020100");
-local get__PartsQuestRewardItem_method = GUI020100_type_def:get_method("get__PartsQuestRewardItem");
-local get__PartsQuestResultList_method = GUI020100_type_def:get_method("get__PartsQuestResultList");
-local get__State_method = GUI020100_type_def:get_method("get__State");
-local get_FixPanelType_method = GUI020100_type_def:get_method("get_FixPanelType");
-local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
-
-local GUI020100PanelQuestRewardItem_type_def = get__PartsQuestRewardItem_method:get_return_type();
+local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
-local GUI020100_JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
+local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
+local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
-local Result_endFix_method = get__PartsQuestResultList_method:get_return_type():get_method("endFix");
+local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
 
-local GUI020100_State_type_def = get__State_method:get_return_type();
-local GUI020100_State = {
-    QuestRewardItem = GUI020100_State_type_def:get_field("QuestRewardItem"):get_data(nil),
-    QuestJudgeItem = GUI020100_State_type_def:get_field("QuestJudgeItem"):get_data(nil),
-    QuestResultList = GUI020100_State_type_def:get_field("QuestResultList"):get_data(nil)
-};
-
-local FIX_PANEL_TYPE_type_def = get_FixPanelType_method:get_return_type();
-local FIX_PANEL_TYPE = {
-    REWARD_ITEMS = FIX_PANEL_TYPE_type_def:get_field("REWARD_ITEMS"):get_data(nil),
-    RESULT_LIST = FIX_PANEL_TYPE_type_def:get_field("RESULT_LIST"):get_data(nil)
-};
+local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
+local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
-
-local hook_datas = {
-    GUI070000 = nil,
-    oldJudgeMode = nil,
-    isShowAttentionMark = nil
-};
-local function receiveAll(GUIPartsReward)
-    if get_CurCtrlInputPriority_method:call(hook_datas.GUI070000) == 0 then
-        receiveAll_method:call(GUIPartsReward);
-    end
-end
 
 local function skipJudgeAnimation(GUIPartsReward)
     if GUIPartsReward_get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
@@ -91,45 +78,52 @@ local function skipJudgeAnimation(GUIPartsReward)
     end
 end
 
-sdk.hook(GUI070000_type_def:get_method("onOpen"), Constants.getObject, function()
-    local this = thread.get_hook_storage()["this"];
-    if get_IsViewMode_method:call(this) == false then
-        hook_datas.GUI070000 = this;
+local function hasNewItem(GUIPartsReward)
+    local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward);
+    local partsCount = get_Count_method:call(ItemGridParts);
+    if partsCount > 0 then
+        for i = 0, partsCount - 1 do
+            local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                return true;
+            end
+        end
+    end
+    return false;
+end
+
+local function receiveAll(GUIPartsReward)
+    if get_CurCtrlInputPriority_method:call(get_Owner_method:call(GUIPartsReward)) == 0 and hasNewItem(GUIPartsReward) == false then
+        receiveAll_method:call(GUIPartsReward);
+    end
+end
+
+local GUIPartsReward = nil;
+sdk.hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUIPartsReward.MODE, System.Boolean, System.Boolean)"), function(args)
+    local this = sdk.to_managed_object(args[2]);
+    if get__IsViewMode_method:call(this) == false and get_IDInt_method:call(get_Owner_method:call(this)) == UI070000 then
+        GUIPartsReward = this;
     end
 end);
 
-sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), nil, function()
-    if hook_datas.GUI070000 ~= nil then
-        local JudgeMode = JudgeMode_field:get_data(hook_datas.GUI070000);
-        if JudgeMode ~= hook_datas.oldJudgeMode then
-            hook_datas.oldJudgeMode = JudgeMode;
-            hook_datas.isShowAttentionMark = nil;
-        end
-        if JudgeMode == JUDGE_MODE.MODE01 then
-            local GUIPartsReward = get__PartsRewardItems_method:call(hook_datas.GUI070000);
-            if hook_datas.isShowAttentionMark == true then
-                skipJudgeAnimation(GUIPartsReward);
-            else
-                receiveAll(GUIPartsReward);
-            end
-        elseif JudgeMode == JUDGE_MODE.MODE02 then
-            skipJudgeAnimation(get__PartsRewardItems_method:call(hook_datas.GUI070000));
+sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), nil, function()
+    if GUIPartsReward ~= nil then
+        if get__Mode_method:call(GUIPartsReward) == REWARD then
+            receiveAll(GUIPartsReward);
         else
-            if hook_datas.isShowAttentionMark ~= true then
-                receiveAll(get__PartsRewardItems_method:call(hook_datas.GUI070000));
+            if get__isRandomAmuletMode_method:call(GUIPartsReward) == false then
+                receiveAll(GUIPartsReward);
+            else
+                skipJudgeAnimation(GUIPartsReward);
             end
         end
     end
 end);
 
-sdk.hook(GUIPartsReward_type_def:get_method("showAttentionMark(via.gui.SelectItem)"), nil, function()
-    if hook_datas.isShowAttentionMark ~= true then
-        hook_datas.isShowAttentionMark = true;
+sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), nil, function()
+    if GUIPartsReward ~= nil then
+        GUIPartsReward = nil;
     end
-end);
-
-sdk.hook(GUI070000_type_def:get_method("onClose"), nil, function()
-    hook_datas = {GUI070000 = nil, oldJudgeMode = nil, isShowAttentionMark = nil};
 end);
 
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), Constants.getObject, function()
@@ -158,32 +152,28 @@ end, function()
     end
 end);
 
-local function Reward_endFix(PartsQuestRewardItem)
-    Reward_endFix_method:call(PartsQuestRewardItem);
-    Reward_endFix_Post_method:call(PartsQuestRewardItem);
-end
+local GUI020100PanelQuestRewardItem = nil;
+sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), function(args)
+    GUI020100PanelQuestRewardItem = sdk.to_managed_object(args[2]);
+end);
 
-local GUI020100 = nil;
-sdk.hook(GUI020100_type_def:get_method("guiHudUpdate"), function(args)
-    if GUI020100 == nil then
-        GUI020100 = sdk.to_managed_object(args[2]);
-    end
-end, function()
-    local State = get__State_method:call(GUI020100);
-    local FixPanelType = get_FixPanelType_method:call(GUI020100);
-    if FixPanelType == FIX_PANEL_TYPE.REWARD_ITEMS then
-        if State == GUI020100_State.QuestRewardItem then
-            Reward_endFix(get__PartsQuestRewardItem_method:call(GUI020100));
-        elseif State == GUI020100_State.QuestJudgeItem then
-            local PartsQuestRewardItem = get__PartsQuestRewardItem_method:call(GUI020100);
-            if GUI020100_JudgeMode_field:get_data(PartsQuestRewardItem) == JUDGE_MODE.MODE02 then
-                jumpFixQuestJudge_method:call(GUI020100);
-            else
-                Reward_endFix(PartsQuestRewardItem);
-            end
+sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
+    if GUI020100PanelQuestRewardItem ~= nil then
+        if JudgeMode_field:get_data(GUI020100PanelQuestRewardItem) == MODE02 then
+            jumpFixQuestJudge_method:call(get_MyOwner_method:call(GUI020100PanelQuestRewardItem));
+        else
+            Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
         end
-    elseif FixPanelType == FIX_PANEL_TYPE.RESULT_LIST and State == GUI020100_State.QuestResultList then
-        Result_endFix_method:call(get__PartsQuestResultList_method:call(GUI020100));
-        terminateQuestResult_method:call(Constants.GUIManager);
     end
+end);
+
+sdk.hook(sdk.find_type_definition("app.cGUIPartsRewardItems"):get_method("end(System.Action)"), nil, function()
+    if GUI020100PanelQuestRewardItem ~= nil then
+        GUI020100PanelQuestRewardItem = nil;
+    end
+end);
+
+sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
+    Result_endFix_method:call(thread.get_hook_storage()["this"]);
+    terminateQuestResult_method:call(Constants.GUIManager);
 end);
