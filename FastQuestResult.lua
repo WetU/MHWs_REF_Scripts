@@ -100,23 +100,23 @@ end);
 
 sdk.hook(GUI070000_type_def:get_method("guiVisibleUpdate"), nil, function()
     if hook_datas.GUI070000 ~= nil then
-        local GUIPartsReward = get__PartsRewardItems_method:call(hook_datas.GUI070000);
         local JudgeMode = JudgeMode_field:get_data(hook_datas.GUI070000);
         if JudgeMode ~= hook_datas.oldJudgeMode then
             hook_datas.oldJudgeMode = JudgeMode;
             hook_datas.isShowAttentionMark = nil;
         end
         if JudgeMode == JUDGE_MODE.MODE01 then
+            local GUIPartsReward = get__PartsRewardItems_method:call(hook_datas.GUI070000);
             if hook_datas.isShowAttentionMark == true then
                 skipJudgeAnimation(GUIPartsReward);
             else
                 receiveAll(GUIPartsReward);
             end
         elseif JudgeMode == JUDGE_MODE.MODE02 then
-            skipJudgeAnimation(GUIPartsReward);
+            skipJudgeAnimation(get__PartsRewardItems_method:call(hook_datas.GUI070000));
         else
             if hook_datas.isShowAttentionMark ~= true then
-                receiveAll(GUIPartsReward);
+                receiveAll(get__PartsRewardItems_method:call(hook_datas.GUI070000));
             end
         end
     end
@@ -172,10 +172,10 @@ end, function()
     local State = get__State_method:call(GUI020100);
     local FixPanelType = get_FixPanelType_method:call(GUI020100);
     if FixPanelType == FIX_PANEL_TYPE.REWARD_ITEMS then
-        local PartsQuestRewardItem = get__PartsQuestRewardItem_method:call(GUI020100);
         if State == GUI020100_State.QuestRewardItem then
-            Reward_endFix(PartsQuestRewardItem);
+            Reward_endFix(get__PartsQuestRewardItem_method:call(GUI020100));
         elseif State == GUI020100_State.QuestJudgeItem then
+            local PartsQuestRewardItem = get__PartsQuestRewardItem_method:call(GUI020100);
             if GUI020100_JudgeMode_field:get_data(PartsQuestRewardItem) == JUDGE_MODE.MODE02 then
                 jumpFixQuestJudge_method:call(GUI020100);
             else

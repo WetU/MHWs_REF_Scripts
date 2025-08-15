@@ -167,25 +167,24 @@ local function execMoriver(facilityMoriver)
                 local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                 local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
-                    local isSuccessSWOP = true;
+                    local isSuccessSWOP = false;
                     local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
                     local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
                     if boxNum >= givingNum then
                         payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
+                        isSuccessSWOP = true;
                     else
                         local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
                         if boxNum > 0 then
                             if (boxNum + pouchNum) >= givingNum then
                                 payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
                                 payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
-                            else
-                                isSuccessSWOP = false;
+                                isSuccessSWOP = true;
                             end
                         else
                             if pouchNum >= givingNum then
                                 payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
-                            else
-                                isSuccessSWOP = false;
+                                isSuccessSWOP = true;
                             end
                         end
                     end
@@ -200,15 +199,15 @@ local function execMoriver(facilityMoriver)
             for _, completedSharing in ipairs(completedMorivers.Sharing) do
                 executedSharing_method:call(facilityMoriver, completedSharing);
             end
+            completedMorivers.Sharing = nil;
         end
-        completedMorivers.Sharing = nil;
         local completedSWOPcounts = #completedMorivers.SWOP;
         if completedSWOPcounts > 0 then
             for _, completedSWOP in ipairs(completedMorivers.SWOP) do
                 Moriver_Remove_method:call(MoriverInfos, completedSWOP);
             end
+            completedMorivers.SWOP = nil;
         end
-        completedMorivers.SWOP = nil;
         local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
