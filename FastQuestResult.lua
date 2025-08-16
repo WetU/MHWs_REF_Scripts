@@ -2,7 +2,7 @@ local Constants = _G.require("Constants/Constants");
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
-
+--<< GUI070000 Fix Quest Result >>--
 local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil);
 
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
@@ -35,37 +35,8 @@ local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
---
-local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
-local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
-local GUISystemModuleNotifyWindowApp_type_def = NotifyWindowApp_field:get_type();
-local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
-local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
-local isExistCurrentInfo_method = GUISystemModuleNotifyWindowApp_type_def:get_method("isExistCurrentInfo");
-
-local GUINotifyWindowInfo_type_def = get__CurInfoApp_method:get_return_type();
-local get_NotifyWindowId_method = GUINotifyWindowInfo_type_def:get_method("get_NotifyWindowId");
-local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(System.Int32)");
-local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
-
-local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
---
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
---
-local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
-
-local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
-
-local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT"):get_data(nil);
-local JUST_TIMING_SHORTCUT2 = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT2"):get_data(nil);
-
-local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
-local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
-
-local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
 
 local hook_data = {
     GUI070000 = nil,
@@ -73,13 +44,11 @@ local hook_data = {
     checkedNewItem = {}
 };
 local function skipJudgeAnimation(GUIPartsReward)
-    if get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
-        if get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
-            set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
-        end
-        if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
-            set__WaitControlTime_method:call(GUIPartsReward, 0.01);
-        end
+    if get__JudgeAnimationEnd_method:call(GUIPartsReward) == false and get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+        set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
+    end
+    if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+        set__WaitControlTime_method:call(GUIPartsReward, 0.01);
     end
 end
 
@@ -137,22 +106,6 @@ end, function()
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), nil, function()
-    hook_data = {GUI070000 = nil, GUIPartsReward = nil, checkedNewItem = {}};
-end);
-
-sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), Constants.getObject, function()
-    local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this"]);
-    if isExistCurrentInfo_method:call(NotifyWindowApp) == true then
-        local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
-        if get_NotifyWindowId_method:call(CurInfoApp) == GUI070000_DLG02 then
-            endWindow_method:call(CurInfoApp, 0);
-            executeWindowEndFunc_method:call(CurInfoApp);
-            closeGUI_method:call(NotifyWindowApp);
-        end
-    end
-end);
-
 local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
@@ -167,73 +120,95 @@ end, function()
     end
 end);
 
+sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), nil, function()
+    hook_data = {GUI070000 = nil, GUIPartsReward = nil, checkedNewItem = {}};
+end);
+--<< GUI000003 Skip Confirm Dialogue >>--
+local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
+local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
+
+local GUISystemModuleNotifyWindowApp_type_def = NotifyWindowApp_field:get_type();
+local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
+local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
+local isExistCurrentInfo_method = GUISystemModuleNotifyWindowApp_type_def:get_method("isExistCurrentInfo");
+
+local GUINotifyWindowInfo_type_def = get__CurInfoApp_method:get_return_type();
+local get_NotifyWindowId_method = GUINotifyWindowInfo_type_def:get_method("get_NotifyWindowId");
+local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(System.Int32)");
+local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
+
+local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
+
+sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), Constants.getObject, function()
+    local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this"]);
+    if isExistCurrentInfo_method:call(NotifyWindowApp) == true then
+        local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
+        if get_NotifyWindowId_method:call(CurInfoApp) == GUI070000_DLG02 then
+            endWindow_method:call(CurInfoApp, 0);
+            executeWindowEndFunc_method:call(CurInfoApp);
+            closeGUI_method:call(NotifyWindowApp);
+        end
+    end
+end);
+--<< GUI020100 Seamless Quest Result >>--
+local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
+local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
+local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl")
+local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
+local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
+
+local FixControl_type_def = get_FixControl_method:get_return_type();
+local finish_method = FixControl_type_def:get_method("finish");
+local FixControl_end_method = FixControl_type_def:get_method("end");
+
+local GUI020100_type_def = get_MyOwner_method:get_return_type();
+local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
+local toQuestContribution_method = GUI020100_type_def:get_method('toQuestContribution');
+local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
+
+local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
+
+local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
+local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
+
+local GUI020100PanelQuestContribution_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestContribution");
+local Contribution_endFix_method = GUI020100PanelQuestContribution_type_def:get_method("endFix");
+
+local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
+
 local GUI020100PanelQuestRewardItem = nil;
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), function(args)
     GUI020100PanelQuestRewardItem = sdk.to_managed_object(args[2]);
 end);
 
---[[local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
-
-local GUI020100_type_def = get_MyOwner_method:get_return_type();
-local get_PartsTimer_method = GUI020100_type_def:get_method("get_PartsTimer");
-local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
-
-local GUI020100PartsTimer_type_def = get_PartsTimer_method:get_return_type();
-local Timer_end_method = GUI020100PartsTimer_type_def:get_method("end");
-local requestEnd_method = GUI020100PartsTimer_type_def:get_method("requestEnd");
-
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI020100PanelQuestRewardItem ~= nil then
         if JudgeMode_field:get_data(GUI020100PanelQuestRewardItem) == MODE02 then
-            local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
-            jumpFixQuestJudge_method:call(GUI020100);
-            requestEnd_method:call(get_PartsTimer_method:call(GUI020100));
+            jumpFixQuestJudge_method:call(get_MyOwner_method:call(GUI020100PanelQuestRewardItem));
+            FixControl_end_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
         else
-            Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
-        end
-    end
-end);]]
-
-local checkJumpFix = nil;
-sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
-    if GUI020100PanelQuestRewardItem ~= nil then
-        if JudgeMode_field:get_data(GUI020100PanelQuestRewardItem) == MODE02 then
-            if checkJumpFix ~= true then
-                checkJumpFix = true;
-            end
-        else
-            if checkJumpFix == true then
-                checkJumpFix = nil;
-            end
             Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
         end
     end
 end);
 
-local validAppKey = nil;
-sdk.hook(Constants.GUIAppKey_onUpdate_method, function(args)
-    if checkJumpFix == true then
-        local GUIAppKey = sdk.to_managed_object(args[2]);
-        if Constants.getGUIAppKey_Type(GUIAppKey) == JUST_TIMING_SHORTCUT then
-            thread.get_hook_storage()["this"] = GUIAppKey;
-            validAppKey = true;
-        end
-        checkJumpFix = nil;
-    end
+sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
+    GUI020100PanelQuestRewardItem = nil;
+    thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 end, function()
-    if validAppKey == true then
-        validAppKey = nil;
-        thread.get_hook_storage()["this"]:set_field("_Success", true);
+    local GUI020100PanelQuestResultList = thread.get_hook_storage()["this"];
+    local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestResultList);
+    Result_endFix_method:call(GUI020100PanelQuestResultList);
+    if hasContribution_method:call(GUI020100) == true then
+        toQuestContribution_method:call(GUI020100);
+    else
+        terminateQuestResult_method:call(Constants.GUIManager);
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.cGUIPartsRewardItems"):get_method("end(System.Action)"), nil, function()
-    if GUI020100PanelQuestRewardItem ~= nil then
-        GUI020100PanelQuestRewardItem = nil;
-    end
-end);
-
-sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), Constants.getObject, function()
-    Result_endFix_method:call(thread.get_hook_storage()["this"]);
+sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), Constants.getObject, function()
+    local GUI020100PanelQuestContribution = thread.get_hook_storage()["this"];
+    Contribution_endFix_method:call(GUI020100PanelQuestContribution);
+    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestContribution));
     terminateQuestResult_method:call(Constants.GUIManager);
 end);
