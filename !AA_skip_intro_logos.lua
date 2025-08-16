@@ -16,7 +16,7 @@ sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), Constan
 end);
 
 local isTitleStart = nil;
-sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_parent_type():get_method("onUpdate(System.Single)"), function(args)
+sdk.hook(Constants.GUIAppKey_onUpdate_method, function(args)
     local GUIAppKey = sdk.to_managed_object(args[2]);
     if Constants.getGUIAppKey_Type(GUIAppKey) == TITLE_START then
         thread.get_hook_storage()["this"] = GUIAppKey;

@@ -1,11 +1,13 @@
 local Constants = _G.require("Constants/Constants");
+
+local type = Constants.type;
+local pairs = Constants.pairs;
+local table = Constants.table;
+
 local json = Constants.json;
 local sdk = Constants.sdk;
 local re = Constants.re;
 local thread = Constants.thread;
-
-local pairs = Constants.pairs;
-local table = Constants.table;
 
 local GUI050000_type_def = sdk.find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
@@ -17,10 +19,10 @@ local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("Ques
 local value_field = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE"):get_field("value__");
 
 local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {}};
-if config.view_type == nil then
+if config.view_type == nil or type(config.view_type) ~= "number" then
     config.view_type = 0;
 end
-if config.sort_types == nil then
+if config.sort_types == nil or type(config.sort_types) ~= "table" then
     config.sort_types = {};
 end
 
@@ -69,7 +71,6 @@ sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), Constants.getO
             table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
         end
     end
-
     local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
     if QuestViewType ~= config.view_type then
         config.view_type = QuestViewType;

@@ -17,7 +17,6 @@ local Constants = {
     draw = _G.draw
 };
 
-Constants.TRUE_ptr = Constants.sdk.to_ptr(true);
 Constants.FALSE_ptr = Constants.sdk.to_ptr(false);
 
 Constants.ActiveQuestData_type_def = Constants.sdk.find_type_definition("app.cActiveQuestData");
@@ -26,9 +25,13 @@ Constants.GUIManager_type_def = Constants.sdk.find_type_definition("app.GUIManag
 Constants.ItemUtil_type_def = Constants.sdk.find_type_definition("app.ItemUtil");
 Constants.QuestDirector_type_def = Constants.sdk.find_type_definition("app.cQuestDirector");
 
-local Type_field = Constants.GUIAppOnTimerKey_type_def:get_field("_Type");
+local GUIAppKey_type_def = Constants.GUIAppOnTimerKey_type_def:get_parent_type();
+local Type_field = GUIAppKey_type_def:get_field("_Type");
 
 Constants.GUIFunc_TYPE_type_def = Type_field:get_type();
+
+Constants.GUIAppKey_onUpdate_method = GUIAppKey_type_def:get_method("onUpdate(System.Single)");
+Constants.GUIAppOnTimerKey_onUpdate_method = Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)");
 
 Constants.getObject = function(args)
     Constants.thread.get_hook_storage()["this"] = Constants.sdk.to_managed_object(args[2]);

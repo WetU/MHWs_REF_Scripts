@@ -1,4 +1,7 @@
 local Constants = _G.require("Constants/Constants");
+
+local type = Constants.type;
+
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 local json = Constants.json;
@@ -32,19 +35,19 @@ local offsets = {
 };
 
 local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
-if config.skipKillCam == nil then
+if config.skipKillCam == nil or type(config.skipKillCam) ~= "boolean" then
     config.skipKillCam = true;
 end
-if config.autoEndQuest == nil then
+if config.autoEndQuest == nil or type(config.autoEndQuest) ~= "boolean" then
     config.autoEndQuest = false;
 end
-if config.enableInstantQuit == nil then
+if config.enableInstantQuit == nil or type(config.enableInstantQuit) ~= "boolean" then
     config.enableInstantQuit = false;
 end
-if config.instantKey == nil then
+if config.instantKey == nil or type(config.instantKey) ~= "boolean" then
     config.instantKey = true;
 end
-if config.skipEndScene == nil then
+if config.skipEndScene == nil or type(config.skipEndScene) ~= "boolean" then
     config.skipEndScene = true;
 end
 
@@ -57,7 +60,7 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"
 end);
 
 local validReturnTimeSkip = nil;
-sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), function(args)
+sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
         if Constants.getGUIAppKey_Type(GUIAppOnTimerKey) == RETURN_TIME_SKIP then

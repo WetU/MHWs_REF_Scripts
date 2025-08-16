@@ -80,34 +80,29 @@ end, function()
         if list_size > 1 then
             local ActiveQuestData = ActiveQuestData_field:get_data(get_QuestOrderParam_method:call(hook_datas.obj));
             local targetEmStartArea = Int32_value_field:get_data(getTargetEmSetAreaNo_method:call(ActiveQuestData):get_element(0)) or nil;
-            if targetEmStartArea ~= nil then
-                local stageDrawData = getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), getStage_method:call(ActiveQuestData));
-                if stageDrawData ~= nil then
-                    local areaIconPosList = get_AreaIconPosList_method:call(stageDrawData);
-                    local targetPos = nil;
-                    for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
-                        local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
-                        if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
-                            targetPos = get_AreaIconPos_method:call(AreaIconData);
-                            break;
-                        end
+            local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), getStage_method:call(ActiveQuestData)));
+            local targetPos = nil;
+            for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
+                local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
+                if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
+                    targetPos = get_AreaIconPos_method:call(AreaIconData);
+                    break;
+                end
+            end
+            if targetPos ~= nil then
+                local shortest_distance = nil;
+                for i = 0, list_size - 1 do
+                    local distance = distance_method:call(nil, targetPos, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, i))));
+                    if i == 0 or distance < shortest_distance then
+                        shortest_distance = distance;
+                        hook_datas.targetCampIdx = i;
                     end
-                    if targetPos ~= nil then
-                        local shortest_distance = nil;
-                        for i = 0, list_size - 1 do
-                            local distance = distance_method:call(nil, targetPos, getPos_method:call(get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, i))));
-                            if i == 0 or distance < shortest_distance then
-                                shortest_distance = distance;
-                                hook_datas.targetCampIdx = i;
-                            end
-                        end
-                        if hook_datas.targetCampIdx > 0 then
-                            setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.targetCampIdx);
-                            hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
-                            hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectNextItem_method or selectPrevItem_method;
-                            hook_datas.hasData = true;
-                        end
-                    end
+                end
+                if hook_datas.targetCampIdx > 0 then
+                    setCurrentSelectStartPointIndex_method:call(hook_datas.obj, hook_datas.targetCampIdx);
+                    hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.obj));
+                    hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectNextItem_method or selectPrevItem_method;
+                    hook_datas.hasData = true;
                 end
             end
         end
