@@ -44,11 +44,14 @@ local hook_data = {
     checkedNewItem = {}
 };
 local function skipJudgeAnimation(GUIPartsReward)
-    if get__JudgeAnimationEnd_method:call(GUIPartsReward) == false and get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
-        set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
-    end
-    if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
-        set__WaitControlTime_method:call(GUIPartsReward, 0.01);
+    if get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
+        if get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+            set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
+        end
+    else
+        if get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+            set__WaitControlTime_method:call(GUIPartsReward, 0.01);
+        end
     end
 end
 
@@ -109,7 +112,7 @@ end);
 local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-    if Constants.getGUIAppKey_Type(GUIAppOnTimerKey) == RESULT_SKIP then
+    if Constants.GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RESULT_SKIP then
         thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
         isResultSkip = true;
     end
@@ -153,26 +156,19 @@ end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl")
+local Reward_Post_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
+local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
-local FixControl_type_def = get_FixControl_method:get_return_type();
-local finish_method = FixControl_type_def:get_method("finish");
-local FixControl_end_method = FixControl_type_def:get_method("end");
+local FixControl_end_method = get_FixControl_method:get_return_type():get_method("end");
 
-local GUI020100_type_def = get_MyOwner_method:get_return_type();
-local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
-local toQuestContribution_method = GUI020100_type_def:get_method('toQuestContribution');
-local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
+local jumpFixQuestJudge_method = get_MyOwner_method:get_return_type():get_method("jumpFixQuestJudge");
 
 local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
 
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
-
-local GUI020100PanelQuestContribution_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestContribution");
-local Contribution_endFix_method = GUI020100PanelQuestContribution_type_def:get_method("endFix");
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
 
@@ -188,27 +184,17 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
             FixControl_end_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
         else
             Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
+            Reward_Post_endFix_method:call(GUI020100PanelQuestRewardItem);
         end
     end
 end);
 
 sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
-    GUI020100PanelQuestRewardItem = nil;
+    if GUI020100PanelQuestRewardItem ~= nil then
+        GUI020100PanelQuestRewardItem = nil;
+    end
     thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 end, function()
-    local GUI020100PanelQuestResultList = thread.get_hook_storage()["this"];
-    local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestResultList);
-    Result_endFix_method:call(GUI020100PanelQuestResultList);
-    if hasContribution_method:call(GUI020100) == true then
-        toQuestContribution_method:call(GUI020100);
-    else
-        terminateQuestResult_method:call(Constants.GUIManager);
-    end
-end);
-
-sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), Constants.getObject, function()
-    local GUI020100PanelQuestContribution = thread.get_hook_storage()["this"];
-    Contribution_endFix_method:call(GUI020100PanelQuestContribution);
-    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestContribution));
+    Result_endFix_method:call(thread.get_hook_storage()["this"]);
     terminateQuestResult_method:call(Constants.GUIManager);
 end);

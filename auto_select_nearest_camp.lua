@@ -7,6 +7,15 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
+local config = json.load_file("auto_select_nearest_camp.json") or {isEnabled = true};
+if config.isEnabled == nil or type(config.isEnabled) ~= "boolean" then
+    config.isEnabled = true;
+end
+
+local function save_config()
+    json.dump_file("auto_select_nearest_camp.json", config);
+end
+
 local distance_method = sdk.find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
 local get_MAP3D_method = Constants.GUIManager_type_def:get_method("get_MAP3D");
@@ -54,16 +63,13 @@ local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextIt
 
 local Int32_value_field = getSelectedIndex_method:get_return_type():get_field("m_value");
 
-local config = json.load_file("auto_select_nearest_camp.json") or {isEnabled = true};
-if config.isEnabled == nil or type(config.isEnabled) ~= "boolean" then
-    config.isEnabled = true;
-end
-
-local function save_config()
-    json.dump_file("auto_select_nearest_camp.json", config);
-end
-
-local hook_datas = {hasData = false, obj = nil, inputCtrl = nil, targetCampIdx = nil, selectMethod = nil};
+local hook_datas = {
+    hasData = false,
+    obj = nil,
+    inputCtrl = nil,
+    targetCampIdx = nil,
+    selectMethod = nil
+};
 
 local function clear_datas()
     hook_datas = {hasData = false, obj = nil, inputCtrl = nil, targetCampIdx = nil, selectMethod = nil};
