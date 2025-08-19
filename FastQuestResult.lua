@@ -166,13 +166,21 @@ end);
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
 local Reward_Post_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
-local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
-local FixControl_end_method = get_FixControl_method:get_return_type():get_method("end");
+local GUI020100_type_def = get_MyOwner_method:get_return_type();
+local get_PartsJust_method = GUI020100_type_def:get_method("get_PartsJust");
+local get_PartsTimer_method = GUI020100_type_def:get_method("get_PartsTimer");
+local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
 
-local jumpFixQuestJudge_method = get_MyOwner_method:get_return_type():get_method("jumpFixQuestJudge");
+local GUI020100PartsJust_type_def = get_PartsJust_method:get_return_type();
+local Just_get__Visible_method = GUI020100PartsJust_type_def:get_method("get__Visible");
+local Just_end_method = GUI020100PartsJust_type_def:get_method("end");
+
+local GUI020100PartsTimer_type_def = get_PartsTimer_method:get_return_type();
+local Timer_get__Visible_method = GUI020100PartsTimer_type_def:get_method("get__Visible");
+local Timer_end_method = GUI020100PartsTimer_type_def:get_method("end");
 
 local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
 
@@ -189,8 +197,16 @@ end);
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI020100PanelQuestRewardItem ~= nil then
         if JudgeMode_field:get_data(GUI020100PanelQuestRewardItem) == MODE02 then
-            jumpFixQuestJudge_method:call(get_MyOwner_method:call(GUI020100PanelQuestRewardItem));
-            FixControl_end_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
+            local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
+            local PartsJust = get_PartsJust_method:call(GUI020100);
+            local PartsTimer = get_PartsTimer_method:call(GUI020100);
+            if Just_get__Visible_method:call(PartsJust) == true then
+                Just_end_method:call(PartsJust);
+            end
+            if Timer_get__Visible_method:call(PartsTimer) == true then
+                Timer_end_method:call(PartsTimer);
+            end
+            jumpFixQuestJudge_method:call(GUI020100);
         else
             Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
             Reward_Post_endFix_method:call(GUI020100PanelQuestRewardItem);
