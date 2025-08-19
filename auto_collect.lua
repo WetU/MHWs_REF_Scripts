@@ -1,18 +1,20 @@
 local Constants = _G.require("Constants/Constants");
-local sdk = Constants.sdk;
-local thread = Constants.thread;
 
 local ipairs = Constants.ipairs;
 local table = Constants.table;
+
+local sdk = Constants.sdk;
+local thread = Constants.thread;
 
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
-local getSellItem_method = Constants.ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
-local changeItemNumFromDialogue_method = Constants.ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
-local getItemNum_method = Constants.ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
+local ItemUtil_type_def = Constants.ItemUtil_type_def;
+local getSellItem_method = ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
+local changeItemNumFromDialogue_method = ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
+local getItemNum_method = ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
 local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
 local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_method("Data(app.WeaponDef.TYPE, System.Int32)"); -- static
@@ -127,13 +129,8 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
-local RallusItemCount = {
-    [1] = 0,
-    [2] = -1,
-    [3] = -2,
-    [4] = -3,
-    [5] = -4
-};
+local init = Constants.init;
+local getObject = Constants.getObject;
 
 local completedMorivers = {
     Sharing = nil,
@@ -213,7 +210,7 @@ local function execMoriver(facilityMoriver)
     end
 end
 
-sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
+sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), getObject, function()
     local CollectionNPCParam = thread.get_hook_storage()["this"];
     local ItemWorks_array = get_CollectionItem_method:call(CollectionNPCParam);
     for i = 0, Collection_MAX_ITEM_NUM - 1 do
@@ -229,7 +226,7 @@ sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.I
     end
 end);
 
-sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), Constants.getObject, function()
+sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), getObject, function()
     local LargeWorkshopParam = thread.get_hook_storage()["this"];
     local ItemWorks_array = get_Rewards_method:call(LargeWorkshopParam);
     for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
@@ -245,25 +242,26 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
     end
 end);
 
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), Constants.getObject, function()
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
 
-sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), Constants.init, function()
+sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), init, function()
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
     end
 end);
 
-sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), Constants.getObject, function()
+sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getObject, function()
     execMoriver(thread.get_hook_storage()["this"]);
 end);
 
 local FacilityPugee = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if Constants.FacilityManager ~= nil and FacilityPugee == nil then
-        FacilityPugee = get_Pugee_method:call(Constants.FacilityManager);
+    local FacilityManager = Constants.FacilityManager;
+    if FacilityManager ~= nil and FacilityPugee == nil then
+        FacilityPugee = get_Pugee_method:call(FacilityManager);
     end
 end, function()
     if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
@@ -271,9 +269,9 @@ end, function()
     end
 end);
 
-sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), Constants.getObject, function()
+sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getObject, function()
     local FacilityRallus = thread.get_hook_storage()["this"];
-    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, RallusItemCount[get_SupplyNum_method:call(FacilityRallus)]);
+    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - get_SupplyNum_method:call(FacilityRallus));
     local SendItemInfo_Count = SendItemInfo_get_Count_method:call(SendItemInfo_List);
     if SendItemInfo_Count > 0 then
         for i = 0, SendItemInfo_Count - 1 do

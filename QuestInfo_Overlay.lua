@@ -1,27 +1,29 @@
 local Constants = _G.require("Constants/Constants");
-local sdk = Constants.sdk;
-
-local re = Constants.re;
-local draw = Constants.draw;
-local imgui = Constants.imgui;
 
 local tostring = Constants.tostring;
 local string = Constants.string;
 local math = Constants.math;
 
+local sdk = Constants.sdk;
+local re = Constants.re;
+local draw = Constants.draw;
+local imgui = Constants.imgui;
+
 local font = imgui.load_font(nil, 20);
 
-local get_IsActiveQuest_method = Constants.QuestDirector_type_def:get_method("get_IsActiveQuest");
-local get_QuestData_method = Constants.QuestDirector_type_def:get_method("get_QuestData");
-local get_QuestElapsedTime_method = Constants.QuestDirector_type_def:get_method("get_QuestElapsedTime");
-local QuestPlDieCount_field = Constants.QuestDirector_type_def:get_field("QuestPlDieCount");
+local QuestDirector_type_def = Constants.QuestDirector_type_def;
+local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
+local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
+local get_QuestElapsedTime_method = QuestDirector_type_def:get_method("get_QuestElapsedTime");
+local QuestPlDieCount_field = QuestDirector_type_def:get_field("QuestPlDieCount");
 
 local Mandrake_type_def = QuestPlDieCount_field:get_type();
 local v_field = Mandrake_type_def:get_field("v");
 local m_field = Mandrake_type_def:get_field("m");
 
-local getTimeLimit_method = Constants.ActiveQuestData_type_def:get_method("getTimeLimit");
-local getQuestLife_method = Constants.ActiveQuestData_type_def:get_method("getQuestLife");
+local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
+local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
+local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
 local oldElapsedTime = nil;
 
@@ -39,7 +41,7 @@ local function getQuestTimeInfo(questElapsedTime)
 end
 
 local QuestDirector = nil;
-sdk.hook(Constants.QuestDirector_type_def:get_method("update"), function(args)
+sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
     if QuestDirector == nil then
         QuestDirector = sdk.to_managed_object(args[2]);
     end
@@ -74,7 +76,7 @@ end, function()
     end
 end);
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
+sdk.hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
     if QuestInfoCreated == true and QuestDirector == nil then
         QuestDirector = sdk.to_managed_object(args[2]);
     end
@@ -85,7 +87,7 @@ end, function()
     end
 end);
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
+sdk.hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
     if QuestInfoCreated == true then
         DeathCount = "다운 횟수: 0 / " .. questMaxDeath;
     end

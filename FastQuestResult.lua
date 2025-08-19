@@ -36,7 +36,11 @@ local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("g
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
 
+local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
+
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
+
+local getObject = Constants.getObject;
 
 local hook_data = {
     GUI070000 = nil,
@@ -83,26 +87,27 @@ sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), function(args)
         end
     end
 end, function()
-    if hook_data.GUIPartsReward ~= nil then
-        if get__isRandomAmuletMode_method:call(hook_data.GUIPartsReward) == true then
-            skipJudgeAnimation(hook_data.GUIPartsReward);
+    local GUIPartsReward = hook_data.GUIPartsReward;
+    if GUIPartsReward ~= nil then
+        if get__isRandomAmuletMode_method:call(GUIPartsReward) == true then
+            skipJudgeAnimation(GUIPartsReward);
         else
-            local Mode = get__Mode_method:call(hook_data.GUIPartsReward);
+            local Mode = get__Mode_method:call(GUIPartsReward);
             if Mode == REWARD then
                 if get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
                     local data = hook_data.checkedNewItem[Mode];
-                    local newMarkVisible = data ~= nil and data or hasNewItem(hook_data.GUIPartsReward, Mode);
+                    local newMarkVisible = data ~= nil and data or hasNewItem(GUIPartsReward, Mode);
                     if newMarkVisible == false then
-                        receiveAll_method:call(hook_data.GUIPartsReward);
+                        receiveAll_method:call(GUIPartsReward);
                     end
                 end
             else
                 local data = hook_data.checkedNewItem[Mode];
-                local newMarkVisible = data ~= nil and data or hasNewItem(hook_data.GUIPartsReward, Mode);
+                local newMarkVisible = data ~= nil and data or hasNewItem(GUIPartsReward, Mode);
                 if newMarkVisible == true then
-                    skipJudgeAnimation(hook_data.GUIPartsReward);
+                    skipJudgeAnimation(GUIPartsReward);
                 elseif get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
-                    receiveAll_method:call(hook_data.GUIPartsReward);
+                    receiveAll_method:call(GUIPartsReward);
                 end
             end
         end
@@ -112,7 +117,7 @@ end);
 local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-    if Constants.GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RESULT_SKIP then
+    if GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RESULT_SKIP then
         thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
         isResultSkip = true;
     end
@@ -123,8 +128,12 @@ end, function()
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), nil, function()
-    hook_data = {GUI070000 = nil, GUIPartsReward = nil, checkedNewItem = {}};
+sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), function(args)
+    hook_data = {
+        GUI070000 = nil,
+        GUIPartsReward = nil,
+        checkedNewItem = {}
+    };
 end);
 --<< GUI000003 Skip Confirm Dialogue >>--
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
@@ -142,7 +151,7 @@ local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("exe
 
 local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
 
-sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), Constants.getObject, function()
+sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getObject, function()
     local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this"]);
     if isExistCurrentInfo_method:call(NotifyWindowApp) == true then
         local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);

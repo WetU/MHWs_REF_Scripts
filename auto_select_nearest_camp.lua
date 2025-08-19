@@ -34,7 +34,7 @@ local AreaIconData_type_def = AreaIconPosList_get_Item_method:get_return_type();
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
 local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
 
-local Int32_value_field = getSelectedIndex_method:get_return_type():get_field("m_value");
+local Int32_value_field = get_AreaNum_method:get_return_type():get_field("m_value");
 
 local GUI050001_type_def = sdk.find_type_definition("app.GUI050001");
 local get_CurrentStartPointList_method = GUI050001_type_def:get_method("get_CurrentStartPointList");
@@ -52,7 +52,7 @@ local getPos_method = get_BeaconGimmick_method:get_return_type():get_method("get
 
 local QuestViewData_field = get_QuestOrderParam_method:get_return_type():get_field("QuestViewData");
 
-local QuestViewData_type_def = QuestViewData_field:get_type();
+local GUIQuestViewData_type_def = QuestViewData_field:get_type();
 local get_TargetEmStartArea_method = GUIQuestViewData_type_def:get_method("get_TargetEmStartArea");
 local get_Stage_method = GUIQuestViewData_type_def:get_method("get_Stage");
 
@@ -108,7 +108,7 @@ end, function()
                     if hook_datas.targetCampIdx > 0 then
                         setCurrentSelectStartPointIndex_method:call(hook_datas.GUI050001, hook_datas.targetCampIdx);
                         hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(hook_datas.GUI050001));
-                        hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectNextItem_method or selectPrevItem_method;
+                        hook_datas.selectMethod = hook_datas.targetCampIdx + 1 <= list_size / 2 and selectPrevItem_method or selectNextItem_method;
                         hook_datas.hasData = true;
                     else
                         clear_datas();
@@ -124,7 +124,7 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
     if config.isEnabled == true and hook_datas.hasData == true then
         local inputCtrl = hook_datas.inputCtrl;
         if getSelectedIndex_method:call(inputCtrl) ~= hook_datas.targetCampIdx then
-            hook_datas.SelectMethod:call(inputCtrl);
+            hook_datas.selectMethod:call(inputCtrl);
         else
             clear_datas();
         end

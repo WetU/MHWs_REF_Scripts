@@ -4,8 +4,10 @@ local sdk = Constants.sdk;
 
 local GUI020206_type_def = sdk.find_type_definition("app.GUI020206");
 
+local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
+
 local function preHook_SKIP(args)
-    return sdk.PreHookResult.SKIP_ORIGINAL;
+    return SKIP_ORIGINAL;
 end
 
 sdk.hook(GUI020206_type_def:get_method("requestStage(app.FieldDef.STAGE, app.GUI020206.RequestType)"), preHook_SKIP);

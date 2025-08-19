@@ -29,9 +29,11 @@ local function saveConfig()
     json.dump_file("AutoSkipKillCam.json", config);
 end
 
-local get_Param_method = Constants.QuestDirector_type_def:get_method("get_Param");
+local QuestDirector_type_def = Constants.QuestDirector_type_def;
+local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
 local isOn_method = Constants.GUIAppOnTimerKey_type_def:get_method("isOn");
+local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
@@ -55,15 +57,18 @@ local offsets = {
     Limit = 0xCC
 };
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
-    return config.skipKillCam == true and Constants.FALSE_ptr or retval;
+local FALSE_ptr = Constants.FALSE_ptr;
+local getObject = Constants.getObject;
+
+sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
+    return config.skipKillCam == true and FALSE_ptr or retval;
 end);
 
 local validReturnTimeSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     if config.autoEndQuest == true or config.instantKey == true then
         local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-        if Constants.GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
+        if GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
             thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
             validReturnTimeSkip = true;
         end
@@ -78,7 +83,7 @@ end, function()
     end
 end);
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("QuestReturnSkip"), function(args)
+sdk.hook(QuestDirector_type_def:get_method("QuestReturnSkip"), function(args)
     if config.enableInstantQuit == true then
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
     end
@@ -96,7 +101,7 @@ sdk.hook(HunterQuestActionController_type_def:get_method("checkQuestActionEnable
         storage.actionType = sdk.to_int64(args[3]) & 0xFFFFFFFF;
     end
 end, function(retval)
-    if config.skipEndScene == true and sdk.to_int64(retval) & 1 == 1 then
+    if config.skipEndScene == true and (sdk.to_int64(retval) & 1) == 1 then
         local storage = thread.get_hook_storage();
         showStamp_method:call(storage.this, storage.actionType);
     end
@@ -108,7 +113,7 @@ local GUI020201_datas = {
     reqSkip = false,
     isSetted = false
 };
-sdk.hook(GUI020201_type_def:get_method("onOpen"), Constants.getObject, function()
+sdk.hook(GUI020201_type_def:get_method("onOpen"), getObject, function()
     local GUI020201 = thread.get_hook_storage()["this"];
     local CurType = CurType_field:get_data(GUI020201);
     if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then

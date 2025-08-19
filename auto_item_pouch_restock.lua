@@ -3,8 +3,9 @@ local sdk = Constants.sdk;
 
 local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
 
-local fillPouchItems_method = Constants.ItemUtil_type_def:get_method("fillPouchItems"); -- static
-local fillShellPouchItems_method = Constants.ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
+local ItemUtil_type_def = Constants.ItemUtil_type_def;
+local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static
+local fillShellPouchItems_method = ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
 
 local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
@@ -17,13 +18,14 @@ local mySet = 0;
 local isSelfCall = false;
 
 local function restockItems()
+    local ChatManager = Constants.ChatManager;
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다.");
+        addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        addSystemLog_method:call(Constants.ChatManager, "아이템이 보충되었습니다.");
+        addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
     end
     fillShellPouchItems_method:call(nil);
 end
