@@ -29,9 +29,6 @@ local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards")
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
 local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
-local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
-local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
-
 local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
@@ -70,6 +67,9 @@ local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("
 local FacilityPugee_type_def = get_Pugee_method:get_return_type();
 local isEnableCoolTimer_method = FacilityPugee_type_def:get_method("isEnableCoolTimer");
 local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)");
+
+local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
+local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
@@ -242,6 +242,20 @@ sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, S
     end
 end);
 
+local FacilityPugee = nil;
+sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
+    if FacilityPugee == nil then
+        local FacilityManager = Constants.FacilityManager;
+        if FacilityManager ~= nil then
+            FacilityPugee = get_Pugee_method:call(FacilityManager);
+        end
+    end
+end, function()
+    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
+        stroke_method:call(FacilityPugee, true);
+    end
+end);
+
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
     supplyFood_method:call(thread.get_hook_storage()["this"]);
 end);
@@ -255,18 +269,6 @@ end);
 
 sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getObject, function()
     execMoriver(thread.get_hook_storage()["this"]);
-end);
-
-local FacilityPugee = nil;
-sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    local FacilityManager = Constants.FacilityManager;
-    if FacilityManager ~= nil and FacilityPugee == nil then
-        FacilityPugee = get_Pugee_method:call(FacilityManager);
-    end
-end, function()
-    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
-        stroke_method:call(FacilityPugee, true);
-    end
 end);
 
 sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getObject, function()
@@ -296,7 +298,7 @@ end, function()
         local dataList = hook_storage.dataList;
         local count = SupportShipData_get_Count_method:call(dataList);
         if count > 0 then
-            local isBuy = false;
+            local isParchased = false;
             for i = 0, count - 1 do
                 local ShipData = SupportShipData_get_Item_method:call(dataList, i);
                 local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
@@ -309,8 +311,8 @@ end, function()
                             payPoint_method:call(nil, totalCost);
                             ShipData:set_field("_StockNum", StockNum - j);
                             SupportShipData_set_item_method:call(dataList, i, ShipData);
-                            if isBuy ~= true then
-                                isBuy = true;
+                            if isParchased ~= true then
+                                isParchased = true;
                             end
                             break;
                         else
@@ -320,8 +322,8 @@ end, function()
                                 payPoint_method:call(nil, totalCost);
                                 ShipData:set_field("_StockNum", StockNum - j);
                                 SupportShipData_set_item_method:call(dataList, i, ShipData);
-                                if isBuy ~= true then
-                                    isBuy = true;
+                                if isParchased ~= true then
+                                    isParchased = true;
                                 end
                                 break;
                             end
@@ -329,7 +331,7 @@ end, function()
                     end
                 end
             end
-            if isBuy == true then
+            if isParchased == true then
                 isSelfCall = true;
                 ShipParam_setItems_method:call(hook_storage.this, dataList);
             end
