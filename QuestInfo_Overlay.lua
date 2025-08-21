@@ -59,20 +59,16 @@ end, function()
             getQuestTimeInfo(QuestElapsedTime);
 
             QuestInfoCreated = true;
-        else
-            if QuestElapsedTime ~= oldElapsedTime then
-                getQuestTimeInfo(QuestElapsedTime);
-            end
+        elseif QuestElapsedTime ~= oldElapsedTime then
+            getQuestTimeInfo(QuestElapsedTime);
         end
-    else
-        if QuestInfoCreated == true then
-            QuestInfoCreated = false;
+    elseif QuestInfoCreated == true then
+        QuestInfoCreated = false;
 
-            questMaxDeath = nil;
-            questTimeLimit = nil;
+        questMaxDeath = nil;
+        questTimeLimit = nil;
 
-            oldElapsedTime = nil;
-        end
+        oldElapsedTime = nil;
     end
 end);
 

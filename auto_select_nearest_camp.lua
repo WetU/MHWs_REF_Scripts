@@ -58,7 +58,7 @@ local get_Gimmick_method = get_ContextHolder_method:get_return_type():get_method
 
 local get_FieldAreaInfo_method = get_Gimmick_method:get_return_type():get_method("get_FieldAreaInfo");
 
-local get_MapAreaNumSafety_method = get_FieldAreaInfo_method:get_return_type():get_method("get_MapAreaNumSafety");
+local get_MapFloorNumSafety_method = get_FieldAreaInfo_method:get_return_type():get_method("get_MapFloorNumSafety");
 
 local QuestViewData_field = get_QuestOrderParam_method:get_return_type():get_field("QuestViewData");
 
@@ -91,9 +91,9 @@ local function clear_datas()
     };
 end
 
-local function dataProcess(GUI050001, targetCampIdx)
-    hook_datas.targetCampIdx = targetCampIdx;
+local function dataProcess(GUI050001, targetCampIdx, list_size)
     setCurrentSelectStartPointIndex_method:call(GUI050001, targetCampIdx);
+    hook_datas.targetCampIdx = targetCampIdx;
     hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001));
     hook_datas.selectMethod = targetCampIdx + 1 < list_size / 2 and selectPrevItem_method or selectNextItem_method;
     hook_datas.hasData = true;
@@ -112,19 +112,20 @@ end, function()
             local QuestViewData = QuestViewData_field:get_data(get_QuestOrderParam_method:call(GUI050001));
             local Stage = get_Stage_method:call(QuestViewData);
             local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
-            local FloorNum = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
+            local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
             local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
             for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
                 local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
                 if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
+                    local AreaIconPos = get_AreaIconPos_method:call(AreaIconData);
                     local sameFloor_shortest_distance = nil;
                     local sameFloor_idx = nil;
                     local diffFloor_shortest_distance = nil;
                     local diffFloor_idx = nil;
                     for j = 0, list_size - 1 do
                         local BeaconGimmick = get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, j));
-                        local distance = distance_method:call(nil, get_AreaIconPos_method:call(AreaIconData), getPos_method:call(BeaconGimmick));
-                        if getFloorNumFromAreaNum_method:call(nil, Stage, get_MapAreaNumSafety_method:call(get_FieldAreaInfo_method:call(get_Gimmick_method:call(get_ContextHolder_method:call(BeaconGimmick))))) == FloorNum then
+                        local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
+                        if get_MapFloorNumSafety_method:call(get_FieldAreaInfo_method:call(get_Gimmick_method:call(get_ContextHolder_method:call(BeaconGimmick)))) == targetEmFloorNo then
                             if sameFloor_shortest_distance == nil or distance < sameFloor_shortest_distance then
                                 sameFloor_shortest_distance = distance;
                                 sameFloor_idx = j;
@@ -137,11 +138,11 @@ end, function()
                         end
                     end
                     if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.5) then
-                        dataProcess(GUI050001, diffFloor_idx);
+                        dataProcess(GUI050001, diffFloor_idx, list_size);
                     elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                        dataProcess(GUI050001, sameFloor_idx);
+                        dataProcess(GUI050001, sameFloor_idx, list_size);
                     elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                        dataProcess(GUI050001, diffFloor_idx);
+                        dataProcess(GUI050001, diffFloor_idx, list_size);
                     else
                         clear_datas();
                     end
