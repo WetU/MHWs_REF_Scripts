@@ -164,25 +164,20 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getObject, function()
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local Reward_Post_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
 local GUI020100_type_def = get_MyOwner_method:get_return_type();
-local get_PartsJust_method = GUI020100_type_def:get_method("get_PartsJust");
-local get_PartsTimer_method = GUI020100_type_def:get_method("get_PartsTimer");
+local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
+local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
+local endRandomAmuletJudge_method = GUI020100_type_def:get_method("endRandomAmuletJudge");
 local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
 
-local GUI020100PartsJust_type_def = get_PartsJust_method:get_return_type();
-local Just_get__Visible_method = GUI020100PartsJust_type_def:get_method("get__Visible");
-local Just_end_method = GUI020100PartsJust_type_def:get_method("end");
-
-local GUI020100PartsTimer_type_def = get_PartsTimer_method:get_return_type();
-local Timer_get__Visible_method = GUI020100PartsTimer_type_def:get_method("get__Visible");
-local Timer_end_method = GUI020100PartsTimer_type_def:get_method("end");
-
-local MODE02 = JudgeMode_field:get_type():get_field("MODE02"):get_data(nil);
+local JUDGE_MODE_type_def = JudgeMode_field:get_type();
+local JUDGE_MODE = {
+    MODE01 = JUDGE_MODE_type_def:get_field("MODE01"):get_data(nil),
+    MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)
+};
 
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
@@ -196,20 +191,15 @@ end);
 
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI020100PanelQuestRewardItem ~= nil then
-        if JudgeMode_field:get_data(GUI020100PanelQuestRewardItem) == MODE02 then
-            local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
-            local PartsJust = get_PartsJust_method:call(GUI020100);
-            local PartsTimer = get_PartsTimer_method:call(GUI020100);
-            if Just_get__Visible_method:call(PartsJust) == true then
-                Just_end_method:call(PartsJust);
-            end
-            if Timer_get__Visible_method:call(PartsTimer) == true then
-                Timer_end_method:call(PartsTimer);
-            end
+        local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
+        local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem);
+        if JudgeMode == JUDGE_MODE.MODE01 then
+            endQuestJudge_method:call(GUI020100);
+        elseif JudgeMode == JUDGE_MODE.MODE02 then
             jumpFixQuestJudge_method:call(GUI020100);
+            endRandomAmuletJudge_method:call(GUI020100);
         else
-            Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
-            Reward_Post_endFix_method:call(GUI020100PanelQuestRewardItem);
+            endQuestReward_method:call(GUI020100);
         end
     end
 end);
