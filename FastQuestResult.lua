@@ -164,14 +164,10 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getObject, function()
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
+local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
+local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
-
-local GUI020100_type_def = get_MyOwner_method:get_return_type();
-local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
-local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
-local endRandomAmuletJudge_method = GUI020100_type_def:get_method("endRandomAmuletJudge");
-local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
 
 local JUDGE_MODE_type_def = JudgeMode_field:get_type();
 local JUDGE_MODE = {
@@ -179,37 +175,84 @@ local JUDGE_MODE = {
     MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)
 };
 
+local GUI020100_type_def = get_MyOwner_method:get_return_type();
+--local get_PartsJust_method = GUI020100_type_def:get_method("get_PartsJust");
+--local get_PartsTimer_method = GUI020100_type_def:get_method("get_PartsTimer");
+local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
+local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
+local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
+local endRandomAmuletJudge_method = GUI020100_type_def:get_method("endRandomAmuletJudge");
+local endQuestResultList_method = GUI020100_type_def:get_method("endQuestResultList");
+local endQuestContribution_method = GUI020100_type_def:get_method("endQuestContribution");
+local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
+
+--local Just_end_method = get_PartsJust_method:get_return_type():get_method("end");
+
+--local Timer_requestEnd_method = get_PartsTimer_method:get_return_type():get_method("requestEnd");
+
 local GUI020100PanelQuestResultList_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
 
+local GUI020100PanelQuestContribution_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestContribution");
+local Contribution_endFix_method = GUI020100PanelQuestContribution_type_def:get_method("endFix");
+
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
+
+local GUI020100 = nil;
+
+local function terminateQuestResultFlow()
+    terminateQuestResult_method:call(Constants.GUIManager);
+    GUI020100 = nil;
+end
 
 local GUI020100PanelQuestRewardItem = nil;
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), function(args)
     GUI020100PanelQuestRewardItem = sdk.to_managed_object(args[2]);
+    GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
 end);
 
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI020100PanelQuestRewardItem ~= nil then
-        local GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem);
         local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem);
         if JudgeMode == JUDGE_MODE.MODE01 then
             endQuestJudge_method:call(GUI020100);
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             jumpFixQuestJudge_method:call(GUI020100);
             endRandomAmuletJudge_method:call(GUI020100);
+            Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
+            Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem);
+            GUI020100PanelQuestRewardItem = nil;
         else
             endQuestReward_method:call(GUI020100);
         end
     end
 end);
 
+local hasContribution = nil;
+local GUI020100PanelQuestResultList = nil;
 sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
     if GUI020100PanelQuestRewardItem ~= nil then
+        Reward_endFix_method:call(GUI020100PanelQuestRewardItem);
+        Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem);
         GUI020100PanelQuestRewardItem = nil;
     end
+    hasContribution = hasContribution_method:call(GUI020100);
+    if hasContribution == false then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end
+end, function()
+    endQuestResultList_method:call(GUI020100);
+    if hasContribution == false then
+        Result_endFix_method:call(thread.get_hook_storage()["this"]);
+        terminateQuestResultFlow();
+    end
+    hasContribution = nil;
+end);
+
+sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), function(args)
     thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 end, function()
-    Result_endFix_method:call(thread.get_hook_storage()["this"]);
-    terminateQuestResult_method:call(Constants.GUIManager);
+    endQuestContribution_method:call(GUI020100);
+    Contribution_endFix_method:call(thread.get_hook_storage()["this"]);
+    terminateQuestResultFlow();
 end);
