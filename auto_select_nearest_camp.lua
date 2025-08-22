@@ -51,14 +51,10 @@ local StartPointInfoList_get_Item_method = StartPointInfoList_type_def:get_metho
 local get_BeaconGimmick_method = StartPointInfoList_get_Item_method:get_return_type():get_method("get_BeaconGimmick");
 
 local GUIBeaconGimmick_type_def = get_BeaconGimmick_method:get_return_type();
-local get_ContextHolder_method = GUIBeaconGimmick_type_def:get_method("get_ContextHolder");
 local getPos_method = GUIBeaconGimmick_type_def:get_method("getPos");
+local getExistAreaInfo_method = GUIBeaconGimmick_type_def:get_method("getExistAreaInfo");
 
-local get_Gimmick_method = get_ContextHolder_method:get_return_type():get_method("get_Gimmick");
-
-local get_FieldAreaInfo_method = get_Gimmick_method:get_return_type():get_method("get_FieldAreaInfo");
-
-local FieldAreaInfo_type_def = get_FieldAreaInfo_method:get_return_type();
+local FieldAreaInfo_type_def = getExistAreaInfo_method:get_return_type();
 local get_MapAreaNumSafety_method = FieldAreaInfo_type_def:get_method("get_MapAreaNumSafety");
 local get_MapFloorNumSafety_method = FieldAreaInfo_type_def:get_method("get_MapFloorNumSafety");
 
@@ -128,9 +124,10 @@ end, function()
                     local diffFloor_idx = nil;
                     for j = 0, list_size - 1 do
                         local BeaconGimmick = get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, j));
-                        local FieldAreaInfo = get_FieldAreaInfo_method:call(get_Gimmick_method:call(get_ContextHolder_method:call(BeaconGimmick)));
+                        local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+                        local Pos = getPos_method:call(BeaconGimmick);
                         if sameArea_idx == nil then
-                            local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
+                            local distance = distance_method:call(nil, AreaIconPos, Pos);
                             if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
                                 if sameArea_shortest_distance == nil or distance < sameArea_shortest_distance then
                                     sameArea_shortest_distance = distance;
@@ -146,7 +143,7 @@ end, function()
                                 diffFloor_idx = j;
                             end
                         elseif get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
-                            local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
+                            local distance = distance_method:call(nil, AreaIconPos, Pos);
                             if distance < sameArea_shortest_distance then
                                 sameArea_shortest_distance = distance;
                                 sameArea_idx = j;
