@@ -3,15 +3,15 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 
 local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
+local getObject = Constants.getObject;
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
-
-local getObject = Constants.getObject;
 
 sdk.hook(sdk.find_type_definition("app.GUI010001"):get_method("onOpen"), getObject, function()
     local GUI010001 = thread.get_hook_storage()["this"];
     GUI010001:set_field("_Flow", 5);
     GUI010001:set_field("_Skip", true);
+    GUI010001:set_field("_EnableSkip", true);
 end);
 
 sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), getObject, function()
@@ -21,9 +21,8 @@ end);
 
 local isTitleStart = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_parent_type():get_method("onUpdate(System.Single)"), function(args)
-    local GUIAppKey = sdk.to_managed_object(args[2]);
-    if GUIAppKey_Type_field:get_data(GUIAppKey) == TITLE_START then
-        thread.get_hook_storage()["this"] = GUIAppKey;
+    if GUIAppKey_Type_field:get_data(args[2]) == TITLE_START then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
         isTitleStart = true;
     end
 end, function()

@@ -8,6 +8,9 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
+local FALSE_ptr = Constants.FALSE_ptr;
+local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
+
 local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
 if config.skipKillCam == nil or type(config.skipKillCam) ~= "boolean" then
     config.skipKillCam = true;
@@ -33,7 +36,6 @@ local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
 local isOn_method = Constants.GUIAppOnTimerKey_type_def:get_method("isOn");
-local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
@@ -57,28 +59,22 @@ local offsets = {
     Limit = 0xCC
 };
 
-local FALSE_ptr = Constants.FALSE_ptr;
-local getObject = Constants.getObject;
-
 sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
     return config.skipKillCam == true and FALSE_ptr or retval;
 end);
 
-local validReturnTimeSkip = nil;
+local isReturnTimeSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
-    if config.autoEndQuest == true or config.instantKey == true then
-        local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-        if GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RETURN_TIME_SKIP then
-            thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
-            validReturnTimeSkip = true;
-        end
+    if (config.autoEndQuest == true or config.instantKey == true) and GUIAppKey_Type_field:get_data(args[2]) == RETURN_TIME_SKIP then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        isReturnTimeSkip = true;
     end
 end, function()
-    if validReturnTimeSkip == true then
-        validReturnTimeSkip = nil;
-        local GUIAppOnTimerKey = thread.get_hook_storage()["this"];
-        if config.autoEndQuest == true or isOn_method:call(GUIAppOnTimerKey) == true then
-            GUIAppOnTimerKey:set_field("_Success", true);
+    if isReturnTimeSkip == true then
+        isReturnTimeSkip = nil;
+        local this = thread.get_hook_storage()["this"];
+        if config.autoEndQuest == true or isOn_method:call(this) == true then
+            this:set_field("_Success", true);
         end
     end
 end);
@@ -113,12 +109,14 @@ local GUI020201_datas = {
     reqSkip = false,
     isSetted = false
 };
-sdk.hook(GUI020201_type_def:get_method("onOpen"), getObject, function()
-    local GUI020201 = thread.get_hook_storage()["this"];
-    local CurType = CurType_field:get_data(GUI020201);
+sdk.hook(GUI020201_type_def:get_method("onOpen"), function(args)
+    thread.get_hook_storage()["this_ptr"] = args[2];
+end, function()
+    local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
+    local CurType = CurType_field:get_data(GUI020201_ptr);
     if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then
         if GUI020201_datas.GUI == nil then
-            GUI020201_datas.GUI = GUI_field:get_data(GUI020201);
+            GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
         end
         GUI020201_datas.reqSkip = true;
     end

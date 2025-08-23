@@ -2,8 +2,13 @@ local Constants = _G.require("Constants/Constants");
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
+
+local getObject = Constants.getObejct;
+local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 --<< GUI070000 Fix Quest Result >>--
 local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil);
+
+local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
 
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
 local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
@@ -35,12 +40,6 @@ local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
-
-local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
-
-local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
-
-local getObject = Constants.getObject;
 
 local hook_data = {
     GUI070000 = nil,
@@ -76,14 +75,12 @@ local function hasNewItem(GUIPartsReward, Mode)
 end
 
 sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), function(args)
-    if hook_data.GUIPartsReward == nil then
+    if hook_data.GUIPartsReward == nil and get__IsViewMode_method:call(args[2]) == false then
         local this = sdk.to_managed_object(args[2]);
-        if get__IsViewMode_method:call(this) == false then
-            local Owner = get_Owner_method:call(this);
-            if get_IDInt_method:call(Owner) == UI070000 then
-                hook_data.GUI070000 = Owner;
-                hook_data.GUIPartsReward = this;
-            end
+        local Owner = get_Owner_method:call(this);
+        if get_IDInt_method:call(Owner) == UI070000 then
+            hook_data.GUI070000 = Owner;
+            hook_data.GUIPartsReward = this;
         end
     end
 end, function()
@@ -116,9 +113,8 @@ end);
 
 local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
-    local GUIAppOnTimerKey = sdk.to_managed_object(args[2]);
-    if GUIAppKey_Type_field:get_data(GUIAppOnTimerKey) == RESULT_SKIP then
-        thread.get_hook_storage()["this"] = GUIAppOnTimerKey;
+    if GUIAppKey_Type_field:get_data(args[2]) == RESULT_SKIP then
+        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
         isResultSkip = true;
     end
 end, function()
@@ -151,8 +147,10 @@ local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("exe
 
 local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
 
-sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getObject, function()
-    local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this"]);
+sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), function(args)
+    thread.get_hook_storage()["this_ptr"] = args[2];
+end, function()
+    local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     if isExistCurrentInfo_method:call(NotifyWindowApp) == true then
         local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
         if get_NotifyWindowId_method:call(CurInfoApp) == GUI070000_DLG02 then

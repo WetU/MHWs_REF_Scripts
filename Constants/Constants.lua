@@ -41,6 +41,13 @@ Constants.init = function()
     Constants.SaveDataManager = Constants.sdk.get_managed_singleton("app.SaveDataManager");
 end
 
-Constants.init();
+local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
+local GameFlowManager_type_def = GameFlowManager:get_type_definition();
+local get_CurrentGameStateType_method = GameFlowManager_type_def:get_method("get_CurrentGameStateType");
+local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
+
+if getStateName_method:call(GameFlowManager, get_CurrentGameStateType_method:call(GameFlowManager)) == "IngameState" then
+    Constants.init();
+end
 
 return Constants;

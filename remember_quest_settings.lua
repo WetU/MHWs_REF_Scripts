@@ -9,6 +9,8 @@ local sdk = Constants.sdk;
 local re = Constants.re;
 local thread = Constants.thread;
 
+local getObject = Constants.getObject;
+
 local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {}};
 if config.view_type == nil or type(config.view_type) ~= "number" then
     config.view_type = 0;
@@ -29,8 +31,6 @@ local QuestViewType_field = QuestCounterContext_type_def:get_field("QuestViewTyp
 local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("QuestCategorySortType");
 
 local value_field = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE"):get_field("value__");
-
-local getObject = Constants.getObject;
 
 sdk.hook(GUI050000_type_def:get_method("onOpen"), function(args)
     if #config.sort_types > 0 then
