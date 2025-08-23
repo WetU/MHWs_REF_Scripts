@@ -17,8 +17,6 @@ local Constants = {
     draw = _G.draw
 };
 
-Constants.FALSE_ptr = Constants.sdk.to_ptr(false);
-
 Constants.ActiveQuestData_type_def = Constants.sdk.find_type_definition("app.cActiveQuestData");
 Constants.GUIAppOnTimerKey_type_def = Constants.sdk.find_type_definition("app.cGUIAppOnTimerKey");
 Constants.GUIManager_type_def = Constants.sdk.find_type_definition("app.GUIManager");

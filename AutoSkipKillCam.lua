@@ -8,7 +8,6 @@ local json = Constants.json;
 local re = Constants.re;
 local imgui = Constants.imgui;
 
-local FALSE_ptr = Constants.FALSE_ptr;
 local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
@@ -58,6 +57,8 @@ local offsets = {
     Timer = 0xC8,
     Limit = 0xCC
 };
+
+local FALSE_ptr = sdk.to_ptr(false);
 
 sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
     return config.skipKillCam == true and FALSE_ptr or retval;

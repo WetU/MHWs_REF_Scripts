@@ -22,16 +22,6 @@ local getItemNum_method = ItemUtil_type_def:get_method("getItemNum(app.ItemDef.I
 local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
 local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_method("Data(app.WeaponDef.TYPE, System.Int32)"); -- static
 
-local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
-local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
-local clearCollectionItem_method = CollectionNPCParam_type_def:get_method("clearCollectionItem(System.Int32)");
-local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
-
-local LargeWorkshopParam_type_def = sdk.find_type_definition("app.savedata.cLargeWorkshopParam");
-local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
-local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
-local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
-
 local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
@@ -134,6 +124,35 @@ local completedMorivers = {
     SWOP = nil
 };
 
+local Zero_ptr = sdk.to_ptr(0);
+
+local function getRewardItems(args)
+    getSellItem_method:call(nil, sdk.to_int64(args[3]) & 0xFFFFFFFF, sdk.to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);
+    args[3] = Zero_ptr;
+    args[4] = Zero_ptr;
+end
+
+sdk.hook(sdk.find_type_definition("app.savedata.cCollectionNPCParam"):get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), getRewardItems);
+sdk.hook(sdk.find_type_definition("app.savedata.cLargeWorkshopParam"):get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), getRewardItems);
+
+local FacilityPugee = nil;
+sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
+    if FacilityPugee == nil then
+        local FacilityManager = Constants.FacilityManager;
+        if FacilityManager ~= nil then
+            FacilityPugee = get_Pugee_method:call(FacilityManager);
+        end
+    end
+end, function()
+    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
+        stroke_method:call(FacilityPugee, true);
+    end
+end);
+
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
+    supplyFood_method:call(thread.get_hook_storage()["this"]);
+end);
+
 local function getItemFromMoriver(moriverInfo)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
@@ -206,56 +225,6 @@ local function execMoriver(facilityMoriver)
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
 end
-
-sdk.hook(CollectionNPCParam_type_def:get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), getObject, function()
-    local CollectionNPCParam = thread.get_hook_storage()["this"];
-    local ItemWorks_array = get_CollectionItem_method:call(CollectionNPCParam);
-    for i = 0, Collection_MAX_ITEM_NUM - 1 do
-        local ItemWork = ItemWorks_array:get_element(i);
-        local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
-        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
-            if ItemNum > 0 then
-                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX);
-                clearCollectionItem_method:call(CollectionNPCParam, i);
-            end
-        end
-    end
-end);
-
-sdk.hook(LargeWorkshopParam_type_def:get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), getObject, function()
-    local LargeWorkshopParam = thread.get_hook_storage()["this"];
-    local ItemWorks_array = get_Rewards_method:call(LargeWorkshopParam);
-    for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
-        local ItemWork = ItemWorks_array:get_element(i);
-        local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
-        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-            local ItemNum = ItemWork_Num_field:get_data(ItemWork);
-            if ItemNum > 0 then
-                getSellItem_method:call(nil, ItemId, ItemNum, STOCK_TYPE.BOX);
-                clearRewardItem_method:call(LargeWorkshopParam, i);
-            end
-        end
-    end
-end);
-
-local FacilityPugee = nil;
-sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if FacilityPugee == nil then
-        local FacilityManager = Constants.FacilityManager;
-        if FacilityManager ~= nil then
-            FacilityPugee = get_Pugee_method:call(FacilityManager);
-        end
-    end
-end, function()
-    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
-        stroke_method:call(FacilityPugee, true);
-    end
-end);
-
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
-    supplyFood_method:call(thread.get_hook_storage()["this"]);
-end);
 
 sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), init, function()
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
