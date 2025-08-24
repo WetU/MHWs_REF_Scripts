@@ -28,8 +28,12 @@ Constants.GUIAppKey_Type_field = Constants.GUIAppOnTimerKey_type_def:get_field("
 
 Constants.GUIFunc_TYPE_type_def = Constants.GUIAppKey_Type_field:get_type();
 
+Constants.getThisPtr = function(args)
+    Constants.thread.get_hook_storage()["this_ptr"] = args[2];
+end
+
 Constants.getObject = function(args)
-    Constants.thread.get_hook_storage()["this"] = Constants.sdk.to_managed_object(args[2]);
+    Constants.thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
 end
 
 Constants.init = function()
@@ -39,13 +43,18 @@ Constants.init = function()
     Constants.SaveDataManager = Constants.sdk.get_managed_singleton("app.SaveDataManager");
 end
 
-local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
-local GameFlowManager_type_def = GameFlowManager:get_type_definition();
-local get_CurrentGameStateType_method = GameFlowManager_type_def:get_method("get_CurrentGameStateType");
-local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
+local function destroy()
+    Constants.ChatManager = nil;
+    Constants.FacilityManager = nil;
+    Constants.GUIManager = nil;
+    Constants.SaveDataManager = nil;
+end
 
-if getStateName_method:call(GameFlowManager, get_CurrentGameStateType_method:call(GameFlowManager)) == "IngameState" then
+local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
+if GameFlowManager:call("getStateName(ace.GameStateType)", GameFlowManager:get_CurrentGameStateType()) == "IngameState" then
     Constants.init();
 end
+
+Constants.sdk.hook(Constants.sdk.find_type_definition("app.TitleState"):get_method("enter"), destroy);
 
 return Constants;

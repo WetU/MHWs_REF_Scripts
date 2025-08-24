@@ -16,22 +16,22 @@ local MODE = {
     JUDGE01 = MODE_type_def:get_field("JUDGE01"):get_data(nil)
 };
 
-local GUI090002PartsItemReceive = nil;
+local GUI090002PartsItemReceive_ptr = nil;
 sdk.hook(GUI090002PartsItemReceive_type_def:get_method("start(app.cGUIPartsRecieveItemsInfo, System.Collections.Generic.List`1<app.cReceiveItemInfo>)"), function(args)
-    GUI090002PartsItemReceive = sdk.to_managed_object(args[2]);
+    GUI090002PartsItemReceive_ptr = args[2];
 end);
 
 sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, function()
-    if GUI090002PartsItemReceive ~= nil then
-        local Mode = get__Mode_method:call(GUI090002PartsItemReceive);
+    if GUI090002PartsItemReceive_ptr ~= nil then
+        local Mode = get__Mode_method:call(GUI090002PartsItemReceive_ptr);
         if Mode == MODE.JUDGE00 or Mode == MODE.JUDGE01 then
-            if get__JudgeAnimationEnd_method:call(GUI090002PartsItemReceive) == false then
-                if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive) > 0.01 then
-                    set__WaitAnimationTime_method:call(GUI090002PartsItemReceive, 0.01);
+            if get__JudgeAnimationEnd_method:call(GUI090002PartsItemReceive_ptr) == false then
+                if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
+                    set__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
                 end
             else
-                if get__WaitControlTime_method:call(GUI090002PartsItemReceive) > 0.01 then
-                    set__WaitControlTime_method:call(GUI090002PartsItemReceive, 0.01);
+                if get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
+                    set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
                 end
             end
         end
@@ -39,5 +39,5 @@ sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, 
 end);
 
 sdk.hook(sdk.find_type_definition("app.GUI090002"):get_method("onClose"), function(args)
-    GUI090002PartsItemReceive = nil;
+    GUI090002PartsItemReceive_ptr = nil;
 end);

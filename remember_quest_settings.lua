@@ -9,7 +9,7 @@ local sdk = Constants.sdk;
 local re = Constants.re;
 local thread = Constants.thread;
 
-local getObject = Constants.getObject;
+local getThisPtr = Constants.getThisPtr;
 
 local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {}};
 if config.view_type == nil or type(config.view_type) ~= "number" then
@@ -34,11 +34,11 @@ local value_field = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_T
 
 sdk.hook(GUI050000_type_def:get_method("onOpen"), function(args)
     if #config.sort_types > 0 then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        thread.get_hook_storage()["this_ptr"] = args[2];
     end
 end, function()
     if #config.sort_types > 0 then
-        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
+        local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
         local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
         local sort_type_list_size = sort_type_list:get_size();
         if sort_type_list_size > 0 then
@@ -64,8 +64,8 @@ end, function()
     end
 end);
 
-sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getObject, function()
-    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this"]);
+sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getThisPtr, function()
+    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
     local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
     local sort_type_list_size = sort_type_list:get_size();
     if sort_type_list_size > 0 then

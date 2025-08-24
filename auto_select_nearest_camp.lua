@@ -82,32 +82,32 @@ local hook_datas = {
 local function clear_datas()
     hook_datas = {
         hasData = false,
-        GUI050001 = nil,
+        GUI050001_ptr = nil,
         inputCtrl = nil,
         targetCampIdx = nil,
         selectMethod = nil
     };
 end
 
-local function dataProcess(GUI050001, targetCampIdx, list_size)
-    setCurrentSelectStartPointIndex_method:call(GUI050001, targetCampIdx);
+local function dataProcess(GUI050001_ptr, targetCampIdx, list_size)
+    setCurrentSelectStartPointIndex_method:call(GUI050001_ptr, targetCampIdx);
     hook_datas.targetCampIdx = targetCampIdx;
-    hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001));
+    hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001_ptr));
     hook_datas.selectMethod = targetCampIdx + 1 < list_size / 2 and selectPrevItem_method or selectNextItem_method;
     hook_datas.hasData = true;
 end
 
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
     if config.isEnabled == true then
-        hook_datas.GUI050001 = sdk.to_managed_object(args[2]);
+        hook_datas.GUI050001_ptr = args[2];
     end
 end, function()
     if config.isEnabled == true then
-        local GUI050001 = hook_datas.GUI050001;
-        local startPoint_list = get_CurrentStartPointList_method:call(GUI050001);
+        local GUI050001_ptr = hook_datas.GUI050001_ptr;
+        local startPoint_list = get_CurrentStartPointList_method:call(GUI050001_ptr);
         local list_size = StartPointInfoList_get_Count_method:call(startPoint_list);
         if list_size > 1 then
-            local QuestViewData = QuestViewData_field:get_data(get_QuestOrderParam_method:call(GUI050001));
+            local QuestViewData = QuestViewData_field:get_data(get_QuestOrderParam_method:call(GUI050001_ptr));
             local Stage = get_Stage_method:call(QuestViewData);
             local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
             local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
@@ -151,13 +151,13 @@ end, function()
                         end
                     end
                     if sameArea_idx ~= nil and sameArea_idx > 0 then
-                        dataProcess(GUI050001, sameArea_idx, list_size);
+                        dataProcess(GUI050001_ptr, sameArea_idx, list_size);
                     elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.5) then
-                        dataProcess(GUI050001, diffFloor_idx, list_size);
+                        dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
                     elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                        dataProcess(GUI050001, sameFloor_idx, list_size);
+                        dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
                     elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                        dataProcess(GUI050001, diffFloor_idx, list_size);
+                        dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
                     else
                         clear_datas();
                     end
@@ -180,7 +180,7 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
 end);
 
 sdk.hook(GUI050001_type_def:get_method("onClose"), function(args)
-    if config.isEnabled == true then
+    if hook_datas.hasData == true then
         clear_datas();
     end
 end);

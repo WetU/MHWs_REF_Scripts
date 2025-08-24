@@ -11,7 +11,6 @@ sdk.hook(sdk.find_type_definition("app.GUI010001"):get_method("onOpen"), getObje
     local GUI010001 = thread.get_hook_storage()["this"];
     GUI010001:set_field("_Flow", 5);
     GUI010001:set_field("_Skip", true);
-    GUI010001:set_field("_EnableSkip", true);
 end);
 
 sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), getObject, function()

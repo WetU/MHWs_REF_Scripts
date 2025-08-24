@@ -25,11 +25,11 @@ end);
 
 sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), function(args)
     if should_sort == true then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        thread.get_hook_storage()["this_ptr"] = args[2];
     end
 end, function()
     if should_sort == true then
-        local ViewQuestDataList = get_ViewQuestDataList_method:call(thread.get_hook_storage()["this"]);
+        local ViewQuestDataList = get_ViewQuestDataList_method:call(thread.get_hook_storage()["this_ptr"]);
         local ViewQuestDataList_size = get_Count_method:call(ViewQuestDataList);
         if ViewQuestDataList_size > 0 then
             local cleared_quests = {};
@@ -38,7 +38,6 @@ end, function()
                 local quest_data = get_Item_method:call(ViewQuestDataList, i);
                 table.insert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
             end
-
             local unclearedCount = #uncleared_quests;
             local clearedCount = #cleared_quests;
             if unclearedCount ~= 0 and clearedCount ~= 0 then

@@ -7,7 +7,7 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 
 local init = Constants.init;
-local getObject = Constants.getObject;
+local getThisPtr = Constants.getThisPtr;
 
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -73,9 +73,7 @@ local execute_method = Event_field:get_type():get_method("execute");
 
 local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
 
-local SendItemInfoList_type_def = getRewardItemData_method:get_return_type();
-local SendItemInfo_get_Count_method = SendItemInfoList_type_def:get_method("get_Count");
-local SendItemInfo_get_Item_method = SendItemInfoList_type_def:get_method("get_Item(System.Int32)");
+local SendItemInfo_get_Item_method = getRewardItemData_method:get_return_type():get_method("get_Item(System.Int32)");
 
 local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_method("getReward(System.Boolean, System.Boolean)");
 
@@ -88,7 +86,6 @@ local SupportShipData_set_item_method = SupportShipData_List_type_def:get_method
 local SupportShipData_get_Item_method = SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
 
 local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
-local SupportShipData_get_DataId_method = SupportShipData_type_def:get_method("get_DataId");
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
 local SupportShipData_get_WeaponType_method = SupportShipData_type_def:get_method("get_WeaponType");
 local SupportShipData_get_ParamId_method = SupportShipData_type_def:get_method("get_ParamId");
@@ -149,8 +146,8 @@ end, function()
     end
 end);
 
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getObject, function()
-    supplyFood_method:call(thread.get_hook_storage()["this"]);
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getThisPtr, function()
+    supplyFood_method:call(thread.get_hook_storage()["this_ptr"]);
 end);
 
 local function getItemFromMoriver(moriverInfo)
@@ -233,32 +230,27 @@ sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), init, 
     end
 end);
 
-sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), function(args)
-    thread.get_hook_storage()["this_pointer"] = args[2];
-end, function()
-    execMoriver(thread.get_hook_storage()["this_pointer"]);
+sdk.hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()
+    execMoriver(thread.get_hook_storage()["this_ptr"]);
 end);
 
-sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getObject, function()
-    local FacilityRallus = thread.get_hook_storage()["this"];
-    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - get_SupplyNum_method:call(FacilityRallus));
-    local SendItemInfo_Count = SendItemInfo_get_Count_method:call(SendItemInfo_List);
-    if SendItemInfo_Count > 0 then
-        for i = 0, SendItemInfo_Count - 1 do
-            getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
-        end
-        execute_method:call(Event_field:get_data(FacilityRallus));
-        resetSupplyNum_method:call(FacilityRallus);
+sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getThisPtr, function()
+    local FacilityRallus_ptr = thread.get_hook_storage()["this_ptr"];
+    local SupplyNum = get_SupplyNum_method:call(FacilityRallus_ptr);
+    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
+    for i = 0, SupplyNum - 1 do
+        getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
     end
+    execute_method:call(Event_field:get_data(FacilityRallus_ptr));
+    resetSupplyNum_method:call(FacilityRallus_ptr);
 end);
 
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
-    local dataList = sdk.to_managed_object(args[3]);
-    local count = SupportShipData_get_Count_method:call(dataList);
+    local dataList_ptr = args[3];
+    local count = SupportShipData_get_Count_method:call(dataList_ptr);
     if count > 0 then
-        local isPurchased = false;
         for i = 0, count - 1 do
-            local ShipData = SupportShipData_get_Item_method:call(dataList, i);
+            local ShipData = SupportShipData_get_Item_method:call(dataList_ptr, i);
             local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
             for j = StockNum, 1, -1 do
                 local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
@@ -268,10 +260,7 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                         getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                         payPoint_method:call(nil, totalCost);
                         ShipData:set_field("_StockNum", StockNum - j);
-                        SupportShipData_set_item_method:call(dataList, i, ShipData);
-                        if isPurchased ~= true then
-                            isPurchased = true;
-                        end
+                        SupportShipData_set_item_method:call(dataList_ptr, i, ShipData);
                         break;
                     else
                         local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
@@ -279,18 +268,12 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                             addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
                             ShipData:set_field("_StockNum", StockNum - j);
-                            SupportShipData_set_item_method:call(dataList, i, ShipData);
-                            if isPurchased ~= true then
-                                isPurchased = true;
-                            end
+                            SupportShipData_set_item_method:call(dataList_ptr, i, ShipData);
                             break;
                         end
                     end
                 end
             end
-        end
-        if isPurchased == true then
-            args[3] = sdk.to_ptr(dataList);
         end
     end
 end);

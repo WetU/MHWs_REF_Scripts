@@ -40,20 +40,20 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0) .. " / " .. questTimeLimit;
 end
 
-local QuestDirector = nil;
+local QuestDirector_ptr = nil;
 sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
-    if QuestDirector == nil then
-        QuestDirector = sdk.to_managed_object(args[2]);
+    if QuestDirector_ptr == nil then
+        QuestDirector_ptr = args[2];
     end
 end, function()
-    if get_IsActiveQuest_method:call(QuestDirector) == true then
-        local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector);
+    if get_IsActiveQuest_method:call(QuestDirector_ptr) == true then
+        local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
         if QuestInfoCreated == false then
-            local ActiveQuestData = get_QuestData_method:call(QuestDirector);
+            local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
 
-            local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector);
+            local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
 
             getQuestTimeInfo(QuestElapsedTime);
@@ -73,12 +73,12 @@ end, function()
 end);
 
 sdk.hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
-    if QuestInfoCreated == true and QuestDirector == nil then
-        QuestDirector = sdk.to_managed_object(args[2]);
+    if QuestInfoCreated == true and QuestDirector_ptr == nil then
+        QuestDirector_ptr = args[2];
     end
 end, function()
     if QuestInfoCreated == true then
-        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector);
+        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
         DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
     end
 end);
