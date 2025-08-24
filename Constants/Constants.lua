@@ -33,7 +33,7 @@ Constants.getThisPtr = function(args)
 end
 
 Constants.getObject = function(args)
-    Constants.thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    Constants.thread.get_hook_storage()["this"] = Constants.sdk.to_managed_object(args[2]);
 end
 
 Constants.init = function()
