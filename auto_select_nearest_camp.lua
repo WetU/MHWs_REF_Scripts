@@ -73,7 +73,7 @@ local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextIt
 
 local hook_datas = {
     hasData = false,
-    GUI050001 = nil,
+    GUI050001_ptr = nil,
     inputCtrl = nil,
     targetCampIdx = nil,
     selectMethod = nil

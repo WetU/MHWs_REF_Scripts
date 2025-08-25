@@ -10,6 +10,10 @@ local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):
 
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil);
 
+local GUI070000_type_def = sdk.find_type_definition("app.GUI070000");
+local get_IDInt_method = GUI070000_type_def:get_method("get_IDInt");
+local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
+
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
 local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
 local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
@@ -24,10 +28,6 @@ local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
 local REWARD = get__Mode_method:get_return_type():get_field("REWARD"):get_data(nil);
-
-local GUIBaseApp_type_def = get_Owner_method:get_return_type();
-local get_IDInt_method = GUIBaseApp_type_def:get_method("get_IDInt");
-local get_CurCtrlInputPriority_method = GUIBaseApp_type_def:get_method("get_CurCtrlInputPriority");
 
 local ItemGridParts_type_def = ItemGridParts_field:get_type();
 local get_Count_method = ItemGridParts_type_def:get_method("get_Count");
@@ -126,43 +126,15 @@ end, function()
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI070000"):get_method("onClose"), function(args)
+sdk.hook(GUI070000_type_def:get_method("onClose"), function(args)
     hook_data = {
         GUI070000 = nil,
         GUIPartsReward_ptr = nil,
         checkedNewItem = {}
     };
 end);
---<< GUI000003 Skip Confirm Dialogue >>--
-local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
-local NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
-
-local GUISystemModuleNotifyWindowApp_type_def = NotifyWindowApp_field:get_type();
-local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
-local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
-local isExistCurrentInfo_method = GUISystemModuleNotifyWindowApp_type_def:get_method("isExistCurrentInfo");
-
-local GUINotifyWindowInfo_type_def = get__CurInfoApp_method:get_return_type();
-local get_NotifyWindowId_method = GUINotifyWindowInfo_type_def:get_method("get_NotifyWindowId");
-local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(System.Int32)");
-local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
-
-local GUI070000_DLG02 = get_NotifyWindowId_method:get_return_type():get_field("GUI070000_DLG02"):get_data(nil);
-
-sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
-    local NotifyWindowApp = NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
-    if isExistCurrentInfo_method:call(NotifyWindowApp) == true then
-        local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
-        if get_NotifyWindowId_method:call(CurInfoApp) == GUI070000_DLG02 then
-            endWindow_method:call(CurInfoApp, 0);
-            executeWindowEndFunc_method:call(CurInfoApp);
-            closeGUI_method:call(NotifyWindowApp);
-        end
-    end
-end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
 local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
@@ -173,11 +145,12 @@ local JUDGE_MODE = {
     MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)
 };
 
+local Fix_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type():get_method("endFix");
+
 local GUI020100_type_def = get_MyOwner_method:get_return_type();
 local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
 local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
 local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
-local endRandomAmuletJudge_method = GUI020100_type_def:get_method("endRandomAmuletJudge");
 local endQuestResultList_method = GUI020100_type_def:get_method("endQuestResultList");
 local endQuestContribution_method = GUI020100_type_def:get_method("endQuestContribution");
 local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
@@ -192,12 +165,6 @@ local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("te
 
 local GUI020100 = nil;
 local GUI020100PanelQuestRewardItem_ptr = nil;
-
-local function finishRewardFlow()
-    Reward_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
-    Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem_ptr);
-    GUI020100PanelQuestRewardItem_ptr = nil;
-end
 
 local function terminateQuestResultFlow()
     terminateQuestResult_method:call(Constants.GUIManager);
@@ -216,7 +183,8 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
             endQuestJudge_method:call(GUI020100);
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             jumpFixQuestJudge_method:call(GUI020100);
-            endRandomAmuletJudge_method:call(GUI020100);
+            Fix_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
+            Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem_ptr);
         else
             endQuestReward_method:call(GUI020100);
         end
@@ -225,14 +193,14 @@ end);
 
 sdk.hook(GUIPartsReward_type_def:get_method("endDialog(app.GUINotifyWindowDef.ID)"), function(args)
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
-        finishRewardFlow();
+        GUI020100PanelQuestRewardItem_ptr = nil;
     end
 end);
 
 local hasContribution = nil;
 sdk.hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
-        finishRewardFlow();
+        GUI020100PanelQuestRewardItem_ptr = nil;
     end
     hasContribution = hasContribution_method:call(GUI020100);
     if hasContribution == false then
