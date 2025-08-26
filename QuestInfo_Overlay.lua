@@ -49,25 +49,20 @@ end, function()
     if get_IsActiveQuest_method:call(QuestDirector_ptr) == true then
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
         if QuestInfoCreated == false then
+            QuestInfoCreated = true;
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
-
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
-
             getQuestTimeInfo(QuestElapsedTime);
-
-            QuestInfoCreated = true;
         elseif QuestElapsedTime ~= oldElapsedTime then
             getQuestTimeInfo(QuestElapsedTime);
         end
     elseif QuestInfoCreated == true then
         QuestInfoCreated = false;
-
         questMaxDeath = nil;
         questTimeLimit = nil;
-
         oldElapsedTime = nil;
     end
 end);

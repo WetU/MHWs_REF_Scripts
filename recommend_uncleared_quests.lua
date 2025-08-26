@@ -18,7 +18,7 @@ local get_MissionID_method = get_Item_method:get_return_type():get_method("get_M
 
 local CATEGORY_FREE = sdk.find_type_definition("app.GUI050000.CATEGORY"):get_field("FREE"):get_data(nil); -- static
 
-local should_sort = nil;
+local should_sort = false;
 sdk.hook(GUI050000QuestListParts_type_def:get_method("initQuestDataInCategory(app.GUI050000.CATEGORY)"), function(args)
     should_sort = (sdk.to_int64(args[3]) & 0xFFFFFFFF) == CATEGORY_FREE;
 end);
@@ -40,7 +40,7 @@ end, function()
             end
             local unclearedCount = #uncleared_quests;
             local clearedCount = #cleared_quests;
-            if unclearedCount ~= 0 and clearedCount ~= 0 then
+            if unclearedCount > 0 and clearedCount > 0 then
                 for i = 0, unclearedCount - 1 do
                     set_Item_method:call(ViewQuestDataList, i, uncleared_quests[i + 1]);
                 end
@@ -49,6 +49,6 @@ end, function()
                 end
             end
         end
-        should_sort = nil;
+        should_sort = false;
     end
 end);

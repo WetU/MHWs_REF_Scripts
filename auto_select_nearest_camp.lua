@@ -107,7 +107,7 @@ end, function()
     if config.isEnabled == true then
         local GUI050001_ptr = hook_datas.GUI050001_ptr;
         local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001_ptr);
-        if get_IsSameStageDeclaration_method:call(QuestOrderParam) ~= true then
+        if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
             local startPoint_list = get_CurrentStartPointList_method:call(GUI050001_ptr);
             local list_size = StartPointInfoList_get_Count_method:call(startPoint_list);
             if list_size > 1 then

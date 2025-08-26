@@ -9,7 +9,7 @@ local Default = sdk.find_type_definition("app.GUI020206.RequestType"):get_field(
 local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
 
 local function preHook_one(args)
-    if (sdk.to_int64(args[4]) & 0xFFFFFFFF) ~= Default then
+    if (sdk.to_int64(args[4]) & 0xFFFFFFFF) == Default then
         return SKIP_ORIGINAL;
     end
 end
