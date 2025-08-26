@@ -4,8 +4,16 @@ local pairs = Constants.pairs;
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
+local json = Constants.json;
+local re = Constants.re;
 
 local getThisPtr = Constants.getThisPtr;
+
+local config = json.load_file("auto_close_DLG.json") or {};
+
+local function saveConfig()
+    json.dump_file("auto_close_DLG.json", config);
+end
 
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local GUI000009_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
@@ -23,7 +31,7 @@ local endWindow_method = GUINotifyWindowInfoApp_type_def:get_method("endWindow(S
 local executeWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("executeWindowEndFunc");
 
 local NotifyWindowID_type_def = get_NotifyWindowId_method:get_return_type();
-local NotifyWindowID = {
+local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
@@ -32,7 +40,7 @@ local NotifyWindowID = {
 };
 
 local function Contains(value)
-    for _, v in pairs(NotifyWindowID) do
+    for _, v in pairs(auto_close_IDs) do
         if value == v then
             return true;
         end
@@ -43,12 +51,19 @@ end
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local NotifyWindowApp = GUI000009_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
-    if CurInfoApp ~= nil and Contains(get_NotifyWindowId_method:call(CurInfoApp)) == true then
-        endWindow_method:call(CurInfoApp, 0);
-        if isExistWindowEndFunc_method:call(CurInfoApp) == true then
-            executeWindowEndFunc_method:call(CurInfoApp);
+    if CurInfoApp ~= nil then
+        local Id = get_NotifyWindowId_method:call(CurInfoApp);
+        if Contains(Id) == true then
+            endWindow_method:call(CurInfoApp, 0);
+            if config[Id] == nil then
+                config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
+                saveConfig();
+            end
+            if config[Id] == true then
+                executeWindowEndFunc_method:call(CurInfoApp);
+            end
+            closeGUI_method:call(NotifyWindowApp);
         end
-        closeGUI_method:call(NotifyWindowApp);
     end
 end);
 
@@ -66,3 +81,5 @@ sdk.hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
         requestSelectIndexCore_method:call(ListCtrl_field:get_data(this_ptr), 2, 2);
     end
 end);
+
+re.on_config_save(saveConfig);
