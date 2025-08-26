@@ -13,6 +13,10 @@ local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
 
+local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter") -- static
+
+local get_IsInAllTent_method = getHunterCharacter_method:get_return_type():get_method("get_IsInAllTent");
+
 local mySet = 0;
 
 local isSelfCall = false;
@@ -40,7 +44,7 @@ end
 sdk.hook(sdk.find_type_definition("app.Gm170_002"):get_method("buttonPushEvent"), nil, restockItems);
 sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
 sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
-    if isArenaQuest_method:call(args[3]) == false then
+    if isArenaQuest_method:call(args[3]) == false and get_IsInAllTent_method:call(getHunterCharacter_method:call(nil)) == false then
         restockItems();
     end
 end);
