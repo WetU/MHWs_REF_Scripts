@@ -1,11 +1,13 @@
 local Constants = _G.require("Constants/Constants");
 
 local pairs = Constants.pairs;
+local tostring = Constants.tostring;
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 local json = Constants.json;
 local re = Constants.re;
+local imgui = Constants.imgui;
 
 local getThisPtr = Constants.getThisPtr;
 
@@ -15,10 +17,10 @@ local function saveConfig()
     json.dump_file("auto_close_DLG.json", config);
 end
 
-local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
-local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
+local GUI000002_type_def = sdk.find_type_definition("app.GUI000002");
+local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
 
-local GUISystemModuleNotifyWindowApp_type_def = GUI000003_NotifyWindowApp_field:get_type();
+local GUISystemModuleNotifyWindowApp_type_def = GUI000002_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
 local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
 
@@ -29,17 +31,9 @@ local endWindow_method = GUINotifyWindowInfoApp_type_def:get_method("endWindow(S
 local executeWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("executeWindowEndFunc");
 
 local NotifyWindowID_type_def = get_NotifyWindowId_method:get_return_type();
-local auto_close_IDs = {
-    NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil)
-};
 
-local function Contains(value)
-    for _, v in pairs(auto_close_IDs) do
+local function Contains(tbl, value)
+    for _, v in pairs(tbl) do
         if value == v then
             return true;
         end
@@ -47,12 +41,46 @@ local function Contains(value)
     return false;
 end
 
+local GUI000002_auto_close_IDs = {
+    NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil)
+};
+
+sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
+    local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
+    local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
+    if CurInfoApp ~= nil then
+        local Id = get_NotifyWindowId_method:call(CurInfoApp);
+        if Contains(GUI000002_auto_close_IDs, Id) == true then
+            endWindow_method:call(CurInfoApp, 0);
+            if config[Id] == nil then
+                config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
+                saveConfig();
+            end
+            if config[Id] == true then
+                executeWindowEndFunc_method:call(CurInfoApp);
+            end
+            closeGUI_method:call(NotifyWindowApp);
+        end
+    end
+end);
+
+local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
+local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
+
+local GUI000003_auto_close_IDs = {
+    NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil)
+};
+
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
-        if Contains(Id) == true then
+        if Contains(GUI000003_auto_close_IDs, Id) == true then
             endWindow_method:call(CurInfoApp, 0);
             if config[Id] == nil then
                 config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);

@@ -50,12 +50,18 @@ local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataMana
 local UserSaveData_type_def = getCurrentUserSaveData_method:get_return_type();
 local get_BasicData_method = UserSaveData_type_def:get_method("get_BasicData");
 local get_Equip_method = UserSaveData_type_def:get_method("get_Equip");
+local get_LargeWorkshop_method = UserSaveData_type_def:get_method("get_LargeWorkshop");
 
 local BasicParam_type_def = get_BasicData_method:get_return_type();
 local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
 local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
 
 local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
+
+local LargeWorkshopParam_type_def = get_LargeWorkshop_method:get_return_type();
+local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
+local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
+local MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
 
 local FacilityPugee_type_def = get_Pugee_method:get_return_type();
 local isEnableCoolTimer_method = FacilityPugee_type_def:get_method("isEnableCoolTimer");
@@ -121,16 +127,38 @@ local completedMorivers = {
     SWOP = nil
 };
 
-local Zero_ptr = sdk.to_ptr(0);
+local isSelfCall = false;
+local BOX_ptr = sdk.to_ptr(STOCK_TYPE.BOX);
+sdk.hook(changeItemNumFromDialogue_method, function(args)
+    if isSelfCall == true then
+        isSelfCall = false;
+    elseif (sdk.to_int64(args[4]) & 0xFFFFFFFF) ~= STOCK_TYPE.BOX then
+        args[4] = BOX_ptr;
+    end
+end);
 
-local function getRewardItems(args)
+local Zero_ptr = sdk.to_ptr(0);
+sdk.hook(sdk.find_type_definition("app.savedata.cCollectionNPCParam"):get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), function(args)
     getSellItem_method:call(nil, sdk.to_int64(args[3]) & 0xFFFFFFFF, sdk.to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);
     args[3] = Zero_ptr;
     args[4] = Zero_ptr;
-end
+end);
 
-sdk.hook(sdk.find_type_definition("app.savedata.cCollectionNPCParam"):get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), getRewardItems);
-sdk.hook(sdk.find_type_definition("app.savedata.cLargeWorkshopParam"):get_method("addRewardItem(app.ItemDef.ID, System.Int16)"), getRewardItems);
+sdk.hook(sdk.find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival"), nil, function()
+    local LargeWorkshopParam = get_LargeWorkshop_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
+    local Rewards = get_Rewards_method:call(LargeWorkshopParam);
+    for i = 0, MAX_ITEM_NUM - 1 do
+        local Reward = Rewards:get_element(i);
+        local ItemId = ItemWork_get_ItemId_method:call(Reward);
+        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+            local Num = ItemWork_Num_field:get_data(Reward);
+            if Num > 0 then
+                getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
+                clearRewardItem_method:call(LargeWorkshopParam, i);
+            end
+        end
+    end
+end);
 
 local FacilityPugee = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
@@ -156,6 +184,7 @@ local function getItemFromMoriver(moriverInfo)
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
+            isSelfCall = true;
             changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE.BOX, true);
         end
     end
