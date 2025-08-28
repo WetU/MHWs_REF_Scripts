@@ -70,7 +70,9 @@ local GUI000003_auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil)
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
+    NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil)
 };
 
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
