@@ -9,14 +9,16 @@ local thread = Constants.thread;
 local init = Constants.init;
 local getThisPtr = Constants.getThisPtr;
 
+local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
+
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
-local getSellItem_method = ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local changeItemNumFromDialogue_method = ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
+local getSellItem_method = ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local getItemNum_method = ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
 local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static

@@ -64,5 +64,6 @@ local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
 if GameFlowManager:call("getStateName(ace.GameStateType)", GameFlowManager:get_CurrentGameStateType()) == "IngameState" then
     Constants.init();
 end
+GameFlowManager = nil;
 
 return Constants;

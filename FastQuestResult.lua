@@ -41,11 +41,6 @@ local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("g
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
 
-local hook_data = {
-    GUI070000 = nil,
-    GUIPartsReward_ptr = nil,
-    checkedNewItem = {}
-};
 local function skipJudgeAnimation(GUIPartsReward_ptr)
     if get__JudgeAnimationEnd_method:call(GUIPartsReward_ptr) == false then
         if get__WaitAnimationTime_method:call(GUIPartsReward_ptr) > 0.01 then
@@ -58,21 +53,11 @@ local function skipJudgeAnimation(GUIPartsReward_ptr)
     end
 end
 
-local function hasNewItem(GUIPartsReward_ptr, Mode)
-    hook_data.checkedNewItem[Mode] = false;
-    local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
-    local partsCount = get_Count_method:call(ItemGridParts);
-    if partsCount > 0 then
-        for i = 0, partsCount - 1 do
-            local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                hook_data.checkedNewItem[Mode] = true;
-                break;
-            end
-        end
-    end
-    return hook_data.checkedNewItem[Mode];
-end
+local hook_data = {
+    GUI070000 = nil,
+    GUIPartsReward_ptr = nil,
+    checkedNewItem = {}
+};
 
 sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), function(args)
     if hook_data.GUIPartsReward_ptr == nil then
@@ -92,18 +77,26 @@ end, function()
             skipJudgeAnimation(GUIPartsReward_ptr);
         else
             local Mode = get__Mode_method:call(GUIPartsReward_ptr);
-            if Mode == REWARD then
-                if get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
-                    local data = hook_data.checkedNewItem[Mode];
-                    local newMarkVisible = data ~= nil and data or hasNewItem(GUIPartsReward_ptr, Mode);
-                    if newMarkVisible == false then
-                        receiveAll_method:call(GUIPartsReward_ptr);
+            if hook_data.checkedNewItem[Mode] == nil then
+                hook_data.checkedNewItem[Mode] = false;
+                local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
+                local partsCount = get_Count_method:call(ItemGridParts);
+                if partsCount > 0 then
+                    for i = 0, partsCount - 1 do
+                        local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                        if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                            hook_data.checkedNewItem[Mode] = true;
+                            break;
+                        end
                     end
                 end
+            end
+            if Mode == REWARD then
+                if hook_data.checkedNewItem[Mode] == false and get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
+                    receiveAll_method:call(GUIPartsReward_ptr);
+                end
             else
-                local data = hook_data.checkedNewItem[Mode];
-                local newMarkVisible = data ~= nil and data or hasNewItem(GUIPartsReward_ptr, Mode);
-                if newMarkVisible == true then
+                if hook_data.checkedNewItem[Mode] == true then
                     skipJudgeAnimation(GUIPartsReward_ptr);
                 elseif get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
                     receiveAll_method:call(GUIPartsReward_ptr);
