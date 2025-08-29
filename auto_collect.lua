@@ -53,8 +53,8 @@ local get_Equip_method = UserSaveData_type_def:get_method("get_Equip");
 local get_LargeWorkshop_method = UserSaveData_type_def:get_method("get_LargeWorkshop");
 
 local BasicParam_type_def = get_BasicData_method:get_return_type();
-local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
 local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
+local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
 
 local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
 
@@ -88,8 +88,8 @@ local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):
 
 local SupportShipData_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 local SupportShipData_get_Count_method = SupportShipData_List_type_def:get_method("get_Count");
-local SupportShipData_set_item_method = SupportShipData_List_type_def:get_method("set_Item(System.Int32, app.user_data.SupportShipData.cData)");
 local SupportShipData_get_Item_method = SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
+local SupportShipData_set_item_method = SupportShipData_List_type_def:get_method("set_Item(System.Int32, app.user_data.SupportShipData.cData)");
 
 local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
@@ -132,7 +132,7 @@ local BOX_ptr = sdk.to_ptr(STOCK_TYPE.BOX);
 sdk.hook(changeItemNumFromDialogue_method, function(args)
     if isSelfCall == true then
         isSelfCall = false;
-    elseif (sdk.to_int64(args[4]) & 0xFFFFFFFF) ~= STOCK_TYPE.BOX then
+    else
         args[4] = BOX_ptr;
     end
 end);

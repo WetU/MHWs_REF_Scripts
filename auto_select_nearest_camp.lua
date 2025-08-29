@@ -3,18 +3,6 @@ local Constants = _G.require("Constants/Constants");
 local type = Constants.type;
 
 local sdk = Constants.sdk;
-local json = Constants.json;
-local re = Constants.re;
-local imgui = Constants.imgui;
-
-local config = json.load_file("auto_select_nearest_camp.json") or {isEnabled = true};
-if config.isEnabled == nil or type(config.isEnabled) ~= "boolean" then
-    config.isEnabled = true;
-end
-
-local function save_config()
-    json.dump_file("auto_select_nearest_camp.json", config);
-end
 
 local distance_method = sdk.find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
@@ -100,73 +88,69 @@ local function dataProcess(GUI050001_ptr, targetCampIdx, list_size)
 end
 
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
-    if config.isEnabled == true then
-        hook_datas.GUI050001_ptr = args[2];
-    end
+    hook_datas.GUI050001_ptr = args[2];
 end, function()
-    if config.isEnabled == true then
-        local GUI050001_ptr = hook_datas.GUI050001_ptr;
-        local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001_ptr);
-        if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
-            local startPoint_list = get_CurrentStartPointList_method:call(GUI050001_ptr);
-            local list_size = StartPointInfoList_get_Count_method:call(startPoint_list);
-            if list_size > 1 then
-                local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
-                local Stage = get_Stage_method:call(QuestViewData);
-                local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
-                local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
-                local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
-                for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
-                    local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
-                    if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
-                        local AreaIconPos = get_AreaIconPos_method:call(AreaIconData);
-                        local sameArea_shortest_distance = nil;
-                        local sameArea_idx = nil;
-                        local sameFloor_shortest_distance = nil;
-                        local sameFloor_idx = nil;
-                        local diffFloor_shortest_distance = nil;
-                        local diffFloor_idx = nil;
-                        for j = 0, list_size - 1 do
-                            local BeaconGimmick = get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, j));
-                            local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                            local Pos = getPos_method:call(BeaconGimmick);
-                            if sameArea_idx == nil then
-                                local distance = distance_method:call(nil, AreaIconPos, Pos);
-                                if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
-                                    if sameArea_shortest_distance == nil or distance < sameArea_shortest_distance then
-                                        sameArea_shortest_distance = distance;
-                                        sameArea_idx = j;
-                                    end
-                                elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
-                                    if sameFloor_shortest_distance == nil or distance < sameFloor_shortest_distance then
-                                        sameFloor_shortest_distance = distance;
-                                        sameFloor_idx = j;
-                                    end
-                                elseif diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
-                                    diffFloor_shortest_distance = distance;
-                                    diffFloor_idx = j;
-                                end
-                            elseif get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
-                                local distance = distance_method:call(nil, AreaIconPos, Pos);
-                                if distance < sameArea_shortest_distance then
+    local GUI050001_ptr = hook_datas.GUI050001_ptr;
+    local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001_ptr);
+    if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
+        local startPoint_list = get_CurrentStartPointList_method:call(GUI050001_ptr);
+        local list_size = StartPointInfoList_get_Count_method:call(startPoint_list);
+        if list_size > 1 then
+            local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
+            local Stage = get_Stage_method:call(QuestViewData);
+            local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
+            local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
+            local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
+            for i = 0, AreaIconPosList_get_Count_method:call(areaIconPosList) - 1 do
+                local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
+                if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
+                    local AreaIconPos = get_AreaIconPos_method:call(AreaIconData);
+                    local sameArea_shortest_distance = nil;
+                    local sameArea_idx = nil;
+                    local sameFloor_shortest_distance = nil;
+                    local sameFloor_idx = nil;
+                    local diffFloor_shortest_distance = nil;
+                    local diffFloor_idx = nil;
+                    for j = 0, list_size - 1 do
+                        local BeaconGimmick = get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, j));
+                        local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+                        local Pos = getPos_method:call(BeaconGimmick);
+                        if sameArea_idx == nil then
+                            local distance = distance_method:call(nil, AreaIconPos, Pos);
+                            if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
+                                if sameArea_shortest_distance == nil or distance < sameArea_shortest_distance then
                                     sameArea_shortest_distance = distance;
                                     sameArea_idx = j;
                                 end
+                            elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                if sameFloor_shortest_distance == nil or distance < sameFloor_shortest_distance then
+                                    sameFloor_shortest_distance = distance;
+                                    sameFloor_idx = j;
+                                end
+                            elseif diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
+                                diffFloor_shortest_distance = distance;
+                                diffFloor_idx = j;
+                            end
+                        elseif get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
+                            local distance = distance_method:call(nil, AreaIconPos, Pos);
+                            if distance < sameArea_shortest_distance then
+                                sameArea_shortest_distance = distance;
+                                sameArea_idx = j;
                             end
                         end
-                        if sameArea_idx ~= nil and sameArea_idx > 0 then
-                            dataProcess(GUI050001_ptr, sameArea_idx, list_size);
-                        elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.5) then
-                            dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
-                        elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                            dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
-                        elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                            dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
-                        else
-                            clear_datas();
-                        end
-                        break;
                     end
+                    if sameArea_idx ~= nil and sameArea_idx > 0 then
+                        dataProcess(GUI050001_ptr, sameArea_idx, list_size);
+                    elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.5) then
+                        dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                    elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
+                        dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
+                    elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
+                        dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                    else
+                        clear_datas();
+                    end
+                    break;
                 end
             end
         end
@@ -174,7 +158,7 @@ end, function()
 end);
 
 sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
-    if config.isEnabled == true and hook_datas.hasData == true then
+    if hook_datas.hasData == true then
         local inputCtrl = hook_datas.inputCtrl;
         if getSelectedIndex_method:call(inputCtrl) ~= hook_datas.targetCampIdx then
             hook_datas.selectMethod:call(inputCtrl);
@@ -187,18 +171,5 @@ end);
 sdk.hook(GUI050001_type_def:get_method("onClose"), function(args)
     if hook_datas.hasData == true then
         clear_datas();
-    end
-end);
-
-re.on_config_save(save_config);
-
-re.on_draw_ui(function()
-    if imgui.tree_node("Auto-Select Nearest Camp") == true then
-        local changed = false;
-        changed, config.isEnabled = imgui.checkbox("Enabled", config.isEnabled);
-        if changed == true then
-            save_config();
-        end
-        imgui.tree_pop();
     end
 end);
