@@ -9,8 +9,6 @@ local thread = Constants.thread;
 local init = Constants.init;
 local getThisPtr = Constants.getThisPtr;
 
-local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
-
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
