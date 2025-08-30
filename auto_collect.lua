@@ -89,7 +89,6 @@ local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):
 local SupportShipData_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 local SupportShipData_get_Count_method = SupportShipData_List_type_def:get_method("get_Count");
 local SupportShipData_get_Item_method = SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
-local SupportShipData_set_item_method = SupportShipData_List_type_def:get_method("set_Item(System.Int32, app.user_data.SupportShipData.cData)");
 
 local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
@@ -281,24 +280,24 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
         for i = 0, count - 1 do
             local ShipData = SupportShipData_get_Item_method:call(dataList_ptr, i);
             local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
-            for j = StockNum, 1, -1 do
-                local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
-                if isEnoughPoint_method:call(nil, totalCost) == true then
-                    local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
-                    if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
-                        payPoint_method:call(nil, totalCost);
-                        ShipData:set_field("_StockNum", StockNum - j);
-                        SupportShipData_set_item_method:call(dataList_ptr, i, ShipData);
-                        break;
-                    else
-                        local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
-                        if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+            if StockNum >= 1 then
+                for j = StockNum, 1, -1 do
+                    local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
+                    if isEnoughPoint_method:call(nil, totalCost) == true then
+                        local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
+                        if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+                            getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                             payPoint_method:call(nil, totalCost);
                             ShipData:set_field("_StockNum", StockNum - j);
-                            SupportShipData_set_item_method:call(dataList_ptr, i, ShipData);
                             break;
+                        else
+                            local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
+                            if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
+                                addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+                                payPoint_method:call(nil, totalCost);
+                                ShipData:set_field("_StockNum", StockNum - j);
+                                break;
+                            end
                         end
                     end
                 end
