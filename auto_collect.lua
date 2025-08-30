@@ -45,29 +45,40 @@ local ItemWork_type_def = ItemFromMoriver_field:get_type();
 local ItemWork_get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
-local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
-
-local UserSaveData_type_def = getCurrentUserSaveData_method:get_return_type();
+local UserSaveData_type_def = sdk.find_type_definition("app.savedata.cUserSaveParam");
 local get_BasicData_method = UserSaveData_type_def:get_method("get_BasicData");
 local get_Equip_method = UserSaveData_type_def:get_method("get_Equip");
+local get_Collection_method = UserSaveData_type_def:get_method("get_Collection");
 local get_LargeWorkshop_method = UserSaveData_type_def:get_method("get_LargeWorkshop");
+local Save_get_Pugee_method = UserSaveData_type_def:get_method("get_Pugee");
 
 local BasicParam_type_def = get_BasicData_method:get_return_type();
-local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
 local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
+local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
 
 local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
+
+local CollectionParam_type_def = get_Collection_method:get_return_type();
+local get_CollectionNPC_method = CollectionParam_type_def:get_method("get_CollectionNPC");
+local COLLECTION_NPC_NUM = CollectionParam_type_def:get_field("COLLECTION_NPC_NUM"):get_data(nil);
+
+local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
+local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
+local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
+local NPCFixedId_field = CollectionNPCParam_type_def:get_field("NPCFixedId");
+local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
 
 local LargeWorkshopParam_type_def = get_LargeWorkshop_method:get_return_type();
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
-local MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
+local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
 
-local FacilityPugee_type_def = get_Pugee_method:get_return_type();
-local isEnableCoolTimer_method = FacilityPugee_type_def:get_method("isEnableCoolTimer");
-local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)");
+local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(System.Boolean)");
+
+local getCoolTimer_method = Save_get_Pugee_method:get_return_type():get_method("getCoolTimer");
 
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
+local isSuppliableFoodMax_method = FacilityDining_type_def:get_method("isSuppliableFoodMax");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
@@ -136,17 +147,31 @@ sdk.hook(changeItemNumFromDialogue_method, function(args)
     end
 end);
 
-local Zero_ptr = sdk.to_ptr(0);
-sdk.hook(sdk.find_type_definition("app.savedata.cCollectionNPCParam"):get_method("addCollectionItem(app.ItemDef.ID, System.Int16)"), function(args)
-    getSellItem_method:call(nil, sdk.to_int64(args[3]) & 0xFFFFFFFF, sdk.to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);
-    args[3] = Zero_ptr;
-    args[4] = Zero_ptr;
+sdk.hook(sdk.find_type_definition("app.FacilityCollection"):get_method("lotItem"), nil, function()
+    local NPCParam_array = get_CollectionNPC_method:call(get_Collection_method:call(Constants.UserSaveData));
+    for i = 0, COLLECTION_NPC_NUM - 1 do
+        local NPCParam = NPCParam_array:get_element(i);
+        if NPCFixedId_field:get_data(NPCParam) ~= -1 then
+            local CollectionItem = get_CollectionItem_method:call(NPCParam);
+            for j = 0, Collection_MAX_ITEM_NUM - 1 do
+                local ItemWork = CollectionItem:get_element(j);
+                local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
+                if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
+                    local Num = ItemWork_Num_field:get_data(ItemWork);
+                    if Num > 0 then
+                        getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
+                    end
+                end
+            end
+            clearAllCollectionItem_method:call(NPCParam);
+        end
+    end
 end);
 
 sdk.hook(sdk.find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival"), nil, function()
-    local LargeWorkshopParam = get_LargeWorkshop_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
+    local LargeWorkshopParam = get_LargeWorkshop_method:call(Constants.UserSaveData);
     local Rewards = get_Rewards_method:call(LargeWorkshopParam);
-    for i = 0, MAX_ITEM_NUM - 1 do
+    for i = 0, LargeWorkshop_MAX_ITEM_NUM - 1 do
         local Reward = Rewards:get_element(i);
         local ItemId = ItemWork_get_ItemId_method:call(Reward);
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
@@ -159,22 +184,25 @@ sdk.hook(sdk.find_type_definition("app.FacilityLargeWorkshop"):get_method("endFe
     end
 end);
 
-local FacilityPugee = nil;
+local PugeeParam = nil;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if FacilityPugee == nil then
-        local FacilityManager = Constants.FacilityManager;
-        if FacilityManager ~= nil then
-            FacilityPugee = get_Pugee_method:call(FacilityManager);
+    if PugeeParam == nil then
+        local UserSaveData = Constants.UserSaveData;
+        if UserSaveData ~= nil then
+            PugeeParam = Save_get_Pugee_method:call(UserSaveData);
         end
     end
 end, function()
-    if FacilityPugee ~= nil and isEnableCoolTimer_method:call(FacilityPugee) == false then
-        stroke_method:call(FacilityPugee, true);
+    if PugeeParam ~= nil and getCoolTimer_method:call(PugeeParam) == 0.0 then
+        stroke_method:call(get_Pugee_method:call(Constants.FacilityManager), true);
     end
 end);
 
 sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getThisPtr, function()
-    supplyFood_method:call(thread.get_hook_storage()["this_ptr"]);
+    local this_ptr = thread.get_hook_storage()["this_ptr"];
+    if isSuppliableFoodMax_method:call(this_ptr) == true then
+        supplyFood_method:call(this_ptr);
+    end
 end);
 
 local function getItemFromMoriver(moriverInfo)
@@ -246,7 +274,7 @@ local function execMoriver(facilityMoriver)
             end
             completedMorivers.SWOP = nil;
         end
-        local BasicParam = get_BasicData_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager));
+        local BasicParam = get_BasicData_method:call(Constants.UserSaveData);
         setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
     end
 end
@@ -293,7 +321,7 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                         else
                             local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                             if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                                addEquipBoxWeapon_method:call(get_Equip_method:call(getCurrentUserSaveData_method:call(Constants.SaveDataManager)), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+                                addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
                                 payPoint_method:call(nil, totalCost);
                                 ShipData:set_field("_StockNum", StockNum - j);
                                 break;

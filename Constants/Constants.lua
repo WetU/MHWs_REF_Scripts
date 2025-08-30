@@ -6,6 +6,8 @@ local thread = _G.thread;
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
 local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
+local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
+
 local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
@@ -25,7 +27,7 @@ local Constants = {
     ChatManager = nil,
     FacilityManager = nil,
     GUIManager = nil,
-    SaveDataManager = nil,
+    UserSaveData = nil,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
@@ -50,14 +52,14 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), functio
     Constants.ChatManager = nil;
     Constants.FacilityManager = nil;
     Constants.GUIManager = nil;
-    Constants.SaveDataManager = nil;
+    Constants.UserSaveData = nil;
 end);
 
 Constants.init = function()
     Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
     Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
     Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    Constants.SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
+    Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
 end
 
 local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
