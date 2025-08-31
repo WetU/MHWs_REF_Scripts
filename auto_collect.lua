@@ -60,18 +60,18 @@ local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("
 
 local CollectionParam_type_def = get_Collection_method:get_return_type();
 local get_CollectionNPC_method = CollectionParam_type_def:get_method("get_CollectionNPC");
-local COLLECTION_NPC_NUM = CollectionParam_type_def:get_field("COLLECTION_NPC_NUM"):get_data(nil);
+local COLLECTION_NPC_NUM = CollectionParam_type_def:get_field("COLLECTION_NPC_NUM"):get_data(nil); -- static
 
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
 local NPCFixedId_field = CollectionNPCParam_type_def:get_field("NPCFixedId");
-local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
+local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = get_LargeWorkshop_method:get_return_type();
 local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards");
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
-local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil);
+local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(System.Boolean)");
 
@@ -293,12 +293,14 @@ end);
 sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getThisPtr, function()
     local FacilityRallus_ptr = thread.get_hook_storage()["this_ptr"];
     local SupplyNum = get_SupplyNum_method:call(FacilityRallus_ptr);
-    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
-    for i = 0, SupplyNum - 1 do
-        getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
+    if SupplyNum > 0 then
+        local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
+        for i = 0, SupplyNum - 1 do
+            getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
+        end
+        execute_method:call(Event_field:get_data(FacilityRallus_ptr));
+        resetSupplyNum_method:call(FacilityRallus_ptr);
     end
-    execute_method:call(Event_field:get_data(FacilityRallus_ptr));
-    resetSupplyNum_method:call(FacilityRallus_ptr);
 end);
 
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
