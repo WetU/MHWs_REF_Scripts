@@ -2,6 +2,7 @@ local Constants = _G.require("Constants/Constants");
 
 local pairs = Constants.pairs;
 local tonumber = Constants.tonumber;
+local tostring = Constants.tostring;
 local string = Constants.string;
 
 local sdk = Constants.sdk;
@@ -23,6 +24,15 @@ local guid2str_method = sdk.find_type_definition("via.gui.message"):get_method("
 
 local GUI000002_type_def = sdk.find_type_definition("app.GUI000002");
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
+
+local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
+local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
+
+local GUI000004_type_def = sdk.find_type_definition("app.GUI000004");
+local GUI000004_NotifyWindowApp_field = GUI000004_type_def:get_field("_NotifyWindowApp");
+local ListCtrl_field = GUI000004_type_def:get_field("_ListCtrl");
+
+local requestSelectIndexCore_method = sdk.find_type_definition("ace.cGUIInputCtrl_ScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
 
 local GUISystemModuleNotifyWindowApp_type_def = GUI000002_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
@@ -48,11 +58,20 @@ local ParamData_type_def = get_Item_method:get_return_type();
 local ParamType_field = ParamData_type_def:get_field("ParamType");
 local ParamGuid_field = ParamData_type_def:get_field("ParamGuid");
 local ParamString_field = ParamData_type_def:get_field("ParamString");
+local ParamValue_field = ParamData_type_def:get_field("ParamValue");
+
+local ParamValue_type_def = ParamValue_field:get_type();
+local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
+local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
+local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
 
 local ParamType_type_def = ParamType_field:get_type();
 local ParamType = {
     GUID = ParamType_type_def:get_field("GUID"):get_data(nil),
-    STRING = ParamType_type_def:get_field("STRING"):get_data(nil)
+    STRING = ParamType_type_def:get_field("STRING"):get_data(nil),
+    INT = ParamType_type_def:get_field("INT"):get_data(nil),
+    LONG = ParamType_type_def:get_field("LONG"):get_data(nil),
+    FLOAT = ParamType_type_def:get_field("FLOAT"):get_data(nil)
 };
 
 local function Contains(tbl, value)
@@ -64,8 +83,18 @@ local function Contains(tbl, value)
     return false;
 end
 
-local GUI000002_auto_close_IDs = {
-    NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil)
+local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
+local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
+local EQUIP_003 = NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil);
+local auto_close_IDs = {
+    NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_005"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
+    NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil)
 };
 
 sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
@@ -73,7 +102,7 @@ sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
-        if Contains(GUI000002_auto_close_IDs, Id) == true then
+        if Id == GUI000002_0000 then
             endWindow_method:call(CurInfoApp, 0);
             if config[Id] == nil then
                 config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
@@ -86,21 +115,6 @@ sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
         end
     end
 end);
-
-local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
-local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
-
-local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
-local GUI000003_auto_close_IDs = {
-    NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_005"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
-    NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil)
-};
 
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
@@ -121,6 +135,9 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                             return guid2str_method:call(nil, ParamGuid_field:get_data(Param));
                         elseif Type == ParamType.STRING then
                             return ParamString_field:get_data(Param);
+                        else
+                            local ParamValue = ParamValue_field:get_data(Param);
+                            return Type == ParamType.INT and tostring(ParamInt_field:get_data(ParamValue)) or Type == ParamType.LONG and tostring(ParamLong_field:get_data(ParamValue)) or tostring(ParamFloat_field:get_data(ParamValue));
                         end
                     end);
                     addSystemLog_method:call(ChatManager, msg);
@@ -129,7 +146,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                 executeWindowEndFunc_method:call(CurInfoApp);
                 closeGUI_method:call(NotifyWindowApp);
             end
-        elseif Contains(GUI000003_auto_close_IDs, Id) == true then
+        elseif Contains(auto_close_IDs, Id) == true then
             endWindow_method:call(CurInfoApp, 0);
             if config[Id] == nil then
                 config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
@@ -142,14 +159,6 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
         end
     end
 end);
-
-local GUI000004_type_def = sdk.find_type_definition("app.GUI000004");
-local GUI000004_NotifyWindowApp_field = GUI000004_type_def:get_field("_NotifyWindowApp");
-local ListCtrl_field = GUI000004_type_def:get_field("_ListCtrl");
-
-local requestSelectIndexCore_method = sdk.find_type_definition("ace.cGUIInputCtrl_ScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
-
-local EQUIP_003 = NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil);
 
 sdk.hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
