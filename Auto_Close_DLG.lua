@@ -70,8 +70,7 @@ local ParamType = {
     GUID = ParamType_type_def:get_field("GUID"):get_data(nil),
     STRING = ParamType_type_def:get_field("STRING"):get_data(nil),
     INT = ParamType_type_def:get_field("INT"):get_data(nil),
-    LONG = ParamType_type_def:get_field("LONG"):get_data(nil),
-    FLOAT = ParamType_type_def:get_field("FLOAT"):get_data(nil)
+    LONG = ParamType_type_def:get_field("LONG"):get_data(nil)
 };
 
 local function Contains(tbl, value)
@@ -97,21 +96,25 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil)
 };
 
+local function auto_close(notifyWindowApp, infoApp, id)
+    endWindow_method:call(infoApp, 0);
+    if config[id] == nil then
+        config[id] = isExistWindowEndFunc_method:call(infoApp);
+        saveConfig();
+    end
+    if config[id] == true then
+        executeWindowEndFunc_method:call(infoApp);
+    end
+    closeGUI_method:call(notifyWindowApp);
+end
+
 sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
         if Id == GUI000002_0000 then
-            endWindow_method:call(CurInfoApp, 0);
-            if config[Id] == nil then
-                config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
-                saveConfig();
-            end
-            if config[Id] == true then
-                executeWindowEndFunc_method:call(CurInfoApp);
-            end
-            closeGUI_method:call(NotifyWindowApp);
+            auto_close(NotifyWindowApp, CurInfoApp, Id);
         end
     end
 end);
@@ -147,15 +150,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                 closeGUI_method:call(NotifyWindowApp);
             end
         elseif Contains(auto_close_IDs, Id) == true then
-            endWindow_method:call(CurInfoApp, 0);
-            if config[Id] == nil then
-                config[Id] = isExistWindowEndFunc_method:call(CurInfoApp);
-                saveConfig();
-            end
-            if config[Id] == true then
-                executeWindowEndFunc_method:call(CurInfoApp);
-            end
-            closeGUI_method:call(NotifyWindowApp);
+            auto_close(NotifyWindowApp, CurInfoApp, Id);
         end
     end
 end);
