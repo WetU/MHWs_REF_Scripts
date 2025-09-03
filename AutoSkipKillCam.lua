@@ -44,7 +44,7 @@ local showStamp_method = HunterQuestActionController_type_def:get_method("showSt
 
 local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
-local GUI_field = GUI020201_type_def:get_field("_GUI"); -- via.gui.GUI
+local GUI_field = GUI020201_type_def:get_field("_GUI");
 
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 

@@ -128,7 +128,7 @@ sdk.hook(GUI070000_type_def:get_method("onClose"), function(args)
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_Post_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
+local Reward_endFix_callback_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
@@ -177,7 +177,7 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             jumpFixQuestJudge_method:call(GUI020100);
             Fix_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
-            Reward_endFix_Post_method:call(GUI020100PanelQuestRewardItem_ptr);
+            Reward_endFix_callback_method:call(GUI020100PanelQuestRewardItem_ptr);
             GUI020100PanelQuestRewardItem_ptr = nil;
         else
             endQuestReward_method:call(GUI020100);

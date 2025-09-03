@@ -12,6 +12,7 @@ local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
     tostring = _G.tostring,
+    tonumber = _G.tonumber,
     type = _G.type,
     math = _G.math,
     string = _G.string,
@@ -37,6 +38,8 @@ local Constants = {
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
     GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
+    addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
+
     GUIAppKey_Type_field = Type_field,
 
     getThisPtr = function(args)
@@ -48,19 +51,19 @@ local Constants = {
     end
 };
 
-sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), function(args)
-    Constants.ChatManager = nil;
-    Constants.FacilityManager = nil;
-    Constants.GUIManager = nil;
-    Constants.UserSaveData = nil;
-end);
-
 Constants.init = function()
     Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
     Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
     Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
     Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
 end
+
+sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), function(args)
+    Constants.ChatManager = nil;
+    Constants.FacilityManager = nil;
+    Constants.GUIManager = nil;
+    Constants.UserSaveData = nil;
+end);
 
 local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
 if GameFlowManager:call("getStateName(ace.GameStateType)", GameFlowManager:get_CurrentGameStateType()) == "IngameState" then

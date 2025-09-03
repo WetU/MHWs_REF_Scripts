@@ -1,7 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 
-local addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)");
+local addSystemLog_method = Constants.addSystemLog_method;
 
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static
@@ -22,14 +22,13 @@ local mySet = 0;
 local isSelfCall = false;
 
 local function restockItems()
-    local ChatManager = Constants.ChatManager;
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        addSystemLog_method:call(ChatManager, "아이템 세트가 적용되었습니다.");
+        addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다.");
     else
         fillPouchItems_method:call(nil);
-        addSystemLog_method:call(ChatManager, "아이템이 보충되었습니다.");
+        addSystemLog_method:call(Constants.ChatManager, "아이템이 보충되었습니다.");
     end
     fillShellPouchItems_method:call(nil);
 end
