@@ -48,7 +48,7 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQue
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onClose"), nil, function()
+sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onOpen"), nil, function()
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
