@@ -2,15 +2,19 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
+local getThisPtr = Constants.getThisPtr;
 local getObject = Constants.getObject;
+
+local GUI010001_type_def = sdk.find_type_definition("app.GUI010001");
+
+local GUIAppKey_type_def = Constants.GUIAppOnTimerKey_type_def:get_parent_type();
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
 
-sdk.hook(sdk.find_type_definition("app.GUI010001"):get_method("onOpen"), getObject, function()
-    local GUI010001 = thread.get_hook_storage()["this"];
-    GUI010001:set_field("_Flow", 5);
-    GUI010001:set_field("_Skip", true);
+sdk.hook(GUI010001_type_def:get_method("onOpen"), getThisPtr, function()
+    local GUI010001_ptr = thread.get_hook_storage()["this_ptr"];
+    sdk.set_native_field(GUI010001_ptr, GUI010001_type_def, "_Flow", 5);
+    sdk.set_native_field(GUI010001_ptr, GUI010001_type_def, "_Skip", true);
 end);
 
 sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), getObject, function()
@@ -19,14 +23,15 @@ sdk.hook(sdk.find_type_definition("app.GUI010002"):get_method("onOpen"), getObje
 end);
 
 local isTitleStart = nil;
-sdk.hook(Constants.GUIAppOnTimerKey_type_def:get_parent_type():get_method("onUpdate(System.Single)"), function(args)
-    if GUIAppKey_Type_field:get_data(args[2]) == TITLE_START then
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args)
+    local this_ptr = args[2];
+    if sdk.get_native_field(this_ptr, GUIAppKey_type_def, "_Type") == TITLE_START then
+        thread.get_hook_storage()["this_ptr"] = this_ptr;
         isTitleStart = true;
     end
 end, function()
     if isTitleStart == true then
         isTitleStart = nil;
-        thread.get_hook_storage()["this"]:set_field("_Success", true);
+        sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUIAppKey_type_def, "_Success", true);
     end
 end);

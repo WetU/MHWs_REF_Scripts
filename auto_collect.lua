@@ -29,21 +29,16 @@ local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
 local FacilityMoriver_type_def = get_Moriver_method:get_return_type();
 local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
 local executedSharing_method = FacilityMoriver_type_def:get_method("executedSharing(app.FacilityMoriver.MoriverInfo)");
-local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
 
-local MoriverInfos_type_def = MoriverInfos_field:get_type();
+local MoriverInfos_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.FacilityMoriver.MoriverInfo>");
 local Moriver_get_Count_method = MoriverInfos_type_def:get_method("get_Count");
 local Moriver_get_Item_method = MoriverInfos_type_def:get_method("get_Item(System.Int32)");
 local Moriver_Remove_method = MoriverInfos_type_def:get_method("Remove(app.FacilityMoriver.MoriverInfo)");
 
 local MoriverInfo_type_def = Moriver_get_Item_method:get_return_type();
-local FacilityId_field = MoriverInfo_type_def:get_field("_FacilityId");
-local ItemFromMoriver_field = MoriverInfo_type_def:get_field("ItemFromMoriver");
-local ItemFromPlayer_field = MoriverInfo_type_def:get_field("ItemFromPlayer");
 
-local ItemWork_type_def = ItemFromMoriver_field:get_type();
+local ItemWork_type_def = sdk.find_type_definition("app.savedata.cItemWork");
 local ItemWork_get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
-local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
 local UserSaveData_type_def = sdk.find_type_definition("app.savedata.cUserSaveParam");
 local get_BasicData_method = UserSaveData_type_def:get_method("get_BasicData");
@@ -65,7 +60,6 @@ local COLLECTION_NPC_NUM = CollectionParam_type_def:get_field("COLLECTION_NPC_NU
 local CollectionNPCParam_type_def = sdk.find_type_definition("app.savedata.cCollectionNPCParam");
 local get_CollectionItem_method = CollectionNPCParam_type_def:get_method("get_CollectionItem");
 local clearAllCollectionItem_method = CollectionNPCParam_type_def:get_method("clearAllCollectionItem");
-local NPCFixedId_field = CollectionNPCParam_type_def:get_field("NPCFixedId");
 local Collection_MAX_ITEM_NUM = CollectionNPCParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
 local LargeWorkshopParam_type_def = get_LargeWorkshop_method:get_return_type();
@@ -84,9 +78,8 @@ local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
 local resetSupplyNum_method = FacilityRallus_type_def:get_method("resetSupplyNum");
-local Event_field = FacilityRallus_type_def:get_field("_Event");
 
-local execute_method = Event_field:get_type():get_method("execute");
+local execute_method = sdk.find_type_definition("ace.cSafeEvent"):get_method("execute");
 
 local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
 
@@ -120,7 +113,7 @@ local STOCK_TYPE = {
     BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil)
 };
 
-local FacilityID_type_def = FacilityId_field:get_type();
+local FacilityID_type_def = sdk.find_type_definition("app.FacilityDef.ID");
 local FacilityID = {
     SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil),
     SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
@@ -151,13 +144,13 @@ sdk.hook(sdk.find_type_definition("app.FacilityCollection"):get_method("lotItem"
     local NPCParam_array = get_CollectionNPC_method:call(get_Collection_method:call(Constants.UserSaveData));
     for i = 0, COLLECTION_NPC_NUM - 1 do
         local NPCParam = NPCParam_array:get_element(i);
-        if NPCFixedId_field:get_data(NPCParam) ~= -1 then
+        if sdk.get_native_field(NPCParam, CollectionNPCParam_type_def, "NPCFixedID") ~= -1 then
             local CollectionItem = get_CollectionItem_method:call(NPCParam);
             for j = 0, Collection_MAX_ITEM_NUM - 1 do
                 local ItemWork = CollectionItem:get_element(j);
                 local ItemId = ItemWork_get_ItemId_method:call(ItemWork);
                 if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                    local Num = ItemWork_Num_field:get_data(ItemWork);
+                    local Num = sdk.get_native_field(ItemWork, ItemWork_type_def, "Num");
                     if Num > 0 then
                         getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
                     end
@@ -175,7 +168,7 @@ sdk.hook(sdk.find_type_definition("app.FacilityLargeWorkshop"):get_method("endFe
         local Reward = Rewards:get_element(i);
         local ItemId = ItemWork_get_ItemId_method:call(Reward);
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-            local Num = ItemWork_Num_field:get_data(Reward);
+            local Num = sdk.get_native_field(Reward, ItemWork_type_def, "Num");
             if Num > 0 then
                 getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
@@ -206,10 +199,10 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getThisPtr, function
 end);
 
 local function getItemFromMoriver(moriverInfo)
-    local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
+    local ItemFromMoriver = sdk.get_native_field(moriverInfo, MoriverInfo_type_def, "ItemFromMoriver");
     local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
-        local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
+        local gettingNum = sdk.get_native_field(ItemFromMoriver, ItemWork_type_def, "Num");
         if gettingNum > 0 then
             isSelfCall = true;
             changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE.BOX, true);
@@ -218,23 +211,23 @@ local function getItemFromMoriver(moriverInfo)
 end
 
 local function execMoriver(facilityMoriver)
-    local MoriverInfos = MoriverInfos_field:get_data(facilityMoriver);
+    local MoriverInfos = sdk.get_native_field(facilityMoriver, FacilityMoriver_type_def, "_MoriverInfos");
     local Count = Moriver_get_Count_method:call(MoriverInfos);
     if Count > 0 then
         completedMorivers.Sharing = {};
         completedMorivers.SWOP = {};
         for i = 0, Count - 1 do
             local MoriverInfo = Moriver_get_Item_method:call(MoriverInfos, i);
-            local FacilityId = FacilityId_field:get_data(MoriverInfo);
+            local FacilityId = sdk.get_native_field(MoriverInfo, MoriverInfo_type_def, "_FacilityId");
             if FacilityId == FacilityID.SHARING then
                 getItemFromMoriver(MoriverInfo);
                 table.insert(completedMorivers.Sharing, MoriverInfo);
             elseif FacilityId == FacilityID.SWOP then
-                local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
+                local ItemFromPlayer = sdk.get_native_field(MoriverInfo, MoriverInfo_type_def, "ItemFromPlayer");
                 local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
                     local isSuccessSWOP = false;
-                    local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
+                    local givingNum = sdk.get_native_field(ItemFromPlayer, ItemWork_type_def, "Num");
                     local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
                     if boxNum >= givingNum then
                         payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
@@ -298,7 +291,7 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
         for i = 0, SupplyNum - 1 do
             getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
         end
-        execute_method:call(Event_field:get_data(FacilityRallus_ptr));
+        execute_method:call(sdk.get_native_field(FacilityRallus_ptr, FacilityRallus_type_def, "_Event"));
         resetSupplyNum_method:call(FacilityRallus_ptr);
     end
 end);
@@ -318,14 +311,14 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
                             getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                             payPoint_method:call(nil, totalCost);
-                            ShipData:set_field("_StockNum", StockNum - j);
+                            sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
                             break;
                         else
                             local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                             if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
                                 addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
                                 payPoint_method:call(nil, totalCost);
-                                ShipData:set_field("_StockNum", StockNum - j);
+                                sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
                                 break;
                             end
                         end

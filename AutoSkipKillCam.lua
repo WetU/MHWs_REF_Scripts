@@ -9,7 +9,6 @@ local re = Constants.re;
 local imgui = Constants.imgui;
 
 local getThisPtr = Constants.getThisPtr;
-local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
 if config.skipKillCam == nil or type(config.skipKillCam) ~= "boolean" then
@@ -35,7 +34,8 @@ end
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
-local isOn_method = Constants.GUIAppOnTimerKey_type_def:get_method("isOn");
+local GUIAppOnTimerKey_type_def = Constants.GUIAppOnTimerKey_type_def;
+local isOn_method = GUIAppOnTimerKey_type_def:get_method("isOn");
 
 local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
@@ -43,12 +43,10 @@ local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHun
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
 local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
-local CurType_field = GUI020201_type_def:get_field("_CurType");
-local GUI_field = GUI020201_type_def:get_field("_GUI");
 
-local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
+local set_PlaySpeed_method = sdk.find_type_definition("via.gui.GUI"):get_method("set_PlaySpeed(System.Single)");
 
-local TYPE_type_def = CurType_field:get_type();
+local TYPE_type_def = sdk.find_type_definition("app.GUI020201.TYPE");
 local TYPES = {
     START = TYPE_type_def:get_field("START"):get_data(nil),
     CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
@@ -67,16 +65,19 @@ end);
 
 local isReturnTimeSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
-    if (config.autoEndQuest == true or config.instantKey == true) and GUIAppKey_Type_field:get_data(args[2]) == RETURN_TIME_SKIP then
-        thread.get_hook_storage()["this_ptr"] = args[2];
-        isReturnTimeSkip = true;
+    if config.autoEndQuest == true or config.instantKey == true then
+        local this_ptr = args[2];
+        if sdk.get_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Type") == RETURN_TIME_SKIP then
+            thread.get_hook_storage()["this_ptr"] = this_ptr;
+            isReturnTimeSkip = true;
+        end
     end
 end, function()
     if isReturnTimeSkip == true then
         isReturnTimeSkip = nil;
         local this_ptr = thread.get_hook_storage()["this_ptr"];
         if config.autoEndQuest == true or isOn_method:call(this_ptr) == true then
-            sdk.to_managed_object(this_ptr):set_field("_Success", true);
+            sdk.set_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Success", true);
         end
     end
 end);
@@ -113,10 +114,10 @@ local GUI020201_datas = {
 };
 sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
-    local CurType = CurType_field:get_data(GUI020201_ptr);
+    local CurType = sdk.get_native_field(GUI020201_ptr, GUI020201_type_def, "_CurType");
     if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then
         if GUI020201_datas.GUI == nil then
-            GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
+            GUI020201_datas.GUI = sdk.get_native_field(GUI020201_ptr, GUI020201_type_def, "_GUI");
         end
         GUI020201_datas.reqSkip = true;
     end

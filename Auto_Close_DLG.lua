@@ -23,12 +23,10 @@ local addSystemLog_method = Constants.addSystemLog_method;
 local guid2str_method = sdk.find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
 local GUI000002_type_def = sdk.find_type_definition("app.GUI000002");
-local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
 
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
-local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
-local GUISystemModuleNotifyWindowApp_type_def = GUI000002_NotifyWindowApp_field:get_type();
+local GUISystemModuleNotifyWindowApp_type_def = sdk.find_type_definition("app.cGUISystemModuleNotifyWindowApp");
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
 local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
 
@@ -49,17 +47,8 @@ local get_Params_method = GUIMessageInfo_type_def:get_method("get_Params");
 local get_Item_method = get_Params_method:get_return_type():get_method("get_Item(System.Int32)");
 
 local ParamData_type_def = get_Item_method:get_return_type();
-local ParamType_field = ParamData_type_def:get_field("ParamType");
-local ParamGuid_field = ParamData_type_def:get_field("ParamGuid");
-local ParamString_field = ParamData_type_def:get_field("ParamString");
-local ParamValue_field = ParamData_type_def:get_field("ParamValue");
 
-local ParamValue_type_def = ParamValue_field:get_type();
-local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
-local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
-local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
-
-local ParamType_type_def = ParamType_field:get_type();
+local ParamType_type_def = sdk.find_type_definition("ace.cGUIMessageInfo.ParamType");
 local ParamType = {
     GUID = ParamType_type_def:get_field("GUID"):get_data(nil),
     STRING = ParamType_type_def:get_field("STRING"):get_data(nil),
@@ -67,8 +56,12 @@ local ParamType = {
     LONG = ParamType_type_def:get_field("LONG"):get_data(nil)
 };
 
+local ParamValue_type_def = sdk.find_type_definition("ace.cGUIMessageInfo.ParamUnion");
+
 local getSetting_method = sdk.find_type_definition("app.user_data.GUINotifyWindowData"):get_method("getSetting(app.GUINotifyWindowDef.ID)");
-local get_DefaultIndex_method = getSetting_method:get_return_type():get_method("get_DefaultIndex");
+
+local Setting_type_def = getSetting_method:get_return_type();
+local get_DefaultIndex_method = Setting_type_def:get_method("get_DefaultIndex");
 
 local function Contains(tbl, value)
     for _, v in pairs(tbl) do
@@ -98,22 +91,23 @@ local auto_close_IDs = {
 
 local VariousDataManager = sdk.get_managed_singleton("app.VariousDataManager");
 if VariousDataManager ~= nil then
-    local VariousDataManagerSetting = VariousDataManager:get_Setting();
+    local VariousDataManagerSetting = sdk.call_native_func(VariousDataManager, VariousDataManager:get_type_definition(), "get_Setting");
     if VariousDataManagerSetting ~= nil then
-        local GUIVariousData = VariousDataManagerSetting:get_GUIVariousData();
+        local GUIVariousData = sdk.call_native_func(VariousDataManagerSetting, VariousDataManagerSetting:get_type_definition(), "get_GUIVariousData");
         if GUIVariousData ~= nil then
-            local GUINotifyWindowData = GUIVariousData:get_NotifyWindowData();
+            local GUINotifyWindowData = sdk.call_native_func(GUIVariousData, GUIVariousData:get_type_definition(), "get_NotifyWindowData");
             if GUINotifyWindowData ~= nil then
                 for id, idx in pairs(change_default_index_IDs) do
                     local Setting = getSetting_method:call(GUINotifyWindowData, id);
                     if Setting ~= nil and get_DefaultIndex_method:call(Setting) ~= idx then
-                        Setting:set_field("_DefaultIndex", idx);
+                        sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
                     end
                 end
             end
         end
     end
 end
+VariousDataManager = nil;
 
 local function auto_close(notifyWindowApp, infoApp, id)
     endWindow_method:call(infoApp, 0);
@@ -128,7 +122,7 @@ local function auto_close(notifyWindowApp, infoApp, id)
 end
 
 sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
-    local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
+    local NotifyWindowApp = sdk.get_native_field(thread.get_hook_storage()["this_ptr"], GUI000002_type_def, "_NotifyWindowApp");
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
@@ -139,7 +133,7 @@ sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
 end);
 
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
-    local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
+    local NotifyWindowApp = sdk.get_native_field(thread.get_hook_storage()["this_ptr"], GUI000003_type_def, "_NotifyWindowApp");
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
@@ -152,14 +146,14 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
                     msg = string.gsub(msg, "{([0-9]+)}", function(i)
                         local Param = get_Item_method:call(Params, tonumber(i));
-                        local Type = ParamType_field:get_data(Param);
+                        local Type = sdk.get_native_field(Param, ParamData_type_def, "ParamType");
                         if Type == ParamType.GUID then
-                            return guid2str_method:call(nil, ParamGuid_field:get_data(Param));
+                            return guid2str_method:call(nil, sdk.get_native_field(Param, ParamData_type_def, "ParamGuid"));
                         elseif Type == ParamType.STRING then
-                            return ParamString_field:get_data(Param);
+                            return sdk.get_native_field(Param, ParamData_type_def, "ParamString");
                         else
-                            local ParamValue = ParamValue_field:get_data(Param);
-                            return Type == ParamType.INT and tostring(ParamInt_field:get_data(ParamValue)) or Type == ParamType.LONG and tostring(ParamLong_field:get_data(ParamValue)) or tostring(ParamFloat_field:get_data(ParamValue));
+                            local ParamValue = sdk.get_native_field(Param, ParamData_type_def, "ParamValue");
+                            return Type == ParamType.INT and tostring(sdk.get_native_field(ParamValue, ParamValue_type_def, "ParamInt")) or Type == ParamType.LONG and tostring(sdk.get_native_field(ParamValue, ParamValue_type_def, "ParamLong")) or tostring(sdk.get_native_field(ParamValue, ParamValue_type_def, "ParamFloat"));
                         end
                     end);
                     addSystemLog_method:call(ChatManager, msg);

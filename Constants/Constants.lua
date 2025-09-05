@@ -4,7 +4,6 @@ local sdk = _G.sdk;
 local thread = _G.thread;
 
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
 local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
 
@@ -32,15 +31,13 @@ local Constants = {
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
-    GUIFunc_TYPE_type_def = Type_field:get_type(),
+    GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
 
     GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
-
-    GUIAppKey_Type_field = Type_field,
 
     getThisPtr = function(args)
         thread.get_hook_storage()["this_ptr"] = args[2];
@@ -66,9 +63,11 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), functio
 end);
 
 local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
-if GameFlowManager:call("getStateName(ace.GameStateType)", GameFlowManager:get_CurrentGameStateType()) == "IngameState" then
+local GameFlowManager_type_def = GameFlowManager:get_type_definition();
+if sdk.call_native_func(GameFlowManager, GameFlowManager_type_def, "getStateName(ace.GameStateType)", sdk.call_native_func(GameFlowManager, GameFlowManager_type_def, "get_CurrentGameStateType")) == "IngameState" then
     Constants.init();
 end
 GameFlowManager = nil;
+GameFlowManager_type_def = nil;
 
 return Constants;
