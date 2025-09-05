@@ -28,12 +28,6 @@ local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWin
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
-local GUI000004_type_def = sdk.find_type_definition("app.GUI000004");
-local GUI000004_NotifyWindowApp_field = GUI000004_type_def:get_field("_NotifyWindowApp");
-local ListCtrl_field = GUI000004_type_def:get_field("_ListCtrl");
-
-local requestSelectIndexCore_method = sdk.find_type_definition("ace.cGUIInputCtrl_ScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
-
 local GUISystemModuleNotifyWindowApp_type_def = GUI000002_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
 local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
@@ -73,6 +67,9 @@ local ParamType = {
     LONG = ParamType_type_def:get_field("LONG"):get_data(nil)
 };
 
+local getSetting_method = sdk.find_type_definition("app.user_data.GUINotifyWindowData"):get_method("getSetting(app.GUINotifyWindowDef.ID)");
+local get_DefaultIndex_method = getSetting_method:get_return_type():get_method("get_DefaultIndex");
+
 local function Contains(tbl, value)
     for _, v in pairs(tbl) do
         if value == v then
@@ -84,7 +81,10 @@ end
 
 local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
 local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
-local EQUIP_003 = NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil);
+local change_default_index_IDs = {
+    [NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil)] = 2,
+    [NotifyWindowID_type_def:get_field("GUI080301_0004_DLG"):get_data(nil)] = 0
+};
 local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
@@ -95,6 +95,25 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
     NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil)
 };
+
+local VariousDataManager = sdk.get_managed_singleton("app.VariousDataManager");
+if VariousDataManager ~= nil then
+    local VariousDataManagerSetting = VariousDataManager:get_Setting();
+    if VariousDataManagerSetting ~= nil then
+        local GUIVariousData = VariousDataManagerSetting:get_GUIVariousData();
+        if GUIVariousData ~= nil then
+            local GUINotifyWindowData = GUIVariousData:get_NotifyWindowData();
+            if GUINotifyWindowData ~= nil then
+                for id, idx in pairs(change_default_index_IDs) do
+                    local Setting = getSetting_method:call(GUINotifyWindowData, id);
+                    if Setting ~= nil and get_DefaultIndex_method:call(Setting) ~= idx then
+                        Setting:set_field("_DefaultIndex", idx);
+                    end
+                end
+            end
+        end
+    end
+end
 
 local function auto_close(notifyWindowApp, infoApp, id)
     endWindow_method:call(infoApp, 0);
@@ -152,13 +171,6 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
         elseif Contains(auto_close_IDs, Id) == true then
             auto_close(NotifyWindowApp, CurInfoApp, Id);
         end
-    end
-end);
-
-sdk.hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
-    if get_NotifyWindowId_method:call(get__CurInfoApp_method:call(GUI000004_NotifyWindowApp_field:get_data(this_ptr))) == EQUIP_003 then
-        requestSelectIndexCore_method:call(ListCtrl_field:get_data(this_ptr), 2, 2);
     end
 end);
 

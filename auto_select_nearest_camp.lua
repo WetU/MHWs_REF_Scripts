@@ -141,7 +141,7 @@ end, function()
                     end
                     if sameArea_idx ~= nil and sameArea_idx > 0 then
                         dataProcess(GUI050001_ptr, sameArea_idx, list_size);
-                    elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.4) then
+                    elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
                         dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
                     elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
                         dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
