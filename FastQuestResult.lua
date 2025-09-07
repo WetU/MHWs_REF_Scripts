@@ -178,6 +178,7 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
             jumpFixQuestJudge_method:call(GUI020100);
             Fix_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
             Reward_endFix_callback_method:call(GUI020100PanelQuestRewardItem_ptr);
+            GUI020100 = nil;
             GUI020100PanelQuestRewardItem_ptr = nil;
         else
             endQuestReward_method:call(GUI020100);

@@ -40,9 +40,9 @@ local Constants = {
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
     SupportShipData_List_type_def = SupportShipData_List_type_def,
 
-    GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
     GenericList_get_Count_method = SupportShipData_List_type_def:get_method("get_Count"),
+    GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
 
     GUIAppKey_Type_field = Type_field,
 

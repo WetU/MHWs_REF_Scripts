@@ -30,6 +30,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
     end
 end, function()
     if should_sort == true then
+        should_sort = false;
         local ViewQuestDataList = get_ViewQuestDataList_method:call(thread.get_hook_storage()["this_ptr"]);
         local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
         if ViewQuestDataList_size > 0 then
@@ -50,6 +51,5 @@ end, function()
                 end
             end
         end
-        should_sort = false;
     end
 end);

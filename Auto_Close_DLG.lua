@@ -104,8 +104,8 @@ if VariousDataManager ~= nil then
             end
         end
     end
+    VariousDataManager = nil;
 end
-VariousDataManager = nil;
 
 local function auto_close(notifyWindowApp, infoApp, id)
     endWindow_method:call(infoApp, 0);
@@ -164,7 +164,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
             for _, v in pairs(auto_close_IDs) do
                 if Id == v then
                     auto_close(NotifyWindowApp, CurInfoApp, Id);
-                    break;
+                    return;
                 end
             end
         end

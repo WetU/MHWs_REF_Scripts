@@ -1,6 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 
 local tostring = Constants.tostring;
+local tonumber = Constants.tonumber;
 local string = Constants.string;
 local math = Constants.math;
 
@@ -36,8 +37,8 @@ local DeathCount = nil;
 
 local function getQuestTimeInfo(questElapsedTime)
     oldElapsedTime = questElapsedTime;
-    local seconds, miliseconds = math.modf(questElapsedTime % 60.0);
-    QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), seconds, miliseconds > 0.0 and string.match(miliseconds, "%.(%d%d)") or 0) .. " / " .. questTimeLimit;
+    local second, milisecond = math.modf(questElapsedTime % 60.0);
+    QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
 local QuestDirector_ptr = nil;

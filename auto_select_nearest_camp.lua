@@ -165,9 +165,3 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
         end
     end
 end);
-
-sdk.hook(GUI050001_type_def:get_method("onClose"), function(args)
-    if hook_datas.hasData == true then
-        clear_datas();
-    end
-end);
