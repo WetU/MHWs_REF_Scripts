@@ -8,7 +8,7 @@ local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
 local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
 
-local SupportShipData_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
+local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local Constants = {
     pairs = _G.pairs,
@@ -38,10 +38,10 @@ local Constants = {
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
-    SupportShipData_List_type_def = SupportShipData_List_type_def,
+    SupportShipData_List_type_def = GenericList_type_def,
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
-    GenericList_get_Count_method = SupportShipData_List_type_def:get_method("get_Count"),
+    GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
 
     GUIAppKey_Type_field = Type_field,
@@ -75,7 +75,7 @@ if GameFlowManager ~= nil then
     if GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)"):call(GameFlowManager, GameFlowManager_type_def:get_method("get_CurrentGameStateType"):call(GameFlowManager)) == "IngameState" then
         Constants.init();
     end
+    GameFlowManager = nil;
 end
-GameFlowManager = nil;
 
 return Constants;

@@ -47,18 +47,13 @@ local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
-local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
-
 local TYPE_type_def = CurType_field:get_type();
 local TYPES = {
     START = TYPE_type_def:get_field("START"):get_data(nil),
     CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
 };
 
-local offsets = {
-    Timer = 0xC8,
-    Limit = 0xCC
-};
+local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
 local FALSE_ptr = sdk.to_ptr(false);
 
@@ -92,7 +87,7 @@ sdk.hook(QuestDirector_type_def:get_method("QuestReturnSkip"), function(args)
 end, function()
     if config.enableInstantQuit == true then
         local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this_ptr"]);
-        QuestFlowParam:write_float(offsets.Timer, QuestFlowParam:read_float(offsets.Limit));
+        QuestFlowParam:write_float(0xC8, QuestFlowParam:read_float(0xCC));
     end
 end);
 

@@ -308,8 +308,9 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
         local ShipData = SupportShipData_get_Item_method:call(dataList_ptr, i);
         local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
         if StockNum > 0 then
+            local cost = SupportShipData_get_Point_method:call(ShipData);
             for j = StockNum, 1, -1 do
-                local totalCost = SupportShipData_get_Point_method:call(ShipData) * j;
+                local totalCost = cost * j;
                 if isEnoughPoint_method:call(nil, totalCost) == true then
                     local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then

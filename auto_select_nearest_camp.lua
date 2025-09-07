@@ -59,13 +59,7 @@ local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelecte
 local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
 
-local hook_datas = {
-    hasData = false,
-    GUI050001_ptr = nil,
-    inputCtrl = nil,
-    targetCampIdx = nil,
-    selectMethod = nil
-};
+local hook_datas = nil;
 
 local function clear_datas()
     hook_datas = {
@@ -148,7 +142,7 @@ end, function()
                     else
                         clear_datas();
                     end
-                    break;
+                    return;
                 end
             end
         end
@@ -165,3 +159,5 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
         end
     end
 end);
+
+clear_datas();
