@@ -4,6 +4,8 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 
 local getThisPtr = Constants.getThisPtr;
+
+local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 --<< GUI070000 Fix Quest Result >>--
 local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil); -- static
 
@@ -24,12 +26,11 @@ local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__Wai
 local get__isRandomAmuletMode_method = GUIPartsReward_type_def:get_method("get__isRandomAmuletMode");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
+local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
 local REWARD = get__Mode_method:get_return_type():get_field("REWARD"):get_data(nil); -- static
 
-local ItemGridParts_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.cGUIItemGridPartsFluent>");
-local get_Count_method = ItemGridParts_type_def:get_method("get_Count");
-local get_Item_method = ItemGridParts_type_def:get_method("get_Item(System.Int32)");
+local get_Item_method = ItemGridParts_field:get_type():get_method("get_Item(System.Int32)");
 
 local GUIItemGridPartsFluent_type_def = get_Item_method:get_return_type();
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
@@ -40,6 +41,7 @@ local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("g
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
 
 local GUIAppOnTimerKey_type_def = Constants.GUIAppOnTimerKey_type_def;
+local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local function skipJudgeAnimation(GUIPartsReward_ptr)
     if get__JudgeAnimationEnd_method:call(GUIPartsReward_ptr) == false then
@@ -79,15 +81,12 @@ end, function()
             local Mode = get__Mode_method:call(GUIPartsReward_ptr);
             if hook_data.checkedNewItem[Mode] == nil then
                 hook_data.checkedNewItem[Mode] = false;
-                local ItemGridParts = sdk.get_native_field(GUIPartsReward_ptr, GUIPartsReward_type_def, "_ItemGridParts");
-                local partsCount = get_Count_method:call(ItemGridParts);
-                if partsCount > 0 then
-                    for i = 0, partsCount - 1 do
-                        local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
-                        if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                            hook_data.checkedNewItem[Mode] = true;
-                            break;
-                        end
+                local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
+                for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
+                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                        hook_data.checkedNewItem[Mode] = true;
+                        break;
                     end
                 end
             end
@@ -109,7 +108,7 @@ end);
 local isResultSkip = nil;
 sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
     local this_ptr = args[2];
-    if sdk.get_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Type") == RESULT_SKIP then
+    if GUIAppKey_Type_field:get_data(this_ptr) == RESULT_SKIP then
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isResultSkip = true;
     end
@@ -131,8 +130,9 @@ end);
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local Reward_endFix_callback_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
+local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
-local JUDGE_MODE_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem.JUDGE_MODE");
+local JUDGE_MODE_type_def = JudgeMode_field:get_type();
 local JUDGE_MODE = {
     MODE01 = JUDGE_MODE_type_def:get_field("MODE01"):get_data(nil), -- static
     MODE02 = JUDGE_MODE_type_def:get_field("MODE02"):get_data(nil)  -- static
@@ -171,7 +171,7 @@ end);
 
 sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
-        local JudgeMode = sdk.get_native_field(GUI020100PanelQuestRewardItem_ptr, GUI020100PanelQuestRewardItem_type_def, "JudgeMode");
+        local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem_ptr);
         if JudgeMode == JUDGE_MODE.MODE01 then
             endQuestJudge_method:call(GUI020100);
         elseif JudgeMode == JUDGE_MODE.MODE02 then

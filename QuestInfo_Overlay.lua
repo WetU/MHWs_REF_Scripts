@@ -15,8 +15,11 @@ local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
 local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
 local get_QuestElapsedTime_method = QuestDirector_type_def:get_method("get_QuestElapsedTime");
+local QuestPlDieCount_field = QuestDirector_type_def:get_field("QuestPlDieCount");
 
-local Mandrake_type_def = sdk.find_type_definition("via.rds.Mandrake");
+local Mandrake_type_def = QuestPlDieCount_field:get_type();
+local v_field = Mandrake_type_def:get_field("v");
+local m_field = Mandrake_type_def:get_field("m");
 
 local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
@@ -60,8 +63,8 @@ end, function()
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
-            local QuestPlDieCount = sdk.get_native_field(QuestDirector_ptr, QuestDirector_type_def, "QuestPlDieCount");
-            DeathCount = "다운 횟수: " .. tostring(math.floor(sdk.get_native_field(QuestPlDieCount, Mandrake_type_def, "v") / sdk.get_native_field(QuestPlDieCount, Mandrake_type_def, "m"))) .. " / " .. questMaxDeath;
+            local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
+            DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
             getQuestTimeInfo(QuestElapsedTime);
             QuestInfoCreated = true;
         elseif QuestElapsedTime ~= oldElapsedTime then
@@ -72,8 +75,8 @@ end);
 
 sdk.hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), nil, function()
     if QuestInfoCreated == true then
-        local QuestPlDieCount = sdk.get_native_field(QuestDirector_ptr, QuestDirector_type_def, "QuestPlDieCount");
-        DeathCount = "다운 횟수: " .. tostring(math.floor(sdk.get_native_field(QuestPlDieCount, Mandrake_type_def, "v") / sdk.get_native_field(QuestPlDieCount, Mandrake_type_def, "m"))) .. " / " .. questMaxDeath;
+        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
+        DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
     end
 end);
 

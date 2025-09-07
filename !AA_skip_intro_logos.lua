@@ -8,6 +8,7 @@ local getObject = Constants.getObject;
 local GUI010001_type_def = sdk.find_type_definition("app.GUI010001");
 
 local GUIAppKey_type_def = Constants.GUIAppOnTimerKey_type_def:get_parent_type();
+local Type_field = Constants.GUIAppKey_Type_field;
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
 
@@ -25,7 +26,7 @@ end);
 local isTitleStart = nil;
 sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args)
     local this_ptr = args[2];
-    if sdk.get_native_field(this_ptr, GUIAppKey_type_def, "_Type") == TITLE_START then
+    if Type_field:get_data(this_ptr) == TITLE_START then
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isTitleStart = true;
     end

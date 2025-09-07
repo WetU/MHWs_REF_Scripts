@@ -4,13 +4,14 @@ local thread = Constants.thread;
 
 local table = Constants.table;
 
+local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
+
 local checkQuestClear_method = sdk.find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
 
 local GUI050000QuestListParts_type_def = sdk.find_type_definition("app.GUI050000QuestListParts");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
 
 local ViewQuestDataList_type_def = get_ViewQuestDataList_method:get_return_type();
-local get_Count_method = ViewQuestDataList_type_def:get_method("get_Count");
 local get_Item_method = ViewQuestDataList_type_def:get_method("get_Item(System.Int32)");
 local set_Item_method = ViewQuestDataList_type_def:get_method("set_Item(System.Int32, app.cGUIQuestViewData)");
 
@@ -30,7 +31,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
 end, function()
     if should_sort == true then
         local ViewQuestDataList = get_ViewQuestDataList_method:call(thread.get_hook_storage()["this_ptr"]);
-        local ViewQuestDataList_size = get_Count_method:call(ViewQuestDataList);
+        local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
         if ViewQuestDataList_size > 0 then
             local cleared_quests = {};
             local uncleared_quests = {};
