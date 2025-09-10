@@ -186,7 +186,10 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
     end
 end);
 
-sdk.hook(GUIPartsReward_type_def:get_method("endDialog(app.GUINotifyWindowDef.ID)"), function(args)
+sdk.hook(GUI070000_type_def:get_method("onOpen"), function(args)
+    if GUI020100 ~= nil then
+        GUI020100 = nil;
+    end
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
         GUI020100PanelQuestRewardItem_ptr = nil;
     end
