@@ -117,21 +117,27 @@ end, function()
                                 sameFloor_shortest_distance = distance;
                                 sameFloor_idx = j;
                             end
-                        elseif diffFloor_idx == nil or distance < sameFloor_shortest_distance then
+                        elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
                             diffFloor_shortest_distance = distance;
                             diffFloor_idx = j;
                         end
                     end
-                    if sameArea_idx ~= nil and sameArea_idx > 0 then
-                        dataProcess(GUI050001_ptr, sameArea_idx, list_size);
+                    if sameArea_idx ~= nil then
+                        if sameArea_idx > 0 then
+                            dataProcess(GUI050001_ptr, sameArea_idx, list_size);
+                        end
                     elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
-                        if diffFloor_idx ~= nil and diffFloor_idx > 0 then
+                        if diffFloor_idx > 0 then
                             dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
                         end
-                    elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                        dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
-                    elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                        dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                    elseif sameFloor_idx ~= nil then
+                        if  sameFloor_idx > 0 then
+                            dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
+                        end
+                    elseif diffFloor_idx ~= nil then
+                        if diffFloor_idx > 0 then
+                            dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                        end
                     else
                         clear_datas();
                     end
