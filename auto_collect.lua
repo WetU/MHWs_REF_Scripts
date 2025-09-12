@@ -311,7 +311,6 @@ sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("addItem
     end
 end, function()
     if isSupplyOnlyItem == false then
-        isSupplyOnlyItem = nil;
         local storage = thread.get_hook_storage();
         local List_ptr = storage.List_ptr;
         local ItemId = storage.ItemId;
@@ -323,10 +322,11 @@ end, function()
                 if Count >= ItemNum then
                 getSellItem_method:call(nil, ItemId, Count, STOCK_TYPE.BOX);
                 SupplyInfo_RemoveAt_method:call(List_ptr, i);
-                return;
+                break;
             end
         end
     end
+    isSupplyOnlyItem = nil;
 end);
 
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
