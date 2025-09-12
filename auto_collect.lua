@@ -16,9 +16,7 @@ local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID,
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
 
-local getItemData_method = sdk.find_type_definition("app.ItemDef"):get_method("Data(app.ItemDef.ID)"); -- static
-
-local get_Shikyu_method = getItemData_method:get_return_type():get_method("get_Shikyu");
+local Shikyu_method = sdk.find_type_definition("app.ItemDef"):get_method("Shikyu(app.ItemDef.ID)"); -- static
 
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local changeItemNumFromDialogue_method = ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
@@ -262,14 +260,14 @@ local function execMoriver(facilityMoriver)
             end
         end
         if #completedSharing > 0 then
-            for _, completedSharing in ipairs(completedSharing) do
-                executedSharing_method:call(facilityMoriver, completedSharing);
+            for _, moriverInfo in ipairs(completedSharing) do
+                executedSharing_method:call(facilityMoriver, moriverInfo);
             end
         end
         local completedSWOPcounts = #completedSWOP;
         if completedSWOPcounts > 0 then
-            for _, completedSWOP in ipairs(completedSWOP) do
-                Moriver_Remove_method:call(MoriverInfos, completedSWOP);
+            for _, moriverInfo in ipairs(completedSWOP) do
+                Moriver_Remove_method:call(MoriverInfos, moriverInfo);
             end
         end
         local BasicParam = get_BasicData_method:call(Constants.UserSaveData);
@@ -302,7 +300,7 @@ end);
 local isSupplyOnlyItem = nil;
 sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = sdk.to_int64(args[3]) & 0xFFFFFFFF;
-    isSupplyOnlyItem = get_Shikyu_method:call(getItemData_method:call(nil, ItemId));
+    isSupplyOnlyItem = Shikyu_method:call(nil, ItemId);
     if isSupplyOnlyItem == false then
         local storage = thread.get_hook_storage();
         storage.List_ptr = args[2];
@@ -318,11 +316,12 @@ end, function()
         for i = 0, GenericList_get_Count_method:call(List_ptr) - 1 do
             local SupplyInfo = SupplyInfo_get_Item_method:call(List_ptr, i);
             if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId then
-                local Count = SupplyInfo_Count_field:get_data(SupplyInfo)
+                local Count = SupplyInfo_Count_field:get_data(SupplyInfo);
                 if Count >= ItemNum then
-                getSellItem_method:call(nil, ItemId, Count, STOCK_TYPE.BOX);
-                SupplyInfo_RemoveAt_method:call(List_ptr, i);
-                break;
+                    getSellItem_method:call(nil, ItemId, Count, STOCK_TYPE.BOX);
+                    SupplyInfo_RemoveAt_method:call(List_ptr, i);
+                    break;
+                end
             end
         end
     end
@@ -344,16 +343,15 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                         getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
                         payPoint_method:call(nil, totalCost);
                         sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
-                        break;
                     else
                         local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
                             addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
                             payPoint_method:call(nil, totalCost);
                             sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
-                            break;
                         end
                     end
+                    break;
                 end
             end
         end
