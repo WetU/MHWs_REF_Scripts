@@ -23,8 +23,9 @@ local changeItemNumFromDialogue_method = ItemUtil_type_def:get_method("changeIte
 local getSellItem_method = ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local getItemNum_method = ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
-local getWeaponEnumId_method = sdk.find_type_definition("app.WeaponUtil"):get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
-local getWeaponData_method = sdk.find_type_definition("app.WeaponDef"):get_method("Data(app.WeaponDef.TYPE, System.Int32)"); -- static
+local WeaponUtil_type_def = sdk.find_type_definition("app.WeaponUtil");
+local getWeaponData_method = WeaponUtil_type_def:get_method("getWeaponData(System.Int32, app.WeaponDef.TYPE)"); -- static
+local getWeaponEnumId_method = WeaponUtil_type_def:get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
 
 local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
@@ -346,7 +347,7 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                     else
                         local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, weaponType, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData))), nil);
+                            addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData)), weaponType), nil);
                             payPoint_method:call(nil, totalCost);
                             sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
                         end
