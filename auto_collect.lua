@@ -11,6 +11,7 @@ local getThisPtr = Constants.getThisPtr;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
+local GenericList_RemoveAt_method = Constants.GenericList_RemoveAt_method;
 
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -98,8 +99,6 @@ local getReward_method = sdk.find_type_definition("app.cSendItemInfo"):get_metho
 
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
-
-local SupplyInfo_RemoveAt_method = sdk.find_type_definition("System.Collections.Generic.List`1<app.cSupplyInfo>"):get_method("RemoveAt(System.Int32)");
 
 local SupplyInfo_type_def = sdk.find_type_definition("app.cSupplyInfo");
 local SupplyInfo_ItemId_field = SupplyInfo_type_def:get_field("ItemId");
@@ -313,7 +312,7 @@ end, function()
                 local Count = SupplyInfo_Count_field:get_data(SupplyInfo);
                 if Count >= ItemNum then
                     getSellItem_method:call(nil, ItemId, Count, STOCK_TYPE.BOX);
-                    SupplyInfo_RemoveAt_method:call(List_ptr, i);
+                    GenericList_RemoveAt_method:call(List_ptr, i);
                     break;
                 end
             end

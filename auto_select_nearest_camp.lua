@@ -19,9 +19,7 @@ local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_met
 
 local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
 
-local AreaIconPosList_get_Item_method = get_AreaIconPosList_method:get_return_type():get_method("get_Item(System.Int32)");
-
-local AreaIconData_type_def = AreaIconPosList_get_Item_method:get_return_type();
+local AreaIconData_type_def = sdk.find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
 local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
 
@@ -92,7 +90,7 @@ end, function()
             local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
             local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
             for i = 0, GenericList_get_Count_method:call(areaIconPosList) - 1 do
-                local AreaIconData = AreaIconPosList_get_Item_method:call(areaIconPosList, i);
+                local AreaIconData = GenericList_get_Item_method:call(areaIconPosList, i);
                 if get_AreaNum_method:call(AreaIconData) == targetEmStartArea then
                     local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmStartArea);
                     local AreaIconPos = get_AreaIconPos_method:call(AreaIconData);

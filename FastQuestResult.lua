@@ -29,7 +29,7 @@ local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
-local REWARD = get__Mode_method:get_return_type():get_field("REWARD"):get_data(nil); -- static
+local JUDGE = get__Mode_method:get_return_type():get_field("JUDGE"):get_data(nil); -- static
 
 local GUIItemGridPartsFluent_type_def = sdk.find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
@@ -89,16 +89,12 @@ end, function()
                     end
                 end
             end
-            if Mode == REWARD then
-                if hook_data.checkedNewItem[Mode] == false and get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
+            if hook_data.checkedNewItem[Mode] == false then
+                if get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
                     receiveAll_method:call(GUIPartsReward_ptr);
                 end
-            else
-                if hook_data.checkedNewItem[Mode] == true then
-                    skipJudgeAnimation(GUIPartsReward_ptr);
-                elseif get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
-                    receiveAll_method:call(GUIPartsReward_ptr);
-                end
+            elseif Mode == JUDGE then
+                skipJudgeAnimation(GUIPartsReward_ptr);
             end
         end
     end
