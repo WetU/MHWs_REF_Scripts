@@ -5,6 +5,7 @@ local type = Constants.type;
 local sdk = Constants.sdk;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
+local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
 local distance_method = sdk.find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
@@ -32,9 +33,7 @@ local get_QuestOrderParam_method = GUI050001_type_def:get_method("get_QuestOrder
 local setCurrentSelectStartPointIndex_method = GUI050001_type_def:get_method("setCurrentSelectStartPointIndex(System.Int32)");
 local StartPointList_field = GUI050001_type_def:get_field("_StartPointList");
 
-local StartPointInfoList_get_Item_method = get_CurrentStartPointList_method:get_return_type():get_method("get_Item(System.Int32)");
-
-local get_BeaconGimmick_method = StartPointInfoList_get_Item_method:get_return_type():get_method("get_BeaconGimmick");
+local get_BeaconGimmick_method = sdk.find_type_definition("app.cStartPointInfo"):get_method("get_BeaconGimmick");
 
 local GUIBeaconGimmick_type_def = get_BeaconGimmick_method:get_return_type();
 local getPos_method = GUIBeaconGimmick_type_def:get_method("getPos");
@@ -104,7 +103,7 @@ end, function()
                     local diffFloor_shortest_distance = nil;
                     local diffFloor_idx = nil;
                     for j = 0, list_size - 1 do
-                        local BeaconGimmick = get_BeaconGimmick_method:call(StartPointInfoList_get_Item_method:call(startPoint_list, j));
+                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPoint_list, j));
                         local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
                         local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
                         if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then

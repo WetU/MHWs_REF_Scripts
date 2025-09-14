@@ -6,6 +6,7 @@ local thread = Constants.thread;
 local getThisPtr = Constants.getThisPtr;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
+local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 --<< GUI070000 Fix Quest Result >>--
 local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil); -- static
 
@@ -25,14 +26,13 @@ local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__Wai
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 local get__isRandomAmuletMode_method = GUIPartsReward_type_def:get_method("get__isRandomAmuletMode");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
+local getGridParts_method = GUIPartsReward_type_def:get_method("getGridParts(System.Int32)");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
 local REWARD = get__Mode_method:get_return_type():get_field("REWARD"):get_data(nil); -- static
 
-local get_Item_method = ItemGridParts_field:get_type():get_method("get_Item(System.Int32)");
-
-local GUIItemGridPartsFluent_type_def = get_Item_method:get_return_type();
+local GUIItemGridPartsFluent_type_def = sdk.find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
 local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark"); -- via.gui.Panel
 
@@ -83,7 +83,7 @@ end, function()
                 hook_data.checkedNewItem[Mode] = false;
                 local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
                 for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
-                    local GUIItemGridPartsFluent = get_Item_method:call(ItemGridParts, i);
+                    local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
                     if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
                         hook_data.checkedNewItem[Mode] = true;
                         break;

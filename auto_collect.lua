@@ -10,6 +10,7 @@ local init = Constants.init;
 local getThisPtr = Constants.getThisPtr;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
+local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -36,11 +37,9 @@ local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__Hav
 local executedSharing_method = FacilityMoriver_type_def:get_method("executedSharing(app.FacilityMoriver.MoriverInfo)");
 local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
 
-local MoriverInfos_type_def = MoriverInfos_field:get_type();
-local Moriver_get_Item_method = MoriverInfos_type_def:get_method("get_Item(System.Int32)");
-local Moriver_Remove_method = MoriverInfos_type_def:get_method("Remove(app.FacilityMoriver.MoriverInfo)");
+local Moriver_Remove_method = MoriverInfos_field:get_type():get_method("Remove(app.FacilityMoriver.MoriverInfo)");
 
-local MoriverInfo_type_def = Moriver_get_Item_method:get_return_type();
+local MoriverInfo_type_def = sdk.find_type_definition("app.FacilityMoriver.MoriverInfo");
 local FacilityId_field = MoriverInfo_type_def:get_field("_FacilityId");
 local ItemFromMoriver_field = MoriverInfo_type_def:get_field("ItemFromMoriver");
 local ItemFromPlayer_field = MoriverInfo_type_def:get_field("ItemFromPlayer");
@@ -95,24 +94,18 @@ local execute_method = Event_field:get_type():get_method("execute");
 
 local getRewardItemData_method = sdk.find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
 
-local SendItemInfo_get_Item_method = getRewardItemData_method:get_return_type():get_method("get_Item(System.Int32)");
-
-local getReward_method = SendItemInfo_get_Item_method:get_return_type():get_method("getReward(System.Boolean, System.Boolean)");
+local getReward_method = sdk.find_type_definition("app.cSendItemInfo"):get_method("getReward(System.Boolean, System.Boolean)");
 
 local GM262_000_00 = sdk.find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = sdk.find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
 
-local SupplyInfo_List_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.cSupplyInfo>");
-local SupplyInfo_get_Item_method = SupplyInfo_List_type_def:get_method("get_Item(System.Int32)");
-local SupplyInfo_RemoveAt_method = SupplyInfo_List_type_def:get_method("RemoveAt(System.Int32)");
+local SupplyInfo_RemoveAt_method = sdk.find_type_definition("System.Collections.Generic.List`1<app.cSupplyInfo>"):get_method("RemoveAt(System.Int32)");
 
-local SupplyInfo_type_def = SupplyInfo_get_Item_method:get_return_type();
+local SupplyInfo_type_def = sdk.find_type_definition("app.cSupplyInfo");
 local SupplyInfo_ItemId_field = SupplyInfo_type_def:get_field("ItemId");
 local SupplyInfo_Count_field = SupplyInfo_type_def:get_field("Count");
 
-local SupportShipData_get_Item_method = Constants.SupportShipData_List_type_def:get_method("get_Item(System.Int32)");
-
-local SupportShipData_type_def = SupportShipData_get_Item_method:get_return_type();
+local SupportShipData_type_def = sdk.find_type_definition("app.user_data.SupportShipData.cData");
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
 local SupportShipData_get_WeaponType_method = SupportShipData_type_def:get_method("get_WeaponType");
 local SupportShipData_get_ParamId_method = SupportShipData_type_def:get_method("get_ParamId");
@@ -231,7 +224,7 @@ local function execMoriver(facilityMoriver)
         local completedSharing = {};
         local completedSWOP = {};
         for i = 0, Count - 1 do
-            local MoriverInfo = Moriver_get_Item_method:call(MoriverInfos, i);
+            local MoriverInfo = GenericList_get_Item_method:call(MoriverInfos, i);
             local FacilityId = FacilityId_field:get_data(MoriverInfo);
             if FacilityId == FacilityID.SHARING then
                 getItemFromMoriver(MoriverInfo, completedSharing);
@@ -292,7 +285,7 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     local SupplyNum = get_SupplyNum_method:call(FacilityRallus_ptr);
     local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
     for i = 0, SupplyNum - 1 do
-        getReward_method:call(SendItemInfo_get_Item_method:call(SendItemInfo_List, i), true, true);
+        getReward_method:call(GenericList_get_Item_method:call(SendItemInfo_List, i), true, true);
     end
     execute_method:call(Event_field:get_data(FacilityRallus_ptr));
     resetSupplyNum_method:call(FacilityRallus_ptr);
@@ -315,7 +308,7 @@ end, function()
         local ItemId = storage.ItemId;
         local ItemNum = storage.ItemNum;
         for i = 0, GenericList_get_Count_method:call(List_ptr) - 1 do
-            local SupplyInfo = SupplyInfo_get_Item_method:call(List_ptr, i);
+            local SupplyInfo = GenericList_get_Item_method:call(List_ptr, i);
             if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId then
                 local Count = SupplyInfo_Count_field:get_data(SupplyInfo);
                 if Count >= ItemNum then
@@ -332,7 +325,7 @@ end);
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
     local dataList_ptr = args[3];
     for i = 0, GenericList_get_Count_method:call(dataList_ptr) - 1 do
-        local ShipData = SupportShipData_get_Item_method:call(dataList_ptr, i);
+        local ShipData = GenericList_get_Item_method:call(dataList_ptr, i);
         local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
         if StockNum > 0 then
             local cost = SupportShipData_get_Point_method:call(ShipData);

@@ -46,7 +46,7 @@ local GUIMessageInfo_type_def = get_TextInfo_method:get_return_type();
 local get_MsgID_method = GUIMessageInfo_type_def:get_method("get_MsgID");
 local get_Params_method = GUIMessageInfo_type_def:get_method("get_Params");
 
-local get_Item_method = get_Params_method:get_return_type():get_method("get_Item(System.Int32)");
+local get_Item_method = get_Params_method:get_return_type():get_method("get_Item(System.Int32)"); -- 144D10300
 
 local ParamData_type_def = get_Item_method:get_return_type();
 local ParamType_field = ParamData_type_def:get_field("ParamType");

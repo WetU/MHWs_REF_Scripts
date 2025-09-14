@@ -6,6 +6,7 @@ local table = Constants.table;
 
 local getThisPtr = Constants.getThisPtr;
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
+local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
 local checkQuestClear_method = sdk.find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
 
@@ -15,11 +16,9 @@ local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method
 
 local CATEGORY_FREE = get_ViewCategory_method:get_return_type():get_field("FREE"):get_data(nil); -- static
 
-local ViewQuestDataList_type_def = get_ViewQuestDataList_method:get_return_type();
-local get_Item_method = ViewQuestDataList_type_def:get_method("get_Item(System.Int32)");
-local set_Item_method = ViewQuestDataList_type_def:get_method("set_Item(System.Int32, app.cGUIQuestViewData)");
+local set_Item_method = get_ViewQuestDataList_method:get_return_type():get_method("set_Item(System.Int32, app.cGUIQuestViewData)");
 
-local get_MissionID_method = get_Item_method:get_return_type():get_method("get_MissionID");
+local get_MissionID_method = sdk.find_type_definition("app.cGUIQuestViewData"):get_method("get_MissionID");
 
 sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
@@ -30,7 +29,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
             local cleared_quests = {};
             local uncleared_quests = {};
             for i = 0, ViewQuestDataList_size - 1 do
-                local quest_data = get_Item_method:call(ViewQuestDataList, i);
+                local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
                 table.insert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
             end
             local unclearedCount = #uncleared_quests;

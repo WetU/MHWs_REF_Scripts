@@ -38,10 +38,10 @@ local Constants = {
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
-    SupportShipData_List_type_def = GenericList_type_def,
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
-    GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
+    GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"), -- 1437D2EC0
+    GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"), -- 1437D2ED0
     GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
 
     GUIAppKey_Type_field = Type_field,
