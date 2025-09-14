@@ -26,7 +26,6 @@ local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__Wai
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 local get__isRandomAmuletMode_method = GUIPartsReward_type_def:get_method("get__isRandomAmuletMode");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
-local getGridParts_method = GUIPartsReward_type_def:get_method("getGridParts(System.Int32)");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
