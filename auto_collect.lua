@@ -11,6 +11,7 @@ local getThisPtr = Constants.getThisPtr;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
+local GenericList_Clear_method = Constants.GenericList_Clear_method;
 local GenericList_RemoveAt_method = Constants.GenericList_RemoveAt_method;
 
 local FacilityUtil_type_def = sdk.find_type_definition("app.FacilityUtil");
@@ -286,6 +287,7 @@ sdk.hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)
     for i = 0, SupplyNum - 1 do
         getReward_method:call(GenericList_get_Item_method:call(SendItemInfo_List, i), true, true);
     end
+    GenericList_Clear_method:call(SendItemInfo_List);
     execute_method:call(Event_field:get_data(FacilityRallus_ptr));
     resetSupplyNum_method:call(FacilityRallus_ptr);
 end);
