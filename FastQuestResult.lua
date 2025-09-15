@@ -136,7 +136,6 @@ local JUDGE_MODE = {
 local Fix_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type():get_method("endFix");
 
 local GUI020100_type_def = get_MyOwner_method:get_return_type();
---local get__LogPanels_method = GUI020100_type_def:get_method("get__LogPanels");
 local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
 local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
 local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
