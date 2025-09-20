@@ -78,7 +78,8 @@ end, function()
             skipJudgeAnimation(GUIPartsReward_ptr);
         else
             local Mode = get__Mode_method:call(GUIPartsReward_ptr);
-            if hook_data.checkedNewItem[Mode] == nil then
+            local hasNewItem = hook_data.checkedNewItem[Mode];
+            if hasNewItem == nil then
                 hook_data.checkedNewItem[Mode] = false;
                 local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
                 for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
@@ -89,7 +90,7 @@ end, function()
                     end
                 end
             end
-            if hook_data.checkedNewItem[Mode] == false then
+            if hasNewItem == false then
                 if get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
                     receiveAll_method:call(GUIPartsReward_ptr);
                 end
