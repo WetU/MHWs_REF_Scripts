@@ -1,5 +1,9 @@
 local _G = _G;
 
+local type = _G.type;
+local pairs = _G.pairs;
+local string = _G.string;
+
 local sdk = _G.sdk;
 local thread = _G.thread;
 
@@ -9,13 +13,13 @@ local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local Constants = {
-    pairs = _G.pairs,
+    pairs = pairs,
     ipairs = _G.ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
-    type = _G.type,
+    type = type,
     math = _G.math,
-    string = _G.string,
+    string = string,
     table = _G.table,
 
     sdk = sdk,
@@ -53,6 +57,17 @@ local Constants = {
 
     getObject = function(args)
         thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+    end,
+
+    getCallbackMethod = function(methods, name)
+        if methods ~= nil and name ~= nil and type(name) == "string" then
+            for _, v in pairs(methods) do
+                if string.match(v:get_name(), "^<" .. name .. ">.*") ~= nil then
+                    return v;
+                end
+            end
+        end
+        return nil;
     end
 };
 

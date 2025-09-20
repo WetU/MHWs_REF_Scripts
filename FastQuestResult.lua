@@ -123,7 +123,7 @@ sdk.hook(GUI070000_type_def:get_method("onClose"), function(args)
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_callback_method = GUI020100PanelQuestRewardItem_type_def:get_method("<endFix>b__21_0");
+local Reward_endFix_callback_method = Constants.getCallbackMethod(GUI020100PanelQuestRewardItem_type_def:get_methods(), "endFix");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
 
