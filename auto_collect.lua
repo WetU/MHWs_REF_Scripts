@@ -50,12 +50,12 @@ local ItemWork_type_def = ItemFromMoriver_field:get_type();
 local ItemWork_get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
-local UserSaveData_type_def = sdk.find_type_definition("app.savedata.cUserSaveParam");
-local get_BasicData_method = UserSaveData_type_def:get_method("get_BasicData");
-local get_Equip_method = UserSaveData_type_def:get_method("get_Equip");
-local get_Collection_method = UserSaveData_type_def:get_method("get_Collection");
-local get_LargeWorkshop_method = UserSaveData_type_def:get_method("get_LargeWorkshop");
-local Save_get_Pugee_method = UserSaveData_type_def:get_method("get_Pugee");
+local UserSaveParam_type_def = Constants.UserSaveParam_type_def;
+local get_BasicData_method = UserSaveParam_type_def:get_method("get_BasicData");
+local get_Equip_method = UserSaveParam_type_def:get_method("get_Equip");
+local get_Collection_method = UserSaveParam_type_def:get_method("get_Collection");
+local get_LargeWorkshop_method = UserSaveParam_type_def:get_method("get_LargeWorkshop");
+local Save_get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local BasicParam_type_def = get_BasicData_method:get_return_type();
 local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
@@ -84,8 +84,11 @@ local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(Syst
 local getCoolTimer_method = Save_get_Pugee_method:get_return_type():get_method("getCoolTimer");
 
 local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
-local isSuppliableFoodMax_method = FacilityDining_type_def:get_method("isSuppliableFoodMax");
+local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
+local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
+
+local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
@@ -142,7 +145,10 @@ sdk.hook(changeItemNumFromDialogue_method, function(args)
     if isSelfCall == true then
         isSelfCall = false;
     else
-        args[4] = BOX_ptr;
+        local sendTarget = args[4];
+        if (sdk.to_int64(sendTarget) & 0xFFFFFFFF) ~= STOCK_TYPE.BOX then
+            sendTarget = BOX_ptr;
+        end
     end
 end);
 
@@ -197,10 +203,21 @@ end, function()
     end
 end);
 
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
-    if isSuppliableFoodMax_method:call(this_ptr) == true then
-        supplyFood_method:call(this_ptr);
+local SupplyFoodMax = nil;
+local isFoodMax = nil;
+sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
+    local this_ptr = args[2];
+    if SupplyFoodMax == nil then
+        SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(this_ptr));
+    end
+    if getSuppliableFoodNum_method:call(this_ptr) == SupplyFoodMax - 1 then
+        thread.get_hook_storage()["this_ptr"] = this_ptr;
+        isFoodMax = true;
+    end
+end, function()
+    if isFoodMax == true then
+        isFoodMax = nil;
+        supplyFood_method:call(thread.get_hook_storage()["this_ptr"]);
     end
 end);
 
@@ -219,11 +236,11 @@ end
 
 local function execMoriver(facilityMoriver)
     local MoriverInfos = MoriverInfos_field:get_data(facilityMoriver);
-    local Count = GenericList_get_Count_method:call(MoriverInfos);
-    if Count > 0 then
+    local moriverCount = GenericList_get_Count_method:call(MoriverInfos);
+    if moriverCount > 0 then
         local completedSharing = {};
         local completedSWOP = {};
-        for i = 0, Count - 1 do
+        for i = 0, moriverCount - 1 do
             local MoriverInfo = GenericList_get_Item_method:call(MoriverInfos, i);
             local FacilityId = FacilityId_field:get_data(MoriverInfo);
             if FacilityId == FacilityID.SHARING then
@@ -239,33 +256,27 @@ local function execMoriver(facilityMoriver)
                         getItemFromMoriver(MoriverInfo, completedSWOP);
                     else
                         local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                        if boxNum > 0 then
-                            if (boxNum + pouchNum) >= givingNum then
+                        if pouchNum >= givingNum or (boxNum + pouchNum) >= givingNum then
+                            if boxNum > 0 then
                                 payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
                                 payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
-                                getItemFromMoriver(MoriverInfo, completedSWOP);
+                            else
+                                payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
                             end
-                        elseif pouchNum >= givingNum then
-                            payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.POUCH);
                             getItemFromMoriver(MoriverInfo, completedSWOP);
                         end
                     end
                 end
             end
         end
-        if #completedSharing > 0 then
-            for _, moriverInfo in ipairs(completedSharing) do
-                executedSharing_method:call(facilityMoriver, moriverInfo);
-            end
+        for _, sharingMoriverInfo in ipairs(completedSharing) do
+            executedSharing_method:call(facilityMoriver, sharingMoriverInfo);
         end
-        local completedSWOPcounts = #completedSWOP;
-        if completedSWOPcounts > 0 then
-            for _, moriverInfo in ipairs(completedSWOP) do
-                Moriver_Remove_method:call(MoriverInfos, moriverInfo);
-            end
+        for _, SWOPMoriverInfo in ipairs(completedSWOP) do
+            Moriver_Remove_method:call(MoriverInfos, SWOPMoriverInfo);
         end
         local BasicParam = get_BasicData_method:call(Constants.UserSaveData);
-        setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - completedSWOPcounts);
+        setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - #completedSWOP);
     end
 end
 
@@ -301,6 +312,7 @@ sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("addItem
         storage.List_ptr = args[2];
         storage.ItemId = ItemId;
         storage.ItemNum = sdk.to_int64(args[4]) & 0xFFFF;
+        getSellItem_method:call(nil, ItemId, storage.ItemNum, STOCK_TYPE.BOX);
     end
 end, function()
     if isSupplyOnlyItem == false then
@@ -313,7 +325,6 @@ end, function()
             if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId then
                 local Count = SupplyInfo_Count_field:get_data(SupplyInfo);
                 if Count >= ItemNum then
-                    getSellItem_method:call(nil, ItemId, Count, STOCK_TYPE.BOX);
                     GenericList_RemoveAt_method:call(List_ptr, i);
                     break;
                 end

@@ -12,6 +12,8 @@ local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
 
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
+local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
+
 local Constants = {
     pairs = pairs,
     ipairs = _G.ipairs,
@@ -37,9 +39,11 @@ local Constants = {
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
     GUIFunc_TYPE_type_def = Type_field:get_type(),
+    GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
+    UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type(),
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"), -- 1437D2EC0
@@ -75,8 +79,7 @@ Constants.init = function()
     Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
     Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
     Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    local SaveDataManager = sdk.get_managed_singleton("app.SaveDataManager");
-    Constants.UserSaveData = SaveDataManager:get_type_definition():get_method("getCurrentUserSaveData"):call(SaveDataManager);
+    Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
 end
 
 sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), function(args)

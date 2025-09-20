@@ -3,7 +3,9 @@ local Constants = _G.require("Constants/Constants");
 local type = Constants.type;
 
 local sdk = Constants.sdk;
+local thread = Constants.thread;
 
+local getThisPtr = Constants.getThisPtr;
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
@@ -61,7 +63,6 @@ local hook_datas = nil;
 local function clear_datas()
     hook_datas = {
         hasData = false,
-        GUI050001_ptr = nil,
         inputCtrl = nil,
         targetCampIdx = nil,
         selectMethod = nil
@@ -76,13 +77,11 @@ local function dataProcess(GUI050001_ptr, targetCampIdx, list_size)
     hook_datas.hasData = true;
 end
 
-sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
-    hook_datas.GUI050001_ptr = args[2];
-end, function()
-    local GUI050001_ptr = hook_datas.GUI050001_ptr;
-    local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001_ptr);
+sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
+    local this_ptr = thread.get_hook_storage()["this_ptr"];
+    local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
-        local startPoint_list = get_CurrentStartPointList_method:call(GUI050001_ptr);
+        local startPoint_list = get_CurrentStartPointList_method:call(this_ptr);
         local list_size = GenericList_get_Count_method:call(startPoint_list);
         if list_size > 1 then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
@@ -121,19 +120,19 @@ end, function()
                     end
                     if sameArea_idx ~= nil then
                         if sameArea_idx > 0 then
-                            dataProcess(GUI050001_ptr, sameArea_idx, list_size);
+                            dataProcess(this_ptr, sameArea_idx, list_size);
                         end
                     elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
                         if diffFloor_idx > 0 then
-                            dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                            dataProcess(this_ptr, diffFloor_idx, list_size);
                         end
                     elseif sameFloor_idx ~= nil then
                         if  sameFloor_idx > 0 then
-                            dataProcess(GUI050001_ptr, sameFloor_idx, list_size);
+                            dataProcess(this_ptr, sameFloor_idx, list_size);
                         end
                     elseif diffFloor_idx ~= nil then
                         if diffFloor_idx > 0 then
-                            dataProcess(GUI050001_ptr, diffFloor_idx, list_size);
+                            dataProcess(this_ptr, diffFloor_idx, list_size);
                         end
                     else
                         clear_datas();

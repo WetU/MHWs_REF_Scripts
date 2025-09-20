@@ -22,6 +22,9 @@ local addSystemLog_method = Constants.addSystemLog_method;
 
 local guid2str_method = sdk.find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
+local isVisibleGUI_method = Constants.GUIManager_type_def:get_method("isVisibleGUI(app.GUIID.ID)");
+local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil); -- static
+
 local GUI000002_type_def = sdk.find_type_definition("app.GUI000002");
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
 
@@ -139,7 +142,8 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
         if Id == INVALID then
             if get_Caller_method:call(CurInfoApp):get_type_definition():get_full_name() == "app.NetworkErrorManager" then
                 local ChatManager = Constants.ChatManager;
-                if ChatManager ~= nil then
+                local GUIManager = Constants.GUIManager;
+                if ChatManager ~= nil and GUIManager ~= nil and isVisibleGUI_method:call(GUIManager, UI020100) == true then
                     local GUIMessageInfo = get_TextInfo_method:call(CurInfoApp);
                     local Params = get_Params_method:call(GUIMessageInfo);
                     local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
@@ -158,7 +162,9 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     addSystemLog_method:call(ChatManager, msg);
                 end
                 endWindow_method:call(CurInfoApp, 0);
-                executeWindowEndFunc_method:call(CurInfoApp);
+                if isExistWindowEndFunc_method:call(CurInfoApp) == true then
+                    executeWindowEndFunc_method:call(CurInfoApp);
+                end
                 closeGUI_method:call(NotifyWindowApp);
             end
         else

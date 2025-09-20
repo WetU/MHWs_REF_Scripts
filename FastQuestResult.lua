@@ -8,7 +8,7 @@ local getThisPtr = Constants.getThisPtr;
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 --<< GUI070000 Fix Quest Result >>--
-local UI070000 = sdk.find_type_definition("app.GUIID.ID"):get_field("UI070000"):get_data(nil); -- static
+local UI070000 = Constants.GUIID_type_def:get_field("UI070000"):get_data(nil); -- static
 
 local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil); -- static
 
@@ -78,8 +78,7 @@ end, function()
             skipJudgeAnimation(GUIPartsReward_ptr);
         else
             local Mode = get__Mode_method:call(GUIPartsReward_ptr);
-            local hasNewItem = hook_data.checkedNewItem[Mode];
-            if hasNewItem == nil then
+            if hook_data.checkedNewItem[Mode] == nil then
                 hook_data.checkedNewItem[Mode] = false;
                 local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
                 for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
@@ -90,7 +89,7 @@ end, function()
                     end
                 end
             end
-            if hasNewItem == false then
+            if hook_data.checkedNewItem[Mode] == false then
                 if get_CurCtrlInputPriority_method:call(hook_data.GUI070000) == 0 then
                     receiveAll_method:call(GUIPartsReward_ptr);
                 end
@@ -173,9 +172,11 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
             endQuestJudge_method:call(GUI020100);
         elseif JudgeMode == JUDGE_MODE.MODE02 then
             jumpFixQuestJudge_method:call(GUI020100);
-            Fix_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
             endRandomAmuletJudge_method:call(GUI020100);
-            Reward_endFix_callback_method:call(GUI020100PanelQuestRewardItem_ptr);
+            Fix_endFix_method:call(GUI020100PanelQuestRewardItem_ptr);
+            if Reward_endFix_callback_method ~= nil then
+                Reward_endFix_callback_method:call(GUI020100PanelQuestRewardItem_ptr);
+            end
             GUI020100 = nil;
             GUI020100PanelQuestRewardItem_ptr = nil;
         else

@@ -18,9 +18,7 @@ local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get
 local get_IsInAllTent_method = getHunterCharacter_method:get_return_type():get_method("get_IsInAllTent");
 
 local mySet = 0;
-
 local isSelfCall = false;
-
 local function restockItems()
     if isValidData_method:call(nil, mySet) == true then
         isSelfCall = true;
