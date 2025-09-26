@@ -53,7 +53,6 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"), -- 144F88680
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"), -- 144F88710
-    --GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
 
     GUIAppKey_Type_field = Type_field,
 
@@ -66,11 +65,9 @@ local Constants = {
     end,
 
     getCallbackMethod = function(methods, name)
-        if methods ~= nil and name ~= nil and type(name) == "string" then
-            for _, v in pairs(methods) do
-                if string.match(v:get_name(), "^<" .. name .. ">.*") ~= nil then
-                    return v;
-                end
+        for _, v in pairs(methods) do
+            if string.match(v:get_name(), "^<" .. name .. ">.*") ~= nil then
+                return v;
             end
         end
         return nil;
