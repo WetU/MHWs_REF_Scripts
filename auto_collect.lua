@@ -210,7 +210,7 @@ sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
     if SupplyFoodMax == nil then
         SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(this_ptr));
     end
-    if getSuppliableFoodNum_method:call(this_ptr) == SupplyFoodMax - 1 then
+    if getSuppliableFoodNum_method:call(this_ptr) >= SupplyFoodMax - 1 then
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isFoodMax = true;
     end
