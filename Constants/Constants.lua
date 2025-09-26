@@ -1,6 +1,5 @@
 local _G = _G;
 
-local require = _G.require;
 local type = _G.type;
 local pairs = _G.pairs;
 local string = _G.string;
