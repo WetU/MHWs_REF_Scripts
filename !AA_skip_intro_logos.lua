@@ -7,7 +7,7 @@ local getObject = Constants.getObject;
 
 local GUI010001_type_def = sdk.find_type_definition("app.GUI010001");
 
-local GUIAppKey_type_def = Constants.GUIAppOnTimerKey_type_def:get_parent_type();
+local GUIAppKey_type_def = Constants.GUIAppKey_type_def;
 local Type_field = Constants.GUIAppKey_Type_field;
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);

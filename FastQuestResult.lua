@@ -10,8 +10,6 @@ local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 --<< GUI070000 Fix Quest Result >>--
 local UI070000 = Constants.GUIID_type_def:get_field("UI070000"):get_data(nil); -- static
 
-local RESULT_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil); -- static
-
 local GUI070000_type_def = sdk.find_type_definition("app.GUI070000");
 local get_IDInt_method = GUI070000_type_def:get_method("get_IDInt");
 local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
@@ -38,9 +36,6 @@ local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
-
-local GUIAppOnTimerKey_type_def = Constants.GUIAppOnTimerKey_type_def;
-local GUIAppKey_Type_field = Constants.GUIAppKey_Type_field;
 
 local function skipJudgeAnimation(GUIPartsReward_ptr)
     if get__JudgeAnimationEnd_method:call(GUIPartsReward_ptr) == false then
@@ -97,20 +92,6 @@ end, function()
                 skipJudgeAnimation(GUIPartsReward_ptr);
             end
         end
-    end
-end);
-
-local isResultSkip = nil;
-sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
-    local this_ptr = args[2];
-    if GUIAppKey_Type_field:get_data(this_ptr) == RESULT_SKIP then
-        thread.get_hook_storage()["this_ptr"] = this_ptr;
-        isResultSkip = true;
-    end
-end, function()
-    if isResultSkip == true then
-        isResultSkip = nil;
-        sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUIAppOnTimerKey_type_def, "_Success", true);
     end
 end);
 

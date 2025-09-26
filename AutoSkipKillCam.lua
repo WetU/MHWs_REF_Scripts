@@ -1,44 +1,15 @@
 local Constants = _G.require("Constants/Constants");
 
-local type = Constants.type;
+local pairs = Constants.pairs;
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
-local json = Constants.json;
 local re = Constants.re;
-local imgui = Constants.imgui;
 
 local getThisPtr = Constants.getThisPtr;
 
-local config = json.load_file("AutoSkipKillCam.json") or {skipKillCam = true, autoEndQuest = false, enableInstantQuit = false, instantKey = false, skipEndScene = true};
-if config.skipKillCam == nil or type(config.skipKillCam) ~= "boolean" then
-    config.skipKillCam = true;
-end
-if config.autoEndQuest == nil or type(config.autoEndQuest) ~= "boolean" then
-    config.autoEndQuest = false;
-end
-if config.enableInstantQuit == nil or type(config.enableInstantQuit) ~= "boolean" then
-    config.enableInstantQuit = false;
-end
-if config.instantKey == nil or type(config.instantKey) ~= "boolean" then
-    config.instantKey = true;
-end
-if config.skipEndScene == nil or type(config.skipEndScene) ~= "boolean" then
-    config.skipEndScene = true;
-end
-
-local function saveConfig()
-    json.dump_file("AutoSkipKillCam.json", config);
-end
-
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
-
-local GUIAppOnTimerKey_type_def = Constants.GUIAppOnTimerKey_type_def;
-local isOn_method = GUIAppOnTimerKey_type_def:get_method("isOn");
-local Type_field = Constants.GUIAppKey_Type_field;
-
-local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
 local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
@@ -58,47 +29,15 @@ local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(Syst
 local FALSE_ptr = sdk.to_ptr(false);
 
 sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
-    return config.skipKillCam == true and FALSE_ptr or retval;
-end);
-
-local isReturnTimeSkip = nil;
-sdk.hook(Constants.GUIAppOnTimerKey_onUpdate_method, function(args)
-    if config.autoEndQuest == true or config.instantKey == true then
-        local this_ptr = args[2];
-        if Type_field:get_data(this_ptr) == RETURN_TIME_SKIP then
-            thread.get_hook_storage()["this_ptr"] = this_ptr;
-            isReturnTimeSkip = true;
-        end
-    end
-end, function()
-    if isReturnTimeSkip == true then
-        isReturnTimeSkip = nil;
-        local this_ptr = thread.get_hook_storage()["this_ptr"];
-        if config.autoEndQuest == true or isOn_method:call(this_ptr) == true then
-            sdk.set_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Success", true);
-        end
-    end
-end);
-
-sdk.hook(QuestDirector_type_def:get_method("QuestReturnSkip"), function(args)
-    if config.enableInstantQuit == true then
-        thread.get_hook_storage()["this_ptr"] = args[2];
-    end
-end, function()
-    if config.enableInstantQuit == true then
-        local QuestFlowParam = get_Param_method:call(thread.get_hook_storage()["this_ptr"]);
-        QuestFlowParam:write_float(0xC8, QuestFlowParam:read_float(0xCC));
-    end
+    return FALSE_ptr;
 end);
 
 sdk.hook(HunterQuestActionController_type_def:get_method("checkQuestActionEnable(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)"), function(args)
-    if config.skipEndScene == true then
-        local storage = thread.get_hook_storage();
-        storage.this_ptr = args[2];
-        storage.actionType_ptr = args[3];
-    end
+    local storage = thread.get_hook_storage();
+    storage.this_ptr = args[2];
+    storage.actionType_ptr = args[3];
 end, function(retval)
-    if config.skipEndScene == true and (sdk.to_int64(retval) & 1) == 1 then
+    if (sdk.to_int64(retval) & 1) == 1 then
         local storage = thread.get_hook_storage();
         showStamp_method:call(storage.this_ptr, sdk.to_int64(storage.actionType_ptr) & 0xFFFFFFFF);
     end
@@ -113,11 +52,14 @@ local GUI020201_datas = {
 sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
     local CurType = CurType_field:get_data(GUI020201_ptr);
-    if CurType == TYPES.START or (config.skipEndScene == true and CurType == TYPES.CLEAR) then
-        if GUI020201_datas.GUI == nil then
-            GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
+    for k, v in pairs(TYPES) do
+        if v == CurType then
+            if GUI020201_datas.GUI == nil then
+                GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
+            end
+            GUI020201_datas.reqSkip = true;
+            break;
         end
-        GUI020201_datas.reqSkip = true;
     end
 end);
 
@@ -139,49 +81,5 @@ end);
 re.on_script_reset(function()
     if GUI020201_datas.isSetted == true then
         set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
-    end
-end);
-
-re.on_config_save(saveConfig);
-
-re.on_draw_ui(function()
-    if imgui.tree_node("Auto Skip Kill Cam") == true then
-        local changed = false;
-        local reqSave = false;
-        changed, config.skipKillCam = imgui.checkbox("Enable skip kill-Cam", config.skipKillCam);
-        if changed == true and reqSave ~= true then
-            reqSave = true;
-        end
-        changed, config.autoEndQuest = imgui.checkbox("Enable auto skip carve timer", config.autoEndQuest);
-        if changed == true and reqSave ~= true then
-            reqSave = true;
-        end
-        if imgui.is_item_hovered() == true then
-            imgui.set_tooltip("If it's not a Field Survey quest, Can't carve a slain monster.");
-        end
-        if config.autoEndQuest ~= true then
-            changed, config.instantKey = imgui.checkbox("Remove skip key delay", config.instantKey);
-            if changed == true and reqSave ~= true then
-                reqSave = true;
-            end
-            if imgui.is_item_hovered() == true then
-                imgui.set_tooltip("Change the 'End quest immediately' key input method from long press to single press.");
-            end
-        end
-        changed, config.enableInstantQuit = imgui.checkbox("Enable instant skip carve timer in multiplay", config.enableInstantQuit);
-        if changed == true and reqSave ~= true then
-            reqSave = true;
-        end
-        if imgui.is_item_hovered() == true then
-            imgui.set_tooltip("End quest immediately without waiting for other players in multiplay.");
-        end
-        changed, config.skipEndScene = imgui.checkbox("Enable skip quest end scene", config.skipEndScene);
-        if changed == true and reqSave ~= true then
-            reqSave = true;
-        end
-        if reqSave == true then
-            saveConfig();
-        end
-        imgui.tree_pop();
     end
 end);

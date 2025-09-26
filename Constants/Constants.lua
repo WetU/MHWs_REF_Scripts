@@ -8,7 +8,8 @@ local sdk = _G.sdk;
 local thread = _G.thread;
 
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local Type_field = GUIAppOnTimerKey_type_def:get_field("_Type");
+local GUIAppKey_type_def = GUIAppOnTimerKey_type_def:get_parent_type();
+local Type_field = GUIAppKey_type_def:get_field("_Type");
 
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -37,6 +38,7 @@ local Constants = {
     UserSaveData = nil,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
+    GUIAppKey_type_def = GUIAppKey_type_def,
     GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
     GUIFunc_TYPE_type_def = Type_field:get_type(),
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
@@ -51,7 +53,7 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"), -- 144F88680
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"), -- 144F88710
-    GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
+    --GUIAppOnTimerKey_onUpdate_method = GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"),
 
     GUIAppKey_Type_field = Type_field,
 
