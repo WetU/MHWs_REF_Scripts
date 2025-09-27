@@ -145,10 +145,7 @@ sdk.hook(changeItemNumFromDialogue_method, function(args)
     if isSelfCall == true then
         isSelfCall = false;
     else
-        local sendTarget = args[4];
-        if (sdk.to_int64(sendTarget) & 0xFFFFFFFF) ~= STOCK_TYPE.BOX then
-            sendTarget = BOX_ptr;
-        end
+        args[4] = BOX_ptr;
     end
 end);
 
