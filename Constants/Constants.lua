@@ -48,11 +48,11 @@ local Constants = {
     UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type(),
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
-    GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"), -- 1437D2EC0
-    GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"), -- 1437D2ED0
-    GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"), -- 144F88680
+    GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
+    GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
+    GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
-    GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"), -- 144F88710
+    GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
 
     GUIAppKey_Type_field = Type_field,
 

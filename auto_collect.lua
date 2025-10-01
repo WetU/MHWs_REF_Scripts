@@ -277,7 +277,8 @@ local function execMoriver(facilityMoriver)
     end
 end
 
-sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), init, function()
+sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
+    init();
     local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
