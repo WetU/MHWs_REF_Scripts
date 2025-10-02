@@ -74,6 +74,7 @@ local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
 local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
 local change_default_index_IDs = {
     [NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil)] = 2,
+    [NotifyWindowID_type_def:get_field("GUI030000_04_06_DLG"):get_data(nil)] = 0,
     [NotifyWindowID_type_def:get_field("GUI080301_0004_DLG"):get_data(nil)] = 0
 };
 local auto_close_IDs = {

@@ -31,15 +31,21 @@ local getWeaponData_method = WeaponUtil_type_def:get_method("getWeaponData(Syste
 local getWeaponEnumId_method = WeaponUtil_type_def:get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
 
 local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
+local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
+
+local FacilityDining_type_def = get_Dining_method:get_return_type();
+local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
+local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
+local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
+
+local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
 local FacilityMoriver_type_def = get_Moriver_method:get_return_type();
 local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
 local executedSharing_method = FacilityMoriver_type_def:get_method("executedSharing(app.FacilityMoriver.MoriverInfo)");
 local MoriverInfos_field = FacilityMoriver_type_def:get_field("_MoriverInfos");
-
-local Moriver_Remove_method = MoriverInfos_field:get_type():get_method("Remove(app.FacilityMoriver.MoriverInfo)");
 
 local MoriverInfo_type_def = sdk.find_type_definition("app.FacilityMoriver.MoriverInfo");
 local FacilityId_field = MoriverInfo_type_def:get_field("_FacilityId");
@@ -51,15 +57,10 @@ local ItemWork_get_ItemId_method = ItemWork_type_def:get_method("get_ItemId");
 local ItemWork_Num_field = ItemWork_type_def:get_field("Num");
 
 local UserSaveParam_type_def = Constants.UserSaveParam_type_def;
-local get_BasicData_method = UserSaveParam_type_def:get_method("get_BasicData");
 local get_Equip_method = UserSaveParam_type_def:get_method("get_Equip");
 local get_Collection_method = UserSaveParam_type_def:get_method("get_Collection");
 local get_LargeWorkshop_method = UserSaveParam_type_def:get_method("get_LargeWorkshop");
 local Save_get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
-
-local BasicParam_type_def = get_BasicData_method:get_return_type();
-local setMoriverNum_method = BasicParam_type_def:get_method("setMoriverNum(System.Int32)");
-local getMoriverNum_method = BasicParam_type_def:get_method("getMoriverNum");
 
 local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
 
@@ -82,13 +83,6 @@ local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_IT
 local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(System.Boolean)");
 
 local getCoolTimer_method = Save_get_Pugee_method:get_return_type():get_method("getCoolTimer");
-
-local FacilityDining_type_def = sdk.find_type_definition("app.FacilityDining");
-local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
-local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
-local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
-
-local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
@@ -201,13 +195,22 @@ end, function()
 end);
 
 local SupplyFoodMax = nil;
-local isFoodMax = nil;
-sdk.hook(FacilityDining_type_def:get_method("addSuplyNum"), function(args)
-    local this_ptr = args[2];
+local function getSupplyFoodMax(facilityDining)
     if SupplyFoodMax == nil then
-        SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(this_ptr));
+        SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(facilityDining));
     end
-    if getSuppliableFoodNum_method:call(this_ptr) >= SupplyFoodMax - 1 then
+    return SupplyFoodMax;
+end
+
+local isFoodMax = nil;
+sdk.hook(FacilityDining_type_def:get_method("addSupplyNum"), function(args)
+    local this_ptr = args[2];
+    local SuppliableFoodNum = getSuppliableFoodNum_method:call(this_ptr);
+    local supplyFoodMax = getSupplyFoodMax(this_ptr);
+    if SuppliableFoodNum >= supplyFoodMax - 1 then
+        if SuppliableFoodNum == supplyFoodMax then
+            supplyFood_method:call(this_ptr);
+        end
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isFoodMax = true;
     end
@@ -235,13 +238,12 @@ local function execMoriver(facilityMoriver)
     local MoriverInfos = MoriverInfos_field:get_data(facilityMoriver);
     local moriverCount = GenericList_get_Count_method:call(MoriverInfos);
     if moriverCount > 0 then
-        local completedSharing = {};
-        local completedSWOP = {};
+        local completedMoriverInfos = {};
         for i = 0, moriverCount - 1 do
             local MoriverInfo = GenericList_get_Item_method:call(MoriverInfos, i);
             local FacilityId = FacilityId_field:get_data(MoriverInfo);
             if FacilityId == FacilityID.SHARING then
-                getItemFromMoriver(MoriverInfo, completedSharing);
+                getItemFromMoriver(MoriverInfo, completedMoriverInfos);
             elseif FacilityId == FacilityID.SWOP then
                 local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                 local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
@@ -250,7 +252,7 @@ local function execMoriver(facilityMoriver)
                     local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
                     if boxNum >= givingNum then
                         payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
-                        getItemFromMoriver(MoriverInfo, completedSWOP);
+                        getItemFromMoriver(MoriverInfo, completedMoriverInfos);
                     else
                         local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
                         if pouchNum >= givingNum or (boxNum + pouchNum) >= givingNum then
@@ -260,28 +262,28 @@ local function execMoriver(facilityMoriver)
                             else
                                 payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
                             end
-                            getItemFromMoriver(MoriverInfo, completedSWOP);
+                            getItemFromMoriver(MoriverInfo, completedMoriverInfos);
                         end
                     end
                 end
             end
         end
-        for _, sharingMoriverInfo in ipairs(completedSharing) do
-            executedSharing_method:call(facilityMoriver, sharingMoriverInfo);
+        for _, completedMoriverInfo in ipairs(completedMoriverInfos) do
+            executedSharing_method:call(facilityMoriver, completedMoriverInfo);
         end
-        for _, SWOPMoriverInfo in ipairs(completedSWOP) do
-            Moriver_Remove_method:call(MoriverInfos, SWOPMoriverInfo);
-        end
-        local BasicParam = get_BasicData_method:call(Constants.UserSaveData);
-        setMoriverNum_method:call(BasicParam, getMoriverNum_method:call(BasicParam) - #completedSWOP);
     end
 end
 
 sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
     init();
-    local FacilityMoriver = get_Moriver_method:call(Constants.FacilityManager);
+    local FacilityManager = Constants.FacilityManager;
+    local FacilityMoriver = get_Moriver_method:call(FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
+    end
+    local FacilityDining = get_Dining_method:call(FacilityManager);
+    if getSuppliableFoodNum_method:call(FacilityDining) == getSupplyFoodMax(FacilityDining) then
+        supplyFood_method:call(FacilityDining);
     end
 end);
 
