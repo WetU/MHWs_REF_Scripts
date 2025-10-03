@@ -1,6 +1,5 @@
 local _G = _G;
 
-local type = _G.type;
 local pairs = _G.pairs;
 local string = _G.string;
 
@@ -20,7 +19,7 @@ local Constants = {
     ipairs = _G.ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
-    type = type,
+    type = _G.type,
     math = _G.math,
     string = string,
     table = _G.table,
@@ -74,18 +73,25 @@ local Constants = {
     end
 };
 
+local isInitialized = false;
 Constants.init = function()
-    Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
-    Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
-    Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-    Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
+    if isInitialized == false then
+        isInitialized = true;
+        Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
+        Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
+        Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
+        Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
+    end
 end
 
-sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), function(args)
-    Constants.ChatManager = nil;
-    Constants.FacilityManager = nil;
-    Constants.GUIManager = nil;
-    Constants.UserSaveData = nil;
+sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, function()
+    if isInitialized == true then
+        isInitialized = false;
+        Constants.ChatManager = nil;
+        Constants.FacilityManager = nil;
+        Constants.GUIManager = nil;
+        Constants.UserSaveData = nil;
+    end
 end);
 
 local GameFlowManager = sdk.get_managed_singleton("app.GameFlowManager");
