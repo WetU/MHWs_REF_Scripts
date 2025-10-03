@@ -81,9 +81,9 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
     local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
-        local startPoint_list = get_CurrentStartPointList_method:call(this_ptr);
-        local list_size = GenericList_get_Count_method:call(startPoint_list);
-        if list_size > 1 then
+        local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
+        local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
+        if startPointlist_size > 1 then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local Stage = get_Stage_method:call(QuestViewData);
             local targetEmStartArea = Int32_value_field:get_data(get_TargetEmStartArea_method:call(QuestViewData):get_element(0));
@@ -99,8 +99,8 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
                     local sameFloor_idx = nil;
                     local diffFloor_shortest_distance = nil;
                     local diffFloor_idx = nil;
-                    for j = 0, list_size - 1 do
-                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPoint_list, j));
+                    for j = 0, startPointlist_size - 1 do
+                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
                         local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
                         local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
                         if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
@@ -120,24 +120,24 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
                     end
                     if sameArea_idx ~= nil then
                         if sameArea_idx > 0 then
-                            dataProcess(this_ptr, sameArea_idx, list_size);
+                            dataProcess(this_ptr, sameArea_idx, startPointlist_size);
                         end
                     elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
                         if diffFloor_idx > 0 then
-                            dataProcess(this_ptr, diffFloor_idx, list_size);
+                            dataProcess(this_ptr, diffFloor_idx, startPointlist_size);
                         end
                     elseif sameFloor_idx ~= nil then
                         if  sameFloor_idx > 0 then
-                            dataProcess(this_ptr, sameFloor_idx, list_size);
+                            dataProcess(this_ptr, sameFloor_idx, startPointlist_size);
                         end
                     elseif diffFloor_idx ~= nil then
                         if diffFloor_idx > 0 then
-                            dataProcess(this_ptr, diffFloor_idx, list_size);
+                            dataProcess(this_ptr, diffFloor_idx, startPointlist_size);
                         end
                     else
                         clear_datas();
                     end
-                    return;
+                    break;
                 end
             end
         end
