@@ -87,6 +87,7 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
     NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil),
+    NotifyWindowID_type_def:get_field("Net_Session_012"):get_data(nil),
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 

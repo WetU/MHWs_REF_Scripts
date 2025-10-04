@@ -205,12 +205,7 @@ end
 local isFoodMax = nil;
 sdk.hook(FacilityDining_type_def:get_method("addSupplyNum"), function(args)
     local this_ptr = args[2];
-    local SuppliableFoodNum = getSuppliableFoodNum_method:call(this_ptr);
-    local supplyFoodMax = getSupplyFoodMax(this_ptr);
-    if SuppliableFoodNum >= supplyFoodMax - 1 then
-        if SuppliableFoodNum == supplyFoodMax then
-            supplyFood_method:call(this_ptr);
-        end
+    if getSuppliableFoodNum_method:call(this_ptr) >= getSupplyFoodMax(this_ptr) - 1 then
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isFoodMax = true;
     end
