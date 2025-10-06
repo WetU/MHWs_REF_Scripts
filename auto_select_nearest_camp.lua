@@ -102,21 +102,27 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
                     for j = 0, startPointlist_size - 1 do
                         local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
                         local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                        local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
-                        if get_MapAreaNumSafety_method:call(FieldAreaInfo) == targetEmStartArea then
-                            if sameArea_idx == nil or distance < sameArea_shortest_distance then
-                                sameArea_shortest_distance = distance;
-                                sameArea_idx = j;
+                        local gimmick_MapAreaNum = get_MapAreaNumSafety_method:call(FieldAreaInfo);
+                        if sameArea_idx ~= nil and gimmick_MapAreaNum ~= targetEmStartArea then
+                            goto continue;
+                        else
+                            local distance = distance_method:call(nil, AreaIconPos, getPos_method:call(BeaconGimmick));
+                            if gimmick_MapAreaNum == targetEmStartArea then
+                                if sameArea_idx == nil or distance < sameArea_shortest_distance then
+                                    sameArea_shortest_distance = distance;
+                                    sameArea_idx = j;
+                                end
+                            elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
+                                    sameFloor_shortest_distance = distance;
+                                    sameFloor_idx = j;
+                                end
+                            elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
+                                diffFloor_shortest_distance = distance;
+                                diffFloor_idx = j;
                             end
-                        elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
-                            if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                sameFloor_shortest_distance = distance;
-                                sameFloor_idx = j;
-                            end
-                        elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
-                            diffFloor_shortest_distance = distance;
-                            diffFloor_idx = j;
                         end
+                        ::continue::
                     end
                     if sameArea_idx ~= nil then
                         if sameArea_idx > 0 then
