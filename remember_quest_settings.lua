@@ -42,20 +42,18 @@ sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
             sdk.set_native_field(sort_type, SORT_TYPE_type_def, "value__", saved_sort_type);
         end
     end
-    if QuestViewType_field:get_data(QuestCounterContext) ~= config.view_type then
-        sdk.set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", config.view_type);
+    local view_type = config.view_type;
+    if QuestViewType_field:get_data(QuestCounterContext) ~= view_type then
+        sdk.set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", view_type);
     end
 end);
 
 sdk.hook(GUI050000_type_def:get_method("closeQuestDetailWindow"), getThisPtr, function()
     local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
     local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
-    local sort_type_list_size = sort_type_list:get_size();
-    if sort_type_list_size > 0 then
-        config.sort_types = {};
-        for i = 0, sort_type_list_size - 1 do
-            table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
-        end
+    config.sort_types = {};
+    for i = 0, sort_type_list:get_size() - 1 do
+        table.insert(config.sort_types, value_field:get_data(sort_type_list:get_element(i)));
     end
     local QuestViewType = QuestViewType_field:get_data(QuestCounterContext);
     if QuestViewType ~= config.view_type then
