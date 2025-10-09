@@ -10,12 +10,12 @@ local thread = Constants.thread;
 
 local getThisPtr = Constants.getThisPtr;
 
-local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {-1, -1, 0, 4, 0, 0, 4, 2, -1, 2, 2, 2, 2}};
+local config = json.load_file("remember_quest_settings.json") or {view_type = 0, sort_types = {-1, -1, 0, 2, 0, 0, 2, 2, -1, 2, 2, 2, 2}};
 if config.view_type == nil or type(config.view_type) ~= "number" then
     config.view_type = 0;
 end
 if config.sort_types == nil or type(config.sort_types) ~= "table" then
-    config.sort_types = {-1, -1, 0, 4, 0, 0, 4, 2, -1, 2, 2, 2, 2};
+    config.sort_types = {-1, -1, 0, 2, 0, 0, 2, 2, -1, 2, 2, 2, 2};
 end
 
 local function saveConfig()
@@ -32,8 +32,8 @@ local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("Ques
 local SORT_TYPE_type_def = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE");
 local value_field = SORT_TYPE_type_def:get_field("value__");
 
-sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
-    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
+sdk.hook(QuestCounterContext_type_def:get_method("init"), getThisPtr, function()
+    local QuestCounterContext = thread.get_hook_storage()["this_ptr"];
     local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
     for i = 0, sort_type_list:get_size() - 1 do
         local sort_type = sort_type_list:get_element(i);
