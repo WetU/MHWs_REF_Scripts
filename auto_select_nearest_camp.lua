@@ -56,7 +56,12 @@ local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelecte
 local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
 
-local hook_datas = nil;
+local hook_datas = {
+    hasData = false,
+    inputCtrl = nil,
+    targetCampIdx = nil,
+    selectMethod = nil
+};
 
 local function clear_datas()
     hook_datas = {
@@ -65,14 +70,6 @@ local function clear_datas()
         targetCampIdx = nil,
         selectMethod = nil
     };
-end
-
-local function dataProcess(GUI050001_ptr, targetCampIdx, list_size)
-    setCurrentSelectStartPointIndex_method:call(GUI050001_ptr, targetCampIdx);
-    hook_datas.targetCampIdx = targetCampIdx;
-    hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001_ptr));
-    hook_datas.selectMethod = (targetCampIdx + 1) < (list_size * 0.5) and selectPrevItem_method or selectNextItem_method;
-    hook_datas.hasData = true;
 end
 
 local function getAreaIconPos(areaIconPosList, targetArea)
@@ -85,13 +82,20 @@ local function getAreaIconPos(areaIconPosList, targetArea)
     return nil;
 end
 
+local function calcbyFloor(sameFloor_distance, diffFloor_distance)
+    if sameFloor_distance ~= nil and diffFloor_distance ~= nil then
+        return diffFloor_distance < (sameFloor_distance * 0.45);
+    end
+    return nil;
+end
+
 sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
-    local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
-    if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
-        local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
-        local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
-        if startPointlist_size > 1 then
+    local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
+    local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
+    if startPointlist_size > 1 then
+        local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
+        if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local Stage = get_Stage_method:call(QuestViewData);
             local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
@@ -105,51 +109,42 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
             for i = 0, TargetEmStartArea_array:get_size() - 1 do
                 local targetEmAreaNo = Int32_value_field:get_data(TargetEmStartArea_array:get_element(i));
                 local areaIconPos = getAreaIconPos(areaIconPosList, targetEmAreaNo);
-                local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
-                for j = 0, startPointlist_size - 1 do
-                    local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
-                    local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                    local gimmick_MapAreaNum = get_MapAreaNumSafety_method:call(FieldAreaInfo);
-                    if sameArea_idx ~= nil and gimmick_MapAreaNum ~= targetEmAreaNo then
-                        goto continue;
-                    else
-                        local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
-                        if targetEmAreaNo == gimmick_MapAreaNum then
-                            if sameArea_idx == nil or distance < sameArea_shortest_distance then
-                                sameArea_shortest_distance = distance;
-                                sameArea_idx = j;
+                if areaIconPos ~= nil then
+                    local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
+                    for j = 0, startPointlist_size - 1 do
+                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
+                        local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+                        local gimmick_MapAreaNum = get_MapAreaNumSafety_method:call(FieldAreaInfo);
+                        if sameArea_idx ~= nil and gimmick_MapAreaNum ~= targetEmAreaNo then
+                            goto continue;
+                        else
+                            local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
+                            if targetEmAreaNo == gimmick_MapAreaNum then
+                                if sameArea_idx == nil or distance < sameArea_shortest_distance then
+                                    sameArea_shortest_distance = distance;
+                                    sameArea_idx = j;
+                                end
+                            elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
+                                    sameFloor_shortest_distance = distance;
+                                    sameFloor_idx = j;
+                                end
+                            elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
+                                diffFloor_shortest_distance = distance;
+                                diffFloor_idx = j;
                             end
-                        elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
-                            if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                sameFloor_shortest_distance = distance;
-                                sameFloor_idx = j;
-                            end
-                        elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
-                            diffFloor_shortest_distance = distance;
-                            diffFloor_idx = j;
                         end
+                        ::continue::
                     end
-                    ::continue::
                 end
             end
-            if sameArea_idx ~= nil then
-                if sameArea_idx > 0 then
-                    dataProcess(this_ptr, sameArea_idx, startPointlist_size);
-                end
-            elseif sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.5) then
-                if diffFloor_idx > 0 then
-                    dataProcess(this_ptr, diffFloor_idx, startPointlist_size);
-                end
-            elseif sameFloor_idx ~= nil then
-                if  sameFloor_idx > 0 then
-                    dataProcess(this_ptr, sameFloor_idx, startPointlist_size);
-                end
-            elseif diffFloor_idx ~= nil then
-                if diffFloor_idx > 0 then
-                    dataProcess(this_ptr, diffFloor_idx, startPointlist_size);
-                end
-            else
-                clear_datas();
+            local targetStartPoint_idx = sameArea_idx or (calcbyFloor(sameFloor_shortest_distance, diffFloor_shortest_distance) == true and diffFloor_idx) or sameFloor_idx or diffFloor_idx;
+            if targetStartPoint_idx ~= nil and targetStartPoint_idx > 0 then
+                setCurrentSelectStartPointIndex_method:call(this_ptr, targetStartPoint_idx);
+                hook_datas.targetCampIdx = targetStartPoint_idx;
+                hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(this_ptr));
+                hook_datas.selectMethod = (targetStartPoint_idx + 1) < (startPointlist_size * 0.5) and selectPrevItem_method or selectNextItem_method;
+                hook_datas.hasData = true;
             end
         end
     end
@@ -165,5 +160,3 @@ sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisi
         end
     end
 end);
-
-clear_datas();

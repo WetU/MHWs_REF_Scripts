@@ -32,14 +32,15 @@ local QuestCategorySortType_field = QuestCounterContext_type_def:get_field("Ques
 local SORT_TYPE_type_def = sdk.find_type_definition("app.GUI050000QuestListParts.SORT_TYPE");
 local value_field = SORT_TYPE_type_def:get_field("value__");
 
-sdk.hook(QuestCounterContext_type_def:get_method("init"), getThisPtr, function()
-    local QuestCounterContext = thread.get_hook_storage()["this_ptr"];
+sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
+    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
     local sort_type_list = QuestCategorySortType_field:get_data(QuestCounterContext);
     for i = 0, sort_type_list:get_size() - 1 do
         local sort_type = sort_type_list:get_element(i);
         local saved_sort_type = config.sort_types[i + 1];
         if value_field:get_data(sort_type) ~= saved_sort_type then
             sdk.set_native_field(sort_type, SORT_TYPE_type_def, "value__", saved_sort_type);
+            sort_type_list[i] = sort_type;
         end
     end
     local view_type = config.view_type;
