@@ -65,7 +65,7 @@ local Constants = {
 
     getCallbackMethod = function(methods, name)
         for _, v in pairs(methods) do
-            if string.match(v:get_name(), "^<" .. name .. ">.*") ~= nil then
+            if string.match(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
                 return v;
             end
         end
