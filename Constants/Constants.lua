@@ -19,7 +19,6 @@ local Constants = {
     ipairs = _G.ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
-    type = _G.type,
     math = _G.math,
     string = string,
     table = _G.table,

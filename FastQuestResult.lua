@@ -15,7 +15,6 @@ local get_IDInt_method = GUI070000_type_def:get_method("get_IDInt");
 local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
 
 local GUIPartsReward_type_def = sdk.find_type_definition("app.cGUIPartsReward");
-local get__Mode_method = GUIPartsReward_type_def:get_method("get__Mode");
 local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
 local get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
@@ -27,7 +26,7 @@ local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
-local JUDGE = get__Mode_method:get_return_type():get_field("JUDGE"):get_data(nil); -- static
+local JUDGE = sdk.find_type_definition("app.cGUIPartsReward.MODE"):get_field("JUDGE"):get_data(nil); -- static
 
 local GUIItemGridPartsFluent_type_def = sdk.find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
@@ -52,12 +51,20 @@ end
 local hook_data = {
     GUI070000 = nil,
     GUIPartsReward_ptr = nil,
+    Mode = nil,
     checkedNewItem = {}
 };
 
-sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), function(args)
+sdk.hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUIPartsReward.MODE, System.Boolean, System.Boolean)"), function(args)
+    local storage = thread.get_hook_storage();
     if hook_data.GUIPartsReward_ptr == nil then
-        local this_ptr = args[2];
+        storage.this_ptr = args[2];
+    end
+    storage.Mode_ptr = args[4];
+end, function()
+    local storage = thread.get_hook_storage();
+    if hook_data.GUIPartsReward_ptr == nil then
+        local this_ptr = storage.this_ptr;
         if get__IsViewMode_method:call(this_ptr) == false then
             local Owner = get_Owner_method:call(this_ptr);
             if get_IDInt_method:call(Owner) == UI070000 then
@@ -66,13 +73,18 @@ sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), function(args)
             end
         end
     end
-end, function()
+    if hook_data.GUIPartsReward_ptr ~= nil then
+        hook_data.Mode = sdk.to_int64(storage.Mode_ptr) & 0xFFFFFFFF;
+    end
+end);
+
+sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), nil, function()
     local GUIPartsReward_ptr = hook_data.GUIPartsReward_ptr;
     if GUIPartsReward_ptr ~= nil then
         if get__isRandomAmuletMode_method:call(GUIPartsReward_ptr) == true then
             skipJudgeAnimation(GUIPartsReward_ptr);
         else
-            local Mode = get__Mode_method:call(GUIPartsReward_ptr);
+            local Mode = hook_data.Mode;
             if hook_data.checkedNewItem[Mode] == nil then
                 hook_data.checkedNewItem[Mode] = false;
                 local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
@@ -99,6 +111,7 @@ sdk.hook(GUI070000_type_def:get_method("onClose"), function(args)
     hook_data = {
         GUI070000 = nil,
         GUIPartsReward_ptr = nil,
+        Mode = nil,
         checkedNewItem = {}
     };
 end);

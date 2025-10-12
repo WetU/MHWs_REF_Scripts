@@ -20,8 +20,8 @@ local GUI_field = GUI020201_type_def:get_field("_GUI");
 
 local TYPE_type_def = CurType_field:get_type();
 local TYPES = {
-    START = TYPE_type_def:get_field("START"):get_data(nil),
-    CLEAR = TYPE_type_def:get_field("CLEAR"):get_data(nil)
+    TYPE_type_def:get_field("START"):get_data(nil),
+    TYPE_type_def:get_field("CLEAR"):get_data(nil)
 };
 
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
@@ -52,7 +52,7 @@ local GUI020201_datas = {
 sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
     local CurType = CurType_field:get_data(GUI020201_ptr);
-    for k, v in pairs(TYPES) do
+    for _, v in pairs(TYPES) do
         if v == CurType then
             if GUI020201_datas.GUI == nil then
                 GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);

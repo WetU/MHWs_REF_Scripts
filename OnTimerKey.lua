@@ -12,7 +12,7 @@ local Type_field = Constants.GUIAppKey_Type_field;
 local GUIFunc_TYPE_type_def = Constants.GUIFunc_TYPE_type_def;
 local GUIFunc_TYPE = {
     RETURN_TIME_SKIP = GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil),
-    RESULT_SKIP = GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil)
+    RESULT_SKIP = GUIFunc_TYPE_type_def:get_field("RESULT_SKIP"):get_data(nil),
 };
 
 local TYPE_key = nil;
