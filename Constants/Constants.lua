@@ -14,6 +14,11 @@ local GenericList_type_def = sdk.find_type_definition("System.Collections.Generi
 
 local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
 
+local UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type();
+local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
+
+local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
+
 local Constants = {
     pairs = pairs,
     ipairs = _G.ipairs,
@@ -43,7 +48,8 @@ local Constants = {
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
-    UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type(),
+    ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
+    UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
@@ -79,7 +85,9 @@ Constants.init = function()
         Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
         Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
         Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
-        Constants.UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
+        local UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
+        Constants.UserSaveData = UserSaveData;
+        Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
     end
 end
 
@@ -90,6 +98,7 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, fu
         Constants.FacilityManager = nil;
         Constants.GUIManager = nil;
         Constants.UserSaveData = nil;
+        Constants.ShortcutPalletParam = nil;
     end
 end);
 
