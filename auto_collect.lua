@@ -331,6 +331,7 @@ end);
 
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)
     local dataList_ptr = args[3];
+    local EquipParam = nil;
     for i = 0, GenericList_get_Count_method:call(dataList_ptr) - 1 do
         local ShipData = GenericList_get_Item_method:call(dataList_ptr, i);
         local StockNum = SupportShipData_get_StockNum_method:call(ShipData);
@@ -347,7 +348,10 @@ sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItem
                     else
                         local weaponType = SupportShipData_get_WeaponType_method:call(ShipData);
                         if weaponType > WeaponType.INVALID and weaponType < WeaponType.MAX then
-                            addEquipBoxWeapon_method:call(get_Equip_method:call(Constants.UserSaveData), getWeaponData_method:call(nil, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData)), weaponType), nil);
+                            if EquipParam == nil then
+                                EquipParam = get_Equip_method:call(Constants.UserSaveData);
+                            end
+                            addEquipBoxWeapon_method:call(EquipParam, getWeaponData_method:call(nil, getWeaponEnumId_method:call(nil, weaponType, SupportShipData_get_ParamId_method:call(ShipData)), weaponType), nil);
                             payPoint_method:call(nil, totalCost);
                             sdk.set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
                         end
