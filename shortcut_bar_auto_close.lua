@@ -20,8 +20,11 @@ sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), getObject, func
 	thread.get_hook_storage()["this"]:write_float(0x344, 0.5);
 end);
 
+local ShortcutPalletParam = nil;
 sdk.hook(GUI020600_type_def:get_method("onHudClose"), nil, function()
-	local ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(Constants.UserSaveData));
+	if ShortcutPalletParam == nil then
+		ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(Constants.UserSaveData));
+	end
 	if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
 		setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
 	end
