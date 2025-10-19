@@ -60,7 +60,6 @@ local UserSaveParam_type_def = Constants.UserSaveParam_type_def;
 local get_Equip_method = UserSaveParam_type_def:get_method("get_Equip");
 local get_Collection_method = UserSaveParam_type_def:get_method("get_Collection");
 local get_LargeWorkshop_method = UserSaveParam_type_def:get_method("get_LargeWorkshop");
-local Save_get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local addEquipBoxWeapon_method = get_Equip_method:get_return_type():get_method("addEquipBoxWeapon(app.user_data.WeaponData.cData, app.EquipDef.WeaponRecipeInfo)");
 
@@ -82,7 +81,7 @@ local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_IT
 
 local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(System.Boolean)");
 
-local getCoolTimer_method = Save_get_Pugee_method:get_return_type():get_method("getCoolTimer");
+local getCoolTimer_method = Constants.PugeeParam_type_def:get_method("getCoolTimer");
 
 local FacilityRallus_type_def = sdk.find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
@@ -180,17 +179,17 @@ sdk.hook(sdk.find_type_definition("app.FacilityLargeWorkshop"):get_method("endFe
     end
 end);
 
-local PugeeParam = nil;
+local pugee_hasReward = false;
 sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
-    if PugeeParam == nil then
-        local UserSaveData = Constants.UserSaveData;
-        if UserSaveData ~= nil then
-            PugeeParam = Save_get_Pugee_method:call(UserSaveData);
-        end
+    local PugeeParam = Constants.PugeeParam;
+    if PugeeParam ~= nil and getCoolTimer_method:call(PugeeParam) <= 0.0 then
+        thread.get_hook_storage()["this_ptr"] = args[2];
+        pugee_hasReward = true;
     end
 end, function()
-    if PugeeParam ~= nil and getCoolTimer_method:call(PugeeParam) <= 0.0 then
-        stroke_method:call(get_Pugee_method:call(Constants.FacilityManager), true);
+    if pugee_hasReward == true then
+        stroke_method:call(get_Pugee_method:call(thread.get_hook_storage()["this_ptr"]), true);
+        pugee_hasReward = false;
     end
 end);
 
@@ -271,13 +270,13 @@ end
 
 sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
     init();
-    local FacilityManager = Constants.FacilityManager;
+    local FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
     local FacilityMoriver = get_Moriver_method:call(FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);
     end
     local FacilityDining = get_Dining_method:call(FacilityManager);
-    if getSuppliableFoodNum_method:call(FacilityDining) == getSupplyFoodMax(FacilityDining) then
+    if getSuppliableFoodNum_method:call(FacilityDining) >= getSupplyFoodMax(FacilityDining) then
         supplyFood_method:call(FacilityDining);
     end
 end);

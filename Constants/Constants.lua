@@ -16,6 +16,7 @@ local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataMana
 
 local UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type();
 local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
+local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
 
@@ -47,6 +48,7 @@ local Constants = {
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
+    PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
@@ -83,10 +85,10 @@ Constants.init = function()
     if isInitialized == false then
         isInitialized = true;
         Constants.ChatManager = sdk.get_managed_singleton("app.ChatManager");
-        Constants.FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
         Constants.GUIManager = sdk.get_managed_singleton("app.GUIManager");
         local UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
         Constants.UserSaveData = UserSaveData;
+        Constants.PugeeParam = get_Pugee_method:call(UserSaveData);
         Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
     end
 end
@@ -95,9 +97,9 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, fu
     if isInitialized == true then
         isInitialized = false;
         Constants.ChatManager = nil;
-        Constants.FacilityManager = nil;
         Constants.GUIManager = nil;
         Constants.UserSaveData = nil;
+        Constants.PugeeParam = nil;
         Constants.ShortcutPalletParam = nil;
     end
 end);
