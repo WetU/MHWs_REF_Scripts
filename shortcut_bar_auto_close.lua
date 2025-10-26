@@ -1,8 +1,7 @@
 local Constants = _G.require("Constants/Constants");
+
 local sdk = Constants.sdk;
 local thread = Constants.thread;
-
-local getObject = Constants.getObject;
 
 local GUI020600_type_def = sdk.find_type_definition("app.GUI020600");
 
@@ -12,7 +11,7 @@ local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurre
 
 local PC = sdk.find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_data(nil); -- static
 
-sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), getObject, function()
+sdk.hook(GUI020600_type_def:get_method("execute(System.Int32)"), Constants.getObject, function()
 	thread.get_hook_storage()["this"]:write_float(0x344, 0.5);
 end);
 

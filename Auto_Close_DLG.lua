@@ -175,7 +175,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
             for _, v in pairs(auto_close_IDs) do
                 if Id == v then
                     auto_close(NotifyWindowApp, CurInfoApp, Id);
-                    return;
+                    break;
                 end
             end
         end

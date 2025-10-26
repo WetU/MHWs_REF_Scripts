@@ -6,8 +6,6 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 local re = Constants.re;
 
-local getThisPtr = Constants.getThisPtr;
-
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
@@ -49,7 +47,7 @@ local GUI020201_datas = {
     reqSkip = false,
     isSetted = false
 };
-sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
+sdk.hook(GUI020201_type_def:get_method("onOpen"), Constants.getThisPtr, function()
     local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
     local CurType = CurType_field:get_data(GUI020201_ptr);
     for _, v in pairs(TYPES) do

@@ -3,7 +3,6 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local getThisPtr = Constants.getThisPtr;
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
@@ -89,7 +88,7 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-sdk.hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
+sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
     local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
     local startPointlist_size = GenericList_get_Count_method:call(startPointlist);

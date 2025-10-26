@@ -3,8 +3,6 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
-local getThisPtr = Constants.getThisPtr;
-
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 --<< GUI070000 Fix Quest Result >>--
@@ -206,7 +204,7 @@ end, function()
     hasContribution = nil;
 end);
 
-sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), getThisPtr, function()
+sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), Constants.getThisPtr, function()
     endQuestContribution_method:call(GUI020100);
     Contribution_endFix_method:call(thread.get_hook_storage()["this_ptr"]);
     terminateQuestResultFlow();

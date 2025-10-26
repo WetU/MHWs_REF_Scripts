@@ -1,5 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 
+local ipairs = Constants.ipairs;
+
 local sdk = Constants.sdk;
 
 local GUI090002PartsItemReceive_type_def = sdk.find_type_definition("app.GUI090002PartsItemReceive");
@@ -12,8 +14,8 @@ local set__WaitControlTime_method = GUI090002PartsItemReceive_type_def:get_metho
 
 local MODE_type_def = get__Mode_method:get_return_type();
 local MODE = {
-    JUDGE00 = MODE_type_def:get_field("JUDGE00"):get_data(nil),
-    JUDGE01 = MODE_type_def:get_field("JUDGE01"):get_data(nil)
+    MODE_type_def:get_field("JUDGE00"):get_data(nil),
+    MODE_type_def:get_field("JUDGE01"):get_data(nil)
 };
 
 local GUI090002PartsItemReceive_ptr = nil;
@@ -24,15 +26,18 @@ end);
 sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI090002PartsItemReceive_ptr ~= nil then
         local Mode = get__Mode_method:call(GUI090002PartsItemReceive_ptr);
-        if Mode == MODE.JUDGE00 or Mode == MODE.JUDGE01 then
-            if get__JudgeAnimationEnd_method:call(GUI090002PartsItemReceive_ptr) == false then
-                if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
-                    set__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
+        for _, v in ipairs(MODE) do
+            if Mode == v then
+                if get__JudgeAnimationEnd_method:call(GUI090002PartsItemReceive_ptr) == false then
+                    if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
+                        set__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
+                    end
+                else
+                    if get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
+                        set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
+                    end
                 end
-            else
-                if get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
-                    set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
-                end
+                break;
             end
         end
     end

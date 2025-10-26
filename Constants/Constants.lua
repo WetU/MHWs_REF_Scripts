@@ -37,9 +37,10 @@ local Constants = {
     draw = _G.draw,
 
     ChatManager = nil,
-    FacilityManager = nil,
     GUIManager = nil,
     UserSaveData = nil,
+    PugeeParam = nil,
+    ShortcutPalletParam = nil,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppKey_type_def = GUIAppKey_type_def,
