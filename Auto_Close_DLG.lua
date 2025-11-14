@@ -70,6 +70,9 @@ local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
 local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
 local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
 
+local GUI080303_type_def = sdk.find_type_definition("app.GUI080303");
+local requestClose_method = GUI080303_type_def:get_method("requestClose(System.Boolean)");
+
 local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
 local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
 local change_default_index_IDs = {
@@ -180,6 +183,10 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
             end
         end
     end
+end);
+
+sdk.hook(GUI080303_type_def:get_method("onOpen"), getThisPtr, function()
+    requestClose_method:call(thread.get_hook_storage()["this_ptr"], true);
 end);
 
 re.on_config_save(saveConfig);
