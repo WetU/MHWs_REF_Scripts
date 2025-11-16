@@ -1,5 +1,11 @@
 local Constants = _G.require("Constants/Constants");
+
+local string = Constants.string;
+local tostring = Constants.tostring;
+
 local sdk = Constants.sdk;
+
+local getThisPtr = Constants.getThisPtr;
 
 local addSystemLog_method = Constants.addSystemLog_method;
 
@@ -15,15 +21,19 @@ local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isAre
 
 local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter") -- static
 
-local get_IsInAllTent_method = getHunterCharacter_method:get_return_type():get_method("get_IsInAllTent");
+local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
+
+local GUI090000_type_def = sdk.find_type_definition("app.GUI090000");
+local get__MainText_method = GUI090000_type_def:get_method("get__MainText");
+
+local get_Message_method = get__MainText_method:get_return_type():get_method("get_Message");
 
 local mySet = 0;
-local isSelfCall = false;
+
 local function restockItems()
     if isValidData_method:call(nil, mySet) == true then
-        isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
-        addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다.");
+        addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다: [" .. tostring(mySet) .. "]");
     else
         fillPouchItems_method:call(nil);
         addSystemLog_method:call(Constants.ChatManager, "아이템이 보충되었습니다.");
@@ -31,15 +41,12 @@ local function restockItems()
     fillShellPouchItems_method:call(nil);
 end
 
-local function getAppliedSet(setVar)
-    local appliedSet = sdk.to_int64(setVar) & 0xFFFFFFFF;
-    if mySet ~= appliedSet then
-        mySet = appliedSet;
+sdk.hook(GUI090000_type_def:get_method("onClose"), getThisPtr, function()
+    if string.match(get_Message_method:call(get__MainText_method:call(thread.get_hook_storage()["this_ptr"])), "캠프 메뉴") ~= nil then
+        restockItems();
     end
-end
+end);
 
-sdk.hook(sdk.find_type_definition("app.Gm170_002"):get_method("buttonPushEvent"), nil, restockItems);
-sdk.hook(sdk.find_type_definition("app.mcHunterTentAction"):get_method("updateBegin"), nil, restockItems);
 sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
     if isArenaQuest_method:call(args[3]) == false and get_IsInAllTent_method:call(getHunterCharacter_method:call(nil)) == false then
         restockItems();
@@ -48,7 +55,6 @@ end);
 
 sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onOpen"), nil, function()
     if isValidData_method:call(nil, mySet) == true then
-        isSelfCall = true;
         applyMySetToPouch_method:call(nil, mySet);
     else
         fillPouchItems_method:call(nil);
@@ -57,13 +63,5 @@ sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onOpen"), nil, fu
 end);
 
 sdk.hook(applyMySetToPouch_method, function(args)
-    if isSelfCall == true then
-        isSelfCall = false;
-    else
-        getAppliedSet(args[2]);
-    end
-end);
-
-sdk.hook(sdk.find_type_definition("app.GUI030203"):get_method("applyMySet(System.Int32)"), function(args)
-    getAppliedSet(args[3]);
+    mySet = sdk.to_int64(args[2]) & 0xFFFFFFFF;
 end);

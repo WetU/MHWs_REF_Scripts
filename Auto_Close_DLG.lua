@@ -31,7 +31,7 @@ local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWin
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
-local GUISystemModuleNotifyWindowApp_type_def = sdk.find_type_definition("app.cGUISystemModuleNotifyWindowApp");
+local GUISystemModuleNotifyWindowApp_type_def = GUI000003_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
 local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
 

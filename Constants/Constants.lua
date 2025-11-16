@@ -48,6 +48,7 @@ local Constants = {
     GUIFunc_TYPE_type_def = Type_field:get_type(),
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
+    HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
