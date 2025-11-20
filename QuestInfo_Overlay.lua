@@ -63,7 +63,7 @@ local questTimeLimit = nil;
 local QuestInfoCreated = false;
 local QuestTimer = nil;
 local DeathCount = nil;
-local curWeaponAttr = nil;
+local curWeaponAttr = "";
 
 local function getQuestTimeInfo(questElapsedTime)
     oldElapsedTime = questElapsedTime;
@@ -97,6 +97,7 @@ sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
             questMaxDeath = nil;
             questTimeLimit = nil;
             oldElapsedTime = nil;
+            curWeaponAttr = "";
             oldWeaponAttr = nil;
         end
     end
