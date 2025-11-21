@@ -6,6 +6,8 @@ local string = _G.string;
 local sdk = _G.sdk;
 local thread = _G.thread;
 
+local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter") -- static
+
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
 local GUIAppKey_type_def = GUIAppOnTimerKey_type_def:get_parent_type();
 local Type_field = GUIAppKey_type_def:get_field("_Type");
@@ -17,8 +19,6 @@ local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataMana
 local UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type();
 local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
 local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
-
-local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
 
 local Constants = {
     pairs = pairs,
@@ -40,7 +40,7 @@ local Constants = {
     GUIManager = nil,
     UserSaveData = nil,
     PugeeParam = nil,
-    ShortcutPalletParam = nil,
+    HunterCharacter = nil,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIAppKey_type_def = GUIAppKey_type_def,
@@ -48,11 +48,10 @@ local Constants = {
     GUIFunc_TYPE_type_def = Type_field:get_type(),
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
-    HunterCharacter_type_def = sdk.find_type_definition("app.HunterCharacter"),
+    HunterCharacter_type_def = getHunterCharacter_method:get_return_type(),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
-    ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = sdk.find_type_definition("app.ChatManager"):get_method("addSystemLog(System.String)"),
@@ -91,7 +90,7 @@ Constants.init = function()
         local UserSaveData = getCurrentUserSaveData_method:call(sdk.get_managed_singleton("app.SaveDataManager"));
         Constants.UserSaveData = UserSaveData;
         Constants.PugeeParam = get_Pugee_method:call(UserSaveData);
-        Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
+        Constants.HunterCharacter = getHunterCharacter_method:call(nil);
     end
 end
 
@@ -102,7 +101,7 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, fu
         Constants.GUIManager = nil;
         Constants.UserSaveData = nil;
         Constants.PugeeParam = nil;
-        Constants.ShortcutPalletParam = nil;
+        Constants.HunterCharacter = nil;
     end
 end);
 

@@ -18,11 +18,14 @@ local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActive
 local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
 local get_QuestElapsedTime_method = QuestDirector_type_def:get_method("get_QuestElapsedTime");
 local QuestPlDieCount_field = QuestDirector_type_def:get_field("QuestPlDieCount");
-local plCharactor_field = QuestDirector_type_def:get_field("plCharactor");
 
 local Mandrake_type_def = QuestPlDieCount_field:get_type();
 local v_field = Mandrake_type_def:get_field("v");
 local m_field = Mandrake_type_def:get_field("m");
+
+local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
+local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
+local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
 local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
 
@@ -30,29 +33,33 @@ local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_met
 
 local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
 
-local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
-local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
-local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
-
 local WeaponAttr = {};
 for _, v in pairs(get_AttibuteType_method:get_return_type():get_fields()) do
     if v:is_static() == true then
-        WeaponAttr[v:get_name()] = v:get_data(nil);
+        local name = v:get_name();
+        if name == "NONE" then
+            WeaponAttr["무속성"] = v:get_data(nil);
+        elseif name == "FIRE" then
+            WeaponAttr["불속성"] = v:get_data(nil);
+        elseif name == "WATER" then
+            WeaponAttr["물속성"] = v:get_data(nil);
+        elseif name == "ICE" then
+            WeaponAttr["얼음속성"] = v:get_data(nil);
+        elseif name == "ELEC" then
+            WeaponAttr["번개속성"] = v:get_data(nil);
+        elseif name == "DRAGON" then
+            WeaponAttr["용속성"] = v:get_data(nil);
+        elseif name == "POISON" then
+            WeaponAttr["독속성"] = v:get_data(nil);
+        elseif name == "PARALYSE" then
+            WeaponAttr["마비속성"] = v:get_data(nil);
+        elseif name == "SLEEP" then
+            WeaponAttr["수면속성"] = v:get_data(nil);
+        elseif name == "BLAST" then
+            WeaponAttr["폭파속성"] = v:get_data(nil);
+        end
     end
 end
-
-local localizedAttr = {
-    ["NONE"] = "무속성",
-    ["FIRE"] = "불속성",
-    ["WATER"] = "물속성",
-    ["ICE"] = "얼음속성",
-    ["ELEC"] = "번개속성",
-    ["DRAGON"] = "용속성",
-    ["POISON"] = "독속성",
-    ["PARALYSE"] = "마비속성",
-    ["SLEEP"] = "수면속성",
-    ["BLAST"] = "폭파속성"
-};
 
 local oldElapsedTime = nil;
 local oldWeaponAttr = nil;
@@ -63,24 +70,26 @@ local questTimeLimit = nil;
 local QuestInfoCreated = false;
 local QuestTimer = nil;
 local DeathCount = nil;
-local curWeaponAttr = "";
+local curWeaponAttr = nil;
+
+local function getWeaponAttr(attr)
+    oldWeaponAttr = attr;
+    if attr ~= nil then
+        for k, v in pairs(WeaponAttr) do
+            if v == attr then
+                curWeaponAttr = k;
+                break;
+            end
+        end
+    elseif curWeaponAttr ~= nil then
+        curWeaponAttr = nil;
+    end
+end
 
 local function getQuestTimeInfo(questElapsedTime)
     oldElapsedTime = questElapsedTime;
     local second, milisecond = math.modf(questElapsedTime % 60.0);
     QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
-end
-
-local function getCurrentWeaponAttr(weaponAttr)
-    oldWeaponAttr = weaponAttr;
-    if weaponAttr ~= nil then
-        for k, v in pairs(WeaponAttr) do
-            if v == weaponAttr then
-                curWeaponAttr = localizedAttr[k];
-                break;
-            end
-        end
-    end
 end
 
 local QuestDirector_ptr = nil;
@@ -96,31 +105,27 @@ sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
             QuestInfoCreated = false;
             questMaxDeath = nil;
             questTimeLimit = nil;
-            oldElapsedTime = nil;
-            curWeaponAttr = "";
-            oldWeaponAttr = nil;
         end
     end
 end, function()
     if QuestDirector_ptr ~= nil then
+        local weaponAttr = get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter)));
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
-        local HunterCharacter = plCharactor_field:get_data(QuestDirector_ptr);
-        local weaponAttr = HunterCharacter ~= nil and get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(HunterCharacter))) or nil;
         if QuestInfoCreated == false then
+            getWeaponAttr(weaponAttr);
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
             getQuestTimeInfo(QuestElapsedTime);
-            getCurrentWeaponAttr(weaponAttr);
             QuestInfoCreated = true;
         else
             if QuestElapsedTime ~= oldElapsedTime then
                 getQuestTimeInfo(QuestElapsedTime);
             end
             if weaponAttr ~= oldWeaponAttr then
-                getCurrentWeaponAttr(weaponAttr);
+                getWeaponAttr(weaponAttr);
             end
         end
     end
@@ -142,7 +147,11 @@ end);
 re.on_frame(function()
     if QuestInfoCreated == true then
         imgui.push_font(font);
-        draw.text(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+        if curWeaponAttr ~= nil then
+            draw.text(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+        else
+            draw.text("" .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+        end
         imgui.pop_font();
     end
 end);
