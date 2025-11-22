@@ -1,6 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 
 local pairs = Constants.pairs;
+local ipairs = Constants.ipairs;
 local table = Constants.table;
 
 local sdk = Constants.sdk;
@@ -25,16 +26,24 @@ local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
 local GUI050000QuestListParts_type_def = sdk.find_type_definition("app.GUI050000QuestListParts");
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
+local set_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("set_ViewQuestDataList(System.Collections.Generic.List`1<app.cGUIQuestViewData>)");
 local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("setSortDifficulty(System.Boolean, System.Boolean)");
 local setSortNewest_method = GUI050000QuestListParts_type_def:get_method("setSortNewest(System.Boolean)");
 local PNLChangeSortType_field = GUI050000QuestListParts_type_def:get_field("_PNLChangeSortType");
 
-local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
+local Remove_method = get_ViewQuestDataList_method:get_return_type():get_method("Remove(app.cGUIQuestViewData)");
 
-local get_MissionID_method = sdk.find_type_definition("app.cGUIQuestViewData"):get_method("get_MissionID");
+local GUIQuestViewData_type_def = sdk.find_type_definition("app.cGUIQuestViewData");
+local get_MissionID_method = GUIQuestViewData_type_def:get_method("get_MissionID");
+local Session_field = GUIQuestViewData_type_def:get_field("Session");
+
+local get_isAutoAccept_method = Session_field:get_type():get_method("get_isAutoAccept");
+
+local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
 
 local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
+local CATEGORY_SEARCH_RESCUE_SIGNAL = CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil);
 local SortNewest = {
     CATEGORY_type_def:get_field("DECLARATION_HISTORY"):get_data(nil),
     CATEGORY_type_def:get_field("KEEP_QUEST"):get_data(nil)
@@ -47,7 +56,6 @@ local SortDifficulty = {
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil),
     CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil),
     CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil),
-    CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
 };
 
 local function sortDifficulty(obj)
@@ -80,6 +88,22 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                 end
             end
         end
+    elseif curCategory == CATEGORY_SEARCH_RESCUE_SIGNAL then
+        local notAutoAccept = {};
+        local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+        for i = 0, GenericList_get_Count_method:call(ViewQuestDataList) - 1 do
+            local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+            if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
+                table.insert(notAutoAccept, quest_data);
+            end
+        end
+        if #notAutoAccept > 0 then
+            for _, v in ipairs(notAutoAccept) do
+                Remove_method:call(ViewQuestDataList, v);
+            end
+            set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+        end
+        sortDifficulty(this_ptr);
     else
         for _, v in pairs(SortNewest) do
             if v == curCategory then

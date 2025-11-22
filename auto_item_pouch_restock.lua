@@ -18,12 +18,17 @@ local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
 
-local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
+local HunterCharacter_type_def = Constants.HunterCharacter_type_def;
+local get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster");
+local get_IsInAllTent_method = HunterCharacter_type_def:get_method("get_IsInAllTent");
 
 local GUI090000_type_def = sdk.find_type_definition("app.GUI090000");
 local get__MainText_method = GUI090000_type_def:get_method("get__MainText");
 
 local get_Message_method = get__MainText_method:get_return_type():get_method("get_Message");
+
+local PorterRide_type_def = sdk.find_type_definition("app.mcPorterRide");
+local Rider_field = PorterRide_type_def:get_field("_Rider");
 
 local mySetIdx = 0;
 
@@ -58,6 +63,22 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQue
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI030210"):get_method("onClose"), nil, function()
-    restockItems(false);
+local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
+local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
+local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurrentIndex(app.ItemDef.PALLET_TYPE)");
+
+local PC = sdk.find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_data(nil); -- static
+
+local isStartRide = nil;
+sdk.hook(PorterRide_type_def:get_method("updateBegin"), function(args)
+    isStartRide = get_IsMaster_method:call(Rider_field:get_data(args[2]));
+end, function()
+    if isStartRide == true then
+        restockItems(false);
+        local ShortcutPalletParam = Constants.ShortcutPalletParam;
+        if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
+            setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
+        end
+    end
+    isStartRide = nil;
 end);
