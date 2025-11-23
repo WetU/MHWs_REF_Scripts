@@ -57,7 +57,7 @@ local onlineLists = {
     CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil),
     CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil),
     CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
-}
+};
 
 local function sortDifficulty(obj)
     setSortDifficulty_method:call(obj, false, false);
