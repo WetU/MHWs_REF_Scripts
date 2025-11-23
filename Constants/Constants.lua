@@ -8,10 +8,6 @@ local thread = _G.thread;
 
 local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter") -- static
 
-local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local GUIAppKey_type_def = GUIAppOnTimerKey_type_def:get_parent_type();
-local Type_field = GUIAppKey_type_def:get_field("_Type");
-
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local getCurrentUserSaveData_method = sdk.find_type_definition("app.SaveDataManager"):get_method("getCurrentUserSaveData");
@@ -46,9 +42,6 @@ local Constants = {
     HunterCharacter = nil,
 
     ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
-    GUIAppKey_type_def = GUIAppKey_type_def,
-    GUIAppOnTimerKey_type_def = GUIAppOnTimerKey_type_def,
-    GUIFunc_TYPE_type_def = Type_field:get_type(),
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = sdk.find_type_definition("app.GUIManager"),
     HunterCharacter_type_def = getHunterCharacter_method:get_return_type(),
@@ -64,8 +57,6 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
-
-    GUIAppKey_Type_field = Type_field,
 
     getThisPtr = function(args)
         thread.get_hook_storage()["this_ptr"] = args[2];
