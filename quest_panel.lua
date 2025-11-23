@@ -1,6 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local pairs = Constants.pairs;
 local ipairs = Constants.ipairs;
 local table = Constants.table;
 
@@ -43,7 +42,6 @@ local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Me
 
 local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
-local CATEGORY_SEARCH_RESCUE_SIGNAL = CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil);
 local SortNewest = {
     CATEGORY_type_def:get_field("DECLARATION_HISTORY"):get_data(nil),
     CATEGORY_type_def:get_field("KEEP_QUEST"):get_data(nil)
@@ -53,10 +51,13 @@ local SortDifficulty = {
     CATEGORY_type_def:get_field("EVENT"):get_data(nil),
     CATEGORY_type_def:get_field("ARENA"):get_data(nil),
     CATEGORY_type_def:get_field("FREE_TA"):get_data(nil),
-    CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil),
+    CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
+};
+local onlineLists = {
     CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil),
     CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil),
-};
+    CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
+}
 
 local function sortDifficulty(obj)
     setSortDifficulty_method:call(obj, false, false);
@@ -88,31 +89,35 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                 end
             end
         end
-    elseif curCategory == CATEGORY_SEARCH_RESCUE_SIGNAL then
-        local notAutoAccept = {};
-        local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
-        for i = 0, GenericList_get_Count_method:call(ViewQuestDataList) - 1 do
-            local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-            if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
-                table.insert(notAutoAccept, quest_data);
-            end
-        end
-        if #notAutoAccept > 0 then
-            for _, v in ipairs(notAutoAccept) do
-                Remove_method:call(ViewQuestDataList, v);
-            end
-            set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
-        end
-        sortDifficulty(this_ptr);
     else
-        for _, v in pairs(SortNewest) do
-            if v == curCategory then
+        for _, v in ipairs(onlineLists) do
+            if curCategory == v then
+                local notAutoAccept = {};
+                local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+                for i = 0, GenericList_get_Count_method:call(ViewQuestDataList) - 1 do
+                    local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                    if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
+                        table.insert(notAutoAccept, quest_data);
+                    end
+                end
+                if #notAutoAccept > 0 then
+                    for _, v in ipairs(notAutoAccept) do
+                        Remove_method:call(ViewQuestDataList, v);
+                    end
+                    set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                end
+                sortDifficulty(this_ptr);
+                return;
+            end
+        end
+        for _, v in ipairs(SortNewest) do
+            if curCategory == v then
                 setSortNewest_method:call(this_ptr, false);
                 set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "새로운 순");
                 return;
             end
         end
-        for _, v in pairs(SortDifficulty) do
+        for _, v in ipairs(SortDifficulty) do
             if v == curCategory then
                 sortDifficulty(this_ptr);
                 return;

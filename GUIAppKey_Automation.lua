@@ -8,10 +8,10 @@ local thread = Constants.thread;
 local getGUI_method = Constants.GUIManager_type_def:get_method("getGUI(app.GUIID.ID)");
 
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
-local isOn_method = GUIAppOnTimerKey_type_def:get_method("isOn");
 
 local GUIAppKey_type_def = GUIAppOnTimerKey_type_def:get_parent_type();
 local isInputSuccess_method = GUIAppKey_type_def:get_method("isInputSuccess");
+local isOn_method = GUIAppKey_type_def:get_method("isOn");
 local Type_field = GUIAppKey_type_def:get_field("_Type");
 
 local doSkip_method = sdk.find_type_definition("app.GUI020025"):get_method("doSkip");
@@ -40,14 +40,14 @@ sdk.hook(GUIAppKey_type_def:get_method("onUpdate(System.Single)"), function(args
         end
     end
 end, function()
-    if appKey == "TITLE_START" then
-        appKey = nil;
-        sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUIAppKey_type_def, "_Success", true);
-    elseif appKey == "SPECIALTY_GUIDE_CUTSCENE_SKIP" then
-        appKey = nil;
-        if isInputSuccess_method:call(thread.get_hook_storage()["this_ptr"]) == true then
+    if appKey ~= nil then
+        local this_ptr = thread.get_hook_storage()["this_ptr"];
+        if appKey == "TITLE_START" then
+            sdk.set_native_field(this_ptr, GUIAppKey_type_def, "_Success", true);
+        elseif isInputSuccess_method:call(this_ptr) == true then
             doSkip_method:call(getGUI_method:call(Constants.GUIManager, UI020025));
         end
+        appKey = nil;
     end
 end);
 
@@ -63,14 +63,11 @@ sdk.hook(GUIAppOnTimerKey_type_def:get_method("onUpdate(System.Single)"), functi
         end
     end
 end, function()
-    if onTimerKey == "RETURN_TIME_SKIP" then
-        onTimerKey = nil;
+    if onTimerKey ~= nil then
         local this_ptr = thread.get_hook_storage()["this_ptr"];
-        if isOn_method:call(this_ptr) == true then
+        if onTimerKey == "RESULT_SKIP" or isOn_method:call(this_ptr) == true then
             sdk.set_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Success", true);
         end
-    elseif onTimerKey == "RESULT_SKIP" then
-        onTImerKey = nil;
-        sdk.set_native_field(this_ptr, GUIAppOnTimerKey_type_def, "_Success", true);
+        onTimerKey = nil;
     end
 end);

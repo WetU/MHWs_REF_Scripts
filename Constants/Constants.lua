@@ -6,7 +6,7 @@ local string = _G.string;
 local sdk = _G.sdk;
 local thread = _G.thread;
 
-local getHunterCharacter_method = sdk.find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter") -- static
+local getHunterCharacter_method = sdk.find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter") -- static
 
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
