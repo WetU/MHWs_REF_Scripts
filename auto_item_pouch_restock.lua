@@ -8,6 +8,8 @@ local thread = Constants.thread;
 
 local addSystemLog_method = Constants.addSystemLog_method;
 
+local IsArenaQuest_method = sdk.find_type_definition("app.EnemyUtil"):get_method("IsArenaQuest"); -- static
+
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static
 local fillShellPouchItems_method = ItemUtil_type_def:get_method("fillShellPouchItems"); -- static
@@ -18,9 +20,7 @@ local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System
 
 local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
 
-local HunterCharacter_type_def = Constants.HunterCharacter_type_def;
-local get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster");
-local get_IsInAllTent_method = HunterCharacter_type_def:get_method("get_IsInAllTent");
+local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
 
 local GUI090000_type_def = sdk.find_type_definition("app.GUI090000");
 local get__MainText_method = GUI090000_type_def:get_method("get__MainText");
@@ -29,7 +29,6 @@ local get_Message_method = get__MainText_method:get_return_type():get_method("ge
 
 local PorterRide_type_def = sdk.find_type_definition("app.mcPorterRide");
 local get_PorterComm_method = PorterRide_type_def:get_method("get_PorterComm");
-local Rider_field = PorterRide_type_def:get_field("_Rider");
 
 local get_Context_method = get_PorterComm_method:get_return_type():get_method("get_Context");
 
@@ -77,18 +76,18 @@ local PC = sdk.find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):g
 local isStartRide = nil;
 sdk.hook(PorterRide_type_def:get_method("updateBegin"), function(args)
     local this_ptr = args[2];
-    if get_IsMaster_method:call(Rider_field:get_data(this_ptr)) == true then
+    if get_IsRideOwnerPlayerUserControl_method:call(get_Context_method:call(get_PorterComm_method:call(this_ptr))) == true then
         thread.get_hook_storage()["this_ptr"] = this_ptr;
         isStartRide = true;
     end
 end, function()
     if isStartRide == true then
-        if get_IsRideOwnerPlayerUserControl_method:call(get_Context_method:call(get_PorterComm_method:call(thread.get_hook_storage()["this_ptr"]))) == true then
+        if IsArenaQuest_method:call(nil) ~= true then
             restockItems(true);
-            local ShortcutPalletParam = Constants.ShortcutPalletParam;
-            if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
-                setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
-            end
+        end
+        local ShortcutPalletParam = Constants.ShortcutPalletParam;
+        if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
+            setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
         end
         isStartRide = nil;
     end
