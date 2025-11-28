@@ -27,12 +27,11 @@ local get__MainText_method = GUI090000_type_def:get_method("get__MainText");
 
 local get_Message_method = get__MainText_method:get_return_type():get_method("get_Message");
 
-local PorterRide_type_def = sdk.find_type_definition("app.mcPorterRide");
-local get_PorterComm_method = PorterRide_type_def:get_method("get_PorterComm");
+local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
+local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
+local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurrentIndex(app.ItemDef.PALLET_TYPE)");
 
-local get_Context_method = get_PorterComm_method:get_return_type():get_method("get_Context");
-
-local get_IsRideOwnerPlayerUserControl_method = get_Context_method:get_return_type():get_method("get_IsRideOwnerPlayerUserControl");
+local PC = sdk.find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_data(nil); -- static
 
 local mySetIdx = 0;
 
@@ -51,6 +50,17 @@ local function restockItems(sendMessage)
     fillShellPouchItems_method:call(nil);
 end
 
+local function PlayerStartRiding(retval)
+    if IsArenaQuest_method:call(nil) ~= true then
+        restockItems(false);
+    end
+    local ShortcutPalletParam = Constants.ShortcutPalletParam;
+    if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
+        setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
+    end
+    return retval;
+end
+
 sdk.hook(applyMySetToPouch_method, function(args)
     mySetIdx = sdk.to_int64(args[2]) & 0xFFFFFFFF;
 end);
@@ -67,28 +77,5 @@ sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQue
     end
 end);
 
-local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
-local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
-local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurrentIndex(app.ItemDef.PALLET_TYPE)");
-
-local PC = sdk.find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_data(nil); -- static
-
-local isStartRide = nil;
-sdk.hook(PorterRide_type_def:get_method("updateBegin"), function(args)
-    local this_ptr = args[2];
-    if get_IsRideOwnerPlayerUserControl_method:call(get_Context_method:call(get_PorterComm_method:call(this_ptr))) == true then
-        thread.get_hook_storage()["this_ptr"] = this_ptr;
-        isStartRide = true;
-    end
-end, function()
-    if isStartRide == true then
-        if IsArenaQuest_method:call(nil) ~= true then
-            restockItems(true);
-        end
-        local ShortcutPalletParam = Constants.ShortcutPalletParam;
-        if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
-            setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
-        end
-        isStartRide = nil;
-    end
-end);
+sdk.hook(sdk.find_type_definition("app.PlayerCommonAction.cPorterRideStart"):get_method("doEnter"), nil, PlayerStartRiding);
+sdk.hook(sdk.find_type_definition("app.PlayerCommonAction.cPorterRideStartJumpOnto"):get_method("doEnter"), nil, PlayerStartRiding);
