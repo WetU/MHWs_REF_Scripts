@@ -8,21 +8,25 @@ local re = Constants.re;
 
 local getThisPtr = Constants.getThisPtr;
 
+local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
+
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
 local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
+local QUEST_ACTION_TYPE_type_def = sdk.find_type_definition("app.mcHunterQuestActionController.QUEST_ACTION_TYPE");
+local QUEST_ACTION_TYPE = {
+    NONE = QUEST_ACTION_TYPE_type_def:get_field("NONE"):get_data(nil),
+    MAX = QUEST_ACTION_TYPE_type_def:get_field("MAX"):get_data(nil)
+};
+
 local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local GUI020201_CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
-local TYPE_type_def = GUI020201_CurType_field:get_type();
-local TYPES = {
-    TYPE_type_def:get_field("START"):get_data(nil),
-    TYPE_type_def:get_field("CLEAR"):get_data(nil)
-};
+local TYPE_MAX = GUI020201_CurType_field:get_type():get_field("MAX"):get_data(nil);
 
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
@@ -42,9 +46,25 @@ sdk.hook(HunterQuestActionController_type_def:get_method("checkQuestActionEnable
 end, function(retval)
     if (sdk.to_int64(retval) & 1) == 1 then
         local storage = thread.get_hook_storage();
-        showStamp_method:call(storage.this_ptr, sdk.to_int64(storage.actionType_ptr) & 0xFFFFFFFF);
+        local actionType = sdk.to_int64(storage.actionType_ptr) & 0xFFFFFFFF;
+        for _, v in pairs(QUEST_ACTION_TYPE) do
+            if actionType == v then
+                return retval;
+            end
+        end
+        showStamp_method:call(storage.this_ptr, actionType);
     end
     return retval;
+end);
+
+sdk.hook(HunterQuestActionController_type_def:get_method("requestDelayStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE, System.Single)"), function(args)
+    local storage = thread.get_hook_storage();
+    storage.this_ptr = args[2];
+    storage.actionType = sdk.to_int64(args[3]) & 0xFFFFFFFF;
+    return SKIP_ORIGINAL;
+end, function()
+    local storage = thread.get_hook_storage();
+    showStamp_method:call(storage.this_ptr, storage.actionType);
 end);
 
 local GUI020201_datas = {
@@ -61,29 +81,21 @@ local GUI020216_datas = {
 
 sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020201_ptr = thread.get_hook_storage()["this_ptr"];
-    local CurType = GUI020201_CurType_field:get_data(GUI020201_ptr);
-    for _, v in pairs(TYPES) do
-        if v == CurType then
-            if GUI020201_datas.GUI == nil then
-                GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
-            end
-            GUI020201_datas.reqSkip = true;
-            break;
+    if GUI020201_CurType_field:get_data(GUI020201_ptr) ~= TYPE_MAX then
+        if GUI020201_datas.GUI == nil then
+            GUI020201_datas.GUI = GUI_field:get_data(GUI020201_ptr);
         end
+        GUI020201_datas.reqSkip = true;
     end
 end);
 
 sdk.hook(GUI020216_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020216_ptr = thread.get_hook_storage()["this_ptr"];
-    local CurType = GUI020216_CurType_field:get_data(GUI020216_ptr);
-    for _, v in pairs(TYPES) do
-        if v == CurType then
-            if GUI020216_datas.GUI == nil then
-                GUI020216_datas.GUI = GUI_field:get_data(GUI020216_ptr);
-            end
-            GUI020216_datas.reqSkip = true;
-            break;
+    if GUI020216_CurType_field:get_data(GUI020216_ptr) ~= TYPE_MAX then
+        if GUI020216_datas.GUI == nil then
+            GUI020216_datas.GUI = GUI_field:get_data(GUI020216_ptr);
         end
+        GUI020216_datas.reqSkip = true;
     end
 end);
 

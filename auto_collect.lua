@@ -30,7 +30,9 @@ local WeaponUtil_type_def = sdk.find_type_definition("app.WeaponUtil");
 local getWeaponData_method = WeaponUtil_type_def:get_method("getWeaponData(System.Int32, app.WeaponDef.TYPE)"); -- static
 local getWeaponEnumId_method = WeaponUtil_type_def:get_method("getWeaponEnumId(app.WeaponDef.TYPE, System.Int32)"); -- static
 
-local FacilityManager_type_def = sdk.find_type_definition("app.FacilityManager");
+local get_Facility_method = Constants.get_Facility_method;
+
+local FacilityManager_type_def = get_Facility_method:get_return_type();
 local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
@@ -270,7 +272,7 @@ end
 
 sdk.hook(sdk.find_type_definition("app.IngameState"):get_method("enter"), nil, function()
     init();
-    local FacilityManager = sdk.get_managed_singleton("app.FacilityManager");
+    local FacilityManager = get_Facility_method:call(nil);
     local FacilityMoriver = get_Moriver_method:call(FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) == true then
         execMoriver(FacilityMoriver);

@@ -27,11 +27,13 @@ local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
+local HunterCharacter_type_def = Constants.HunterCharacter_type_def;
+local get_HunterStatus_method = HunterCharacter_type_def:get_method("get_HunterStatus");
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
-local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
+local HunterAttackPower_type_def = get_AttackPower_method:get_return_type();
+local get_AttibuteType_method = HunterAttackPower_type_def:get_method("get_AttibuteType");
 
 local WeaponAttr = {};
 for _, v in pairs(get_AttibuteType_method:get_return_type():get_fields()) do
@@ -72,17 +74,21 @@ local QuestTimer = nil;
 local DeathCount = nil;
 local curWeaponAttr = nil;
 
+local QuestDirector_ptr = nil;
+
 local function getWeaponAttr(attr)
-    oldWeaponAttr = attr;
-    if attr ~= nil then
-        for k, v in pairs(WeaponAttr) do
-            if v == attr then
-                curWeaponAttr = k;
-                break;
+    if oldWeaponAttr ~= attr then
+        oldWeaponAttr = attr;
+        if attr ~= nil then
+            for k, v in pairs(WeaponAttr) do
+                if attr == v then
+                    curWeaponAttr = k;
+                    break;
+                end
             end
+        elseif curWeaponAttr ~= nil then
+            curWeaponAttr = nil;
         end
-    elseif curWeaponAttr ~= nil then
-        curWeaponAttr = nil;
     end
 end
 
@@ -92,7 +98,10 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
-local QuestDirector_ptr = nil;
+sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), Constants.getThisPtr, function()
+    getWeaponAttr(get_AttibuteType_method:call(thread.get_hook_storage()["this_ptr"]));
+end);
+
 sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
     if QuestDirector_ptr == nil then
         local this_ptr = args[2];
@@ -109,24 +118,18 @@ sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
     end
 end, function()
     if QuestDirector_ptr ~= nil then
-        local weaponAttr = get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter)));
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
         if QuestInfoCreated == false then
-            getWeaponAttr(weaponAttr);
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
             getQuestTimeInfo(QuestElapsedTime);
+            getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
             QuestInfoCreated = true;
-        else
-            if QuestElapsedTime ~= oldElapsedTime then
-                getQuestTimeInfo(QuestElapsedTime);
-            end
-            if weaponAttr ~= oldWeaponAttr then
-                getWeaponAttr(weaponAttr);
-            end
+        elseif QuestElapsedTime ~= oldElapsedTime then
+            getQuestTimeInfo(QuestElapsedTime);
         end
     end
 end);

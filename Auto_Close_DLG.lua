@@ -96,7 +96,7 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local VariousDataManager = sdk.get_managed_singleton("app.VariousDataManager");
+local VariousDataManager = Constants.get_Various_method:call(nil);
 if VariousDataManager ~= nil then
     local VariousDataManagerSetting = VariousDataManager:get_type_definition():get_method("get_Setting"):call(VariousDataManager);
     if VariousDataManagerSetting ~= nil then
@@ -113,8 +113,11 @@ if VariousDataManager ~= nil then
                         sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
                     end
                 end
+                GUINotifyWindowData = nil;
             end
+            GUIVariousData = nil;
         end
+        VariousDataManagerSetting = nil;
     end
     VariousDataManager = nil;
 end

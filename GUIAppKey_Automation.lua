@@ -10,11 +10,13 @@ local getGUI_method = Constants.GUIManager_type_def:get_method("getGUI(app.GUIID
 local GUIAppOnTimerKey_type_def = sdk.find_type_definition("app.cGUIAppOnTimerKey");
 
 local GUIAppKey_type_def = GUIAppOnTimerKey_type_def:get_parent_type();
-local isInputSuccess_method = GUIAppKey_type_def:get_method("isInputSuccess");
 local isOn_method = GUIAppKey_type_def:get_method("isOn");
 local Type_field = GUIAppKey_type_def:get_field("_Type");
+local Success_field = GUIAppKey_type_def:get_field("_Success");
 
-local doSkip_method = sdk.find_type_definition("app.GUI020025"):get_method("doSkip");
+local GUI020025_type_def = sdk.find_type_definition("app.GUI020025");
+local isCutScenePlaying_method = GUI020025_type_def:get_method("isCutScenePlaying");
+local doSkip_method = GUI020025_type_def:get_method("doSkip");
 
 local UI020025 = Constants.GUIID_type_def:get_field("UI020025"):get_data(nil);
 
@@ -44,8 +46,11 @@ end, function()
         local this_ptr = thread.get_hook_storage()["this_ptr"];
         if appKey == "TITLE_START" then
             sdk.set_native_field(this_ptr, GUIAppKey_type_def, "_Success", true);
-        elseif isInputSuccess_method:call(this_ptr) == true then
-            doSkip_method:call(getGUI_method:call(Constants.GUIManager, UI020025));
+        elseif Success_field:get_data(this_ptr) == false then
+            local GUI020025 = getGUI_method:call(Constants.GUIManager, UI020025);
+            if isCutScenePlaying_method:call(GUI020025) == true then
+                doSkip_method:call(GUI020025);
+            end
         end
         appKey = nil;
     end
