@@ -43,6 +43,6 @@ sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, 
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI090002"):get_method("onClose"), function(args)
+sdk.hook(sdk.find_type_definition("app.GUI090002"):get_method("onClose"), function()
     GUI090002PartsItemReceive_ptr = nil;
 end);

@@ -105,7 +105,7 @@ sdk.hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), nil, function()
     end
 end);
 
-sdk.hook(GUI070000_type_def:get_method("onClose"), function(args)
+sdk.hook(GUI070000_type_def:get_method("onClose"), function()
     hook_data = {
         GUI070000 = nil,
         GUIPartsReward_ptr = nil,
@@ -177,7 +177,7 @@ sdk.hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), n
     end
 end);
 
-sdk.hook(GUI070000_type_def:get_method("onOpen"), function(args)
+sdk.hook(GUI070000_type_def:get_method("onOpen"), function()
     if GUI020100 ~= nil then
         GUI020100 = nil;
     end

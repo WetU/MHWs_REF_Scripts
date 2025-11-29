@@ -26,16 +26,16 @@ local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local GUI020201_CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
+local GUI020216_type_def = sdk.find_type_definition("app.GUI020216");
+local GUI020216_CurType_field = GUI020216_type_def:get_field("_CurType");
+
 local TYPE_MAX = GUI020201_CurType_field:get_type():get_field("MAX"):get_data(nil);
 
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
-local GUI020216_type_def = sdk.find_type_definition("app.GUI020216");
-local GUI020216_CurType_field = GUI020216_type_def:get_field("_CurType");
-
 local FALSE_ptr = sdk.to_ptr(false);
 
-sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function(retval)
+sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
     return FALSE_ptr;
 end);
 

@@ -14,7 +14,7 @@ local function preHook_one(args)
     end
 end
 
-local function preHook_SKIP(args)
+local function preHook_SKIP()
     return SKIP_ORIGINAL;
 end
 
