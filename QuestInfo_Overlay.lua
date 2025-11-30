@@ -73,8 +73,6 @@ local QuestTimer = nil;
 local DeathCount = nil;
 local curWeaponAttr = nil;
 
-local QuestDirector_ptr = nil;
-
 local function getWeaponAttr(attr)
     if oldWeaponAttr ~= attr then
         oldWeaponAttr = attr;
@@ -98,9 +96,12 @@ local function getQuestTimeInfo(questElapsedTime)
 end
 
 sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
-    getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
+    if QuestInfoCreated == true then
+        getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
+    end
 end);
 
+local QuestDirector_ptr = nil;
 sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
     if QuestDirector_ptr == nil then
         local this_ptr = args[2];
