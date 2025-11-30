@@ -15,7 +15,7 @@ local Type_field = GUIAppKey_type_def:get_field("_Type");
 local Success_field = GUIAppKey_type_def:get_field("_Success");
 
 local GUI020025_type_def = sdk.find_type_definition("app.GUI020025");
-local isCutScenePlaying_method = GUI020025_type_def:get_method("isCutScenePlaying");
+local isEnableControllCutScene_method = GUI020025_type_def:get_method("isEnableControllCutScene");
 local doSkip_method = GUI020025_type_def:get_method("doSkip");
 
 local UI020025 = Constants.GUIID_type_def:get_field("UI020025"):get_data(nil);
@@ -46,9 +46,9 @@ end, function()
         local this_ptr = thread.get_hook_storage()["this_ptr"];
         if appKey == "TITLE_START" then
             sdk.set_native_field(this_ptr, GUIAppKey_type_def, "_Success", true);
-        elseif Success_field:get_data(this_ptr) == false then
+        elseif Success_field:get_data(this_ptr) == true then
             local GUI020025 = getGUI_method:call(Constants.GUIManager, UI020025);
-            if isCutScenePlaying_method:call(GUI020025) == true then
+            if isEnableControllCutScene_method:call(GUI020025) == true then
                 doSkip_method:call(GUI020025);
             end
         end

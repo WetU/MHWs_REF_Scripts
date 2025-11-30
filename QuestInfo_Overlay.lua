@@ -27,8 +27,7 @@ local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local HunterCharacter_type_def = Constants.HunterCharacter_type_def;
-local get_HunterStatus_method = HunterCharacter_type_def:get_method("get_HunterStatus");
+local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
@@ -98,8 +97,8 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
-sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), Constants.getThisPtr, function()
-    getWeaponAttr(get_AttibuteType_method:call(thread.get_hook_storage()["this_ptr"]));
+sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
+    getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
 end);
 
 sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
