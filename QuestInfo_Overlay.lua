@@ -73,6 +73,8 @@ local QuestTimer = nil;
 local DeathCount = nil;
 local curWeaponAttr = nil;
 
+local QuestDirector_ptr = nil;
+
 local function getWeaponAttr(attr)
     if oldWeaponAttr ~= attr then
         oldWeaponAttr = attr;
@@ -101,7 +103,6 @@ sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunter
     end
 end);
 
-local QuestDirector_ptr = nil;
 sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
     if QuestDirector_ptr == nil then
         local this_ptr = args[2];
@@ -112,8 +113,6 @@ sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
         QuestDirector_ptr = nil;
         if QuestInfoCreated == true then
             QuestInfoCreated = false;
-            questMaxDeath = nil;
-            questTimeLimit = nil;
         end
     end
 end, function()

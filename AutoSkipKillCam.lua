@@ -8,8 +8,6 @@ local re = Constants.re;
 
 local getThisPtr = Constants.getThisPtr;
 
-local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
-
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_Param_method = QuestDirector_type_def:get_method("get_Param");
 
@@ -26,14 +24,15 @@ local GUI020201_type_def = sdk.find_type_definition("app.GUI020201");
 local GUI020201_CurType_field = GUI020201_type_def:get_field("_CurType");
 local GUI_field = GUI020201_type_def:get_field("_GUI");
 
+local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
+
 local GUI020216_type_def = sdk.find_type_definition("app.GUI020216");
 local GUI020216_CurType_field = GUI020216_type_def:get_field("_CurType");
 
 local TYPE_MAX = GUI020201_CurType_field:get_type():get_field("MAX"):get_data(nil);
 
-local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
-
 local FALSE_ptr = sdk.to_ptr(false);
+local ZERO_float_ptr = sdk.float_to_ptr(0.0);
 
 sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
     return FALSE_ptr;
@@ -58,22 +57,12 @@ end, function(retval)
 end);
 
 sdk.hook(HunterQuestActionController_type_def:get_method("requestDelayStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE, System.Single)"), function(args)
-    local storage = thread.get_hook_storage();
-    storage.this_ptr = args[2];
-    storage.actionType = sdk.to_int64(args[3]) & 0xFFFFFFFF;
-    return SKIP_ORIGINAL;
-end, function()
-    local storage = thread.get_hook_storage();
-    showStamp_method:call(storage.this_ptr, storage.actionType);
+    if sdk.to_float(args[4]) > 0.0 then
+        args[4] = ZERO_float_ptr;
+    end
 end);
 
 local GUI020201_datas = {
-    GUI = nil,
-    reqSkip = false,
-    isSetted = false
-};
-
-local GUI020216_datas = {
     GUI = nil,
     reqSkip = false,
     isSetted = false
@@ -89,6 +78,27 @@ sdk.hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     end
 end);
 
+sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
+    if GUI020201_datas.reqSkip == true and GUI020201_datas.isSetted == false then
+        GUI020201_datas.isSetted = true;
+        GUI020201_datas.reqSkip = false;
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
+    end
+end);
+
+sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
+    if GUI020201_datas.isSetted == true then
+        GUI020201_datas.isSetted = false;
+        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
+    end
+end);
+
+local GUI020216_datas = {
+    GUI = nil,
+    reqSkip = false,
+    isSetted = false
+};
+
 sdk.hook(GUI020216_type_def:get_method("onOpen"), getThisPtr, function()
     local GUI020216_ptr = thread.get_hook_storage()["this_ptr"];
     if GUI020216_CurType_field:get_data(GUI020216_ptr) ~= TYPE_MAX then
@@ -99,26 +109,11 @@ sdk.hook(GUI020216_type_def:get_method("onOpen"), getThisPtr, function()
     end
 end);
 
-sdk.hook(GUI020201_type_def:get_method("guiVisibleUpdate"), nil, function()
-    if GUI020201_datas.reqSkip == true and GUI020201_datas.isSetted == false then
-        GUI020201_datas.isSetted = true;
-        GUI020201_datas.reqSkip = false;
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 10.0);
-    end
-end);
-
 sdk.hook(GUI020216_type_def:get_method("guiVisibleUpdate"), nil, function()
     if GUI020216_datas.reqSkip == true and GUI020216_datas.isSetted == false then
         GUI020216_datas.isSetted = true;
         GUI020216_datas.reqSkip = false;
         set_PlaySpeed_method:call(GUI020216_datas.GUI, 10.0);
-    end
-end);
-
-sdk.hook(GUI020201_type_def:get_method("onCloseApp"), nil, function()
-    if GUI020201_datas.isSetted == true then
-        GUI020201_datas.isSetted = false;
-        set_PlaySpeed_method:call(GUI020201_datas.GUI, 1.0);
     end
 end);
 
