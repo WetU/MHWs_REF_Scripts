@@ -24,6 +24,7 @@ local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isAre
 local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
 
 local GUI090001_type_def = sdk.find_type_definition("app.GUI090001");
+local isActive_method = GUI090001_type_def:get_method("isActive");
 local CurrentMenu_field = GUI090001_type_def:get_field("_CurrentMenu");
 
 local MenuType_type_def = CurrentMenu_field:get_type();
@@ -58,7 +59,7 @@ local function restockItems(sendMessage)
 end
 
 local function PlayerStartRiding(retval)
-    if IsArenaQuest_method:call(nil) ~= true then
+    if IsArenaQuest_method:call(nil) == false then
         restockItems(false);
     end
     local ShortcutPalletParam = Constants.ShortcutPalletParam;
@@ -72,14 +73,24 @@ sdk.hook(applyMySetToPouch_method, function(args)
     mySetIdx = sdk.to_int64(args[2]) & 0xFFFFFFFF;
 end);
 
+local valid_GUI090001 = nil;
 sdk.hook(GUI090001_type_def:get_method("onClose"), function(args)
-    local CurrentMenu = IsArenaQuest_method:call(nil) == false and CurrentMenu_field:get_data(args[2]);
-    if CurrentMenu ~= nil then
+    if IsArenaQuest_method:call(nil) == false then
+        local this_ptr = args[2];
+        local CurrentMenu = CurrentMenu_field:get_data(this_ptr);
         for _, v in ipairs(restockMenus) do
             if CurrentMenu == v then
-                restockItems(true);
+                thread.get_hook_storage()["this_ptr"] = this_ptr;
+                valid_GUI090001 = true;
                 break;
             end
+        end
+    end
+end, function()
+    if valid_GUI090001 == true then
+        valid_GUI090001 = nil;
+        if isActive_method:call(thread.get_hook_storage()["this_ptr"]) == false then
+            restockItems(true);
         end
     end
 end);
