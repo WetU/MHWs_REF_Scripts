@@ -39,10 +39,8 @@ local function skipJudgeAnimation(GUIPartsReward_ptr)
         if get__WaitAnimationTime_method:call(GUIPartsReward_ptr) > 0.01 then
             set__WaitAnimationTime_method:call(GUIPartsReward_ptr, 0.01);
         end
-    else
-        if get__WaitControlTime_method:call(GUIPartsReward_ptr) > 0.01 then
-            set__WaitControlTime_method:call(GUIPartsReward_ptr, 0.01);
-        end
+    elseif get__WaitControlTime_method:call(GUIPartsReward_ptr) > 0.01 then
+        set__WaitControlTime_method:call(GUIPartsReward_ptr, 0.01);
     end
 end
 

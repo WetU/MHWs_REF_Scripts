@@ -32,10 +32,8 @@ sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, 
                     if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
                         set__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
                     end
-                else
-                    if get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
-                        set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
-                    end
+                elseif get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
+                    set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
                 end
                 break;
             end

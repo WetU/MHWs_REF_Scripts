@@ -2,6 +2,7 @@ local Constants = _G.require("Constants/Constants");
 
 local string = Constants.string;
 local tostring = Constants.tostring;
+local ipairs = Constants.ipairs;
 
 local sdk = Constants.sdk;
 local thread = Constants.thread;
@@ -22,10 +23,16 @@ local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isAre
 
 local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
 
-local GUI090000_type_def = sdk.find_type_definition("app.GUI090000");
-local get__MainText_method = GUI090000_type_def:get_method("get__MainText");
+local GUI090001_type_def = sdk.find_type_definition("app.GUI090001");
+local CurrentMenu_field = GUI090001_type_def:get_field("_CurrentMenu");
 
-local get_Message_method = get__MainText_method:get_return_type():get_method("get_Message");
+local MenuType_type_def = CurrentMenu_field:get_type();
+local restockMenus = {
+    MenuType_type_def:get_field("TENT"):get_data(nil),
+    MenuType_type_def:get_field("TEMPORARY_TENT"):get_data(nil),
+    MenuType_type_def:get_field("SIMPLE_TENT"):get_data(nil),
+    MenuType_type_def:get_field("ITEM_BOX"):get_data(nil)
+};
 
 local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
 local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
@@ -65,9 +72,15 @@ sdk.hook(applyMySetToPouch_method, function(args)
     mySetIdx = sdk.to_int64(args[2]) & 0xFFFFFFFF;
 end);
 
-sdk.hook(GUI090000_type_def:get_method("onClose"), Constants.getThisPtr, function()
-    if string.match(get_Message_method:call(get__MainText_method:call(thread.get_hook_storage()["this_ptr"])), "캠프 메뉴") ~= nil then
-        restockItems(true);
+sdk.hook(GUI090001_type_def:get_method("onClose"), function(args)
+    local CurrentMenu = IsArenaQuest_method:call(nil) == false and CurrentMenu_field:get_data(args[2]);
+    if CurrentMenu ~= nil then
+        for _, v in ipairs(restockMenus) do
+            if CurrentMenu == v then
+                restockItems(true);
+                break;
+            end
+        end
     end
 end);
 
