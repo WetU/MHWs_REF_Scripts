@@ -151,46 +151,44 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
-        if Id ~= nil then
-            if Id == INVALID then
-                if get_Caller_method:call(CurInfoApp):get_type_definition():get_full_name() == "app.NetworkErrorManager" then
-                    local GUIManager = Constants.GUIManager;
-                    if GUIManager ~= nil and isVisibleGUI_method:call(GUIManager, UI020100) == true then
-                        local GUIMessageInfo = get_TextInfo_method:call(CurInfoApp);
-                        local Params = get_Params_method:call(GUIMessageInfo);
-                        local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
-                        msg = string.gsub(msg, "{([0-9]+)}", function(i)
-                            local Param = get_Item_method:call(Params, tonumber(i));
-                            local Type = ParamType_field:get_data(Param);
-                            if Type == ParamType.GUID then
-                                return guid2str_method:call(nil, ParamGuid_field:get_data(Param));
-                            elseif Type == ParamType.STRING then
-                                return ParamString_field:get_data(Param);
+        if Id == INVALID then
+            if get_Caller_method:call(CurInfoApp):get_type_definition():get_full_name() == "app.NetworkErrorManager" then
+                local GUIManager = Constants.GUIManager;
+                if GUIManager ~= nil and isVisibleGUI_method:call(GUIManager, UI020100) == true then
+                    local GUIMessageInfo = get_TextInfo_method:call(CurInfoApp);
+                    local Params = get_Params_method:call(GUIMessageInfo);
+                    local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
+                    msg = string.gsub(msg, "{([0-9]+)}", function(i)
+                        local Param = get_Item_method:call(Params, tonumber(i));
+                        local Type = ParamType_field:get_data(Param);
+                        if Type == ParamType.GUID then
+                            return guid2str_method:call(nil, ParamGuid_field:get_data(Param));
+                        elseif Type == ParamType.STRING then
+                            return ParamString_field:get_data(Param);
+                        else
+                            local ParamValue = ParamValue_field:get_data(Param);
+                            if Type == ParamType.INT then
+                                return tostring(ParamInt_field:get_data(ParamValue));
+                            elseif Type == ParamType.LONG then
+                                return tostring(ParamLong_field:get_data(ParamValue));
                             else
-                                local ParamValue = ParamValue_field:get_data(Param);
-                                if Type == ParamType.INT then
-                                    return tostring(ParamInt_field:get_data(ParamValue));
-                                elseif Type == ParamType.LONG then
-                                    return tostring(ParamLong_field:get_data(ParamValue));
-                                else
-                                    return tostring(ParamFloat_field:get_data(ParamValue));
-                                end
+                                return tostring(ParamFloat_field:get_data(ParamValue));
                             end
-                        end);
-                        addSystemLog_method:call(Constants.ChatManager, msg);
-                    end
-                    endWindow_method:call(CurInfoApp, 0);
-                    if isExistWindowEndFunc_method:call(CurInfoApp) == true then
-                        executeWindowEndFunc_method:call(CurInfoApp);
-                    end
-                    closeGUI_method:call(NotifyWindowApp);
+                        end
+                    end);
+                    addSystemLog_method:call(Constants.ChatManager, msg);
                 end
-            else
-                for _, v in pairs(auto_close_IDs) do
-                    if Id == v then
-                        auto_close(NotifyWindowApp, CurInfoApp, Id);
-                        break;
-                    end
+                endWindow_method:call(CurInfoApp, 0);
+                if isExistWindowEndFunc_method:call(CurInfoApp) == true then
+                    executeWindowEndFunc_method:call(CurInfoApp);
+                end
+                closeGUI_method:call(NotifyWindowApp);
+            end
+        else
+            for _, v in pairs(auto_close_IDs) do
+                if Id == v then
+                    auto_close(NotifyWindowApp, CurInfoApp, Id);
+                    break;
                 end
             end
         end
