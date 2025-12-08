@@ -11,7 +11,6 @@ local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
 local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
 local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
 local get_Save_method = GA_type_def:get_method("get_Save"); -- static
-local get_Pl_method = GA_type_def:get_method("get_Pl"); -- static
 
 local GameFlowManager_type_def = get_GameFlow_method:get_return_type();
 local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
@@ -24,10 +23,6 @@ local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
 local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
-
-local getMasterPlayer_method = get_Pl_method:get_return_type():get_method("getMasterPlayer");
-
-local get_Character_method = getMasterPlayer_method:get_return_type():get_method("get_Character");
 
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -52,12 +47,9 @@ local Constants = {
     UserSaveData = nil,
     PugeeParam = nil,
     ShortcutPalletParam = nil,
-    HunterCharacter = nil,
 
-    ActiveQuestData_type_def = sdk.find_type_definition("app.cActiveQuestData"),
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
     GUIManager_type_def = get_GUI_method:get_return_type(),
-    HunterCharacter_type_def = get_Character_method:get_return_type(),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
@@ -106,13 +98,6 @@ Constants.init = function()
                 Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
             end
         end
-        local PlayerManager = get_Pl_method:call(nil);
-        if PlayerManager ~= nil then
-            local MasterPlayer = getMasterPlayer_method:call(PlayerManager);
-            if MasterPlayer ~= nil then
-                Constants.HunterCharacter = get_Character_method:call(MasterPlayer);
-            end
-        end
     end
 end
 
@@ -124,7 +109,6 @@ sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, fu
         Constants.UserSaveData = nil;
         Constants.PugeeParam = nil;
         Constants.ShortcutPalletParam = nil;
-        Constants.HunterCharacter = nil;
     end
 end);
 

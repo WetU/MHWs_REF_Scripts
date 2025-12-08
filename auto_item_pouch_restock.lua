@@ -1,6 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local string = Constants.string;
 local tostring = Constants.tostring;
 local ipairs = Constants.ipairs;
 
@@ -18,10 +17,6 @@ local fillShellPouchItems_method = ItemUtil_type_def:get_method("fillShellPouchI
 local ItemMySetUtil_type_def = sdk.find_type_definition("app.ItemMySetUtil");
 local applyMySetToPouch_method = ItemMySetUtil_type_def:get_method("applyMySetToPouch(System.Int32)"); -- static
 local isValidData_method = ItemMySetUtil_type_def:get_method("isValidData(System.Int32)"); -- static
-
-local isArenaQuest_method = Constants.ActiveQuestData_type_def:get_method("isArenaQuest");
-
-local get_IsInAllTent_method = Constants.HunterCharacter_type_def:get_method("get_IsInAllTent");
 
 local GUI090001_type_def = sdk.find_type_definition("app.GUI090001");
 local isActive_method = GUI090001_type_def:get_method("isActive");
@@ -95,8 +90,8 @@ end, function()
     end
 end);
 
-sdk.hook(Constants.QuestDirector_type_def:get_method("acceptQuest(app.cActiveQuestData, app.cQuestAcceptArg, System.Boolean, System.Boolean)"), function(args)
-    if isArenaQuest_method:call(args[3]) == false and get_IsInAllTent_method:call(Constants.HunterCharacter) == false then
+sdk.hook(sdk.find_type_definition("app.MissionMusicManager.QuestMusicManager"):get_method("onQuestStart"), nil, function()
+    if IsArenaQuest_method:call(nil) == false then
         restockItems(true);
     end
 end);

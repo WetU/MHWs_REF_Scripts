@@ -23,11 +23,13 @@ local Mandrake_type_def = QuestPlDieCount_field:get_type();
 local v_field = Mandrake_type_def:get_field("v");
 local m_field = Mandrake_type_def:get_field("m");
 
-local ActiveQuestData_type_def = Constants.ActiveQuestData_type_def;
+local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
+local getHunterCharacter_method = sdk.find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
+
+local get_HunterStatus_method = getHunterCharacter_method:get_return_type():get_method("get_HunterStatus");
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
@@ -74,6 +76,7 @@ local DeathCount = nil;
 local curWeaponAttr = nil;
 
 local QuestDirector_ptr = nil;
+local Hunter_AttackPower = nil;
 
 local function getWeaponAttr(attr)
     if oldWeaponAttr ~= attr then
@@ -99,7 +102,7 @@ end
 
 sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
     if QuestInfoCreated == true then
-        getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
+        getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
     end
 end);
 
@@ -125,7 +128,8 @@ end, function()
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
             getQuestTimeInfo(QuestElapsedTime);
-            getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(Constants.HunterCharacter))));
+            Hunter_AttackPower = get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)));
+            getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
             QuestInfoCreated = true;
         elseif QuestElapsedTime ~= oldElapsedTime then
             getQuestTimeInfo(QuestElapsedTime);
