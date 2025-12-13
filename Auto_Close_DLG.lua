@@ -107,10 +107,9 @@ if VariousDataManager ~= nil then
             if GUINotifyWindowData ~= nil then
                 local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
                 local Setting_type_def = getSetting_method:get_return_type();
-                local get_DefaultIndex_method = Setting_type_def:get_method("get_DefaultIndex");
                 for id, idx in pairs(change_default_index_IDs) do
                     local Setting = getSetting_method:call(GUINotifyWindowData, id);
-                    if Setting ~= nil and get_DefaultIndex_method:call(Setting) ~= idx then
+                    if Setting ~= nil then
                         sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
                     end
                 end
