@@ -190,8 +190,8 @@ sdk.hook(FacilityManager_type_def:get_method("update"), function(args)
     end
 end, function()
     if pugee_hasReward == true then
-        stroke_method:call(get_Pugee_method:call(thread.get_hook_storage()["this_ptr"]), true);
         pugee_hasReward = false;
+        stroke_method:call(get_Pugee_method:call(thread.get_hook_storage()["this_ptr"]), true);
     end
 end);
 
@@ -302,8 +302,8 @@ end);
 local isSupplyOnlyItem = nil;
 sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = sdk.to_int64(args[3]) & 0xFFFFFFFF;
-    isSupplyOnlyItem = Shikyu_method:call(nil, ItemId);
-    if isSupplyOnlyItem == false then
+    if Shikyu_method:call(nil, ItemId) == false then
+        isSupplyOnlyItem = false;
         local storage = thread.get_hook_storage();
         storage.List_ptr = args[2];
         storage.ItemId = ItemId;
@@ -312,22 +312,19 @@ sdk.hook(sdk.find_type_definition("app.FacilitySupplyItems"):get_method("addItem
     end
 end, function()
     if isSupplyOnlyItem == false then
+        isSupplyOnlyItem = nil;
         local storage = thread.get_hook_storage();
         local List_ptr = storage.List_ptr;
         local ItemId = storage.ItemId;
         local ItemNum = storage.ItemNum;
         for i = 0, GenericList_get_Count_method:call(List_ptr) - 1 do
             local SupplyInfo = GenericList_get_Item_method:call(List_ptr, i);
-            if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId then
-                local Count = SupplyInfo_Count_field:get_data(SupplyInfo);
-                if Count >= ItemNum then
-                    GenericList_RemoveAt_method:call(List_ptr, i);
-                    break;
-                end
+            if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId and SupplyInfo_Count_field:get_data(SupplyInfo) >= ItemNum then
+                GenericList_RemoveAt_method:call(List_ptr, i);
+                break;
             end
         end
     end
-    isSupplyOnlyItem = nil;
 end);
 
 sdk.hook(sdk.find_type_definition("app.savedata.cShipParam"):get_method("setItems(System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>)"), function(args)

@@ -94,19 +94,22 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
             if curCategory == v then
                 local notAutoAccept = {};
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
-                for i = 0, GenericList_get_Count_method:call(ViewQuestDataList) - 1 do
-                    local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                    if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
-                        table.insert(notAutoAccept, quest_data);
+                local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
+                if ViewQuestDataList_size > 0 then
+                    for i = 0, ViewQuestDataList_size - 1 do
+                        local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                        if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
+                            table.insert(notAutoAccept, quest_data);
+                        end
                     end
-                end
-                if #notAutoAccept > 0 then
-                    for _, v in ipairs(notAutoAccept) do
-                        Remove_method:call(ViewQuestDataList, v);
+                    if #notAutoAccept > 0 then
+                        for _, v in ipairs(notAutoAccept) do
+                            Remove_method:call(ViewQuestDataList, v);
+                        end
+                        set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                     end
-                    set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                    sortDifficulty(this_ptr);
                 end
-                sortDifficulty(this_ptr);
                 return;
             end
         end
@@ -120,7 +123,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
         for _, v in ipairs(SortDifficulty) do
             if v == curCategory then
                 sortDifficulty(this_ptr);
-                return;
+                break;
             end
         end
     end

@@ -88,31 +88,31 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
-    thread.get_hook_storage()["this_ptr"] = args[2];
-    if DrawDatas == nil then
-        DrawDatas = {};
-        local MapStageDrawData = get_MapStageDrawData_method:call(Constants.getVariousDataManagetSetting());
-        for _, stageID in ipairs(STAGES) do
-            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
-            if DrawData ~= nil then
-                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
-                local tempTbl = {};
-                for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
-                    local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
-                    tempTbl[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
-                end
-                DrawDatas[stageID] = tempTbl;
-            end
-        end
-    end
-end, function()
+sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
     local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
     local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
     if startPointlist_size > 1 then
         local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
         if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
+            if DrawDatas == nil then
+                DrawDatas = {};
+                local MapStageDrawData = get_MapStageDrawData_method:call(Constants.getVariousDataManagetSetting());
+                for _, stageID in ipairs(STAGES) do
+                    local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
+                    if DrawData ~= nil then
+                        local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
+                        local tempTbl = {};
+                        for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
+                            local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
+                            if AreaIconData ~= nil then
+                                tempTbl[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
+                            end
+                        end
+                        DrawDatas[stageID] = tempTbl;
+                    end
+                end
+            end
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local Stage = get_Stage_method:call(QuestViewData);
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
@@ -124,34 +124,37 @@ end, function()
             local diffFloor_shortest_distance = nil;
             local diffFloor_idx = nil;
             for i = 0, TargetEmStartArea_array:get_size() - 1 do
-                local targetEmAreaNo = Int32_value_field:get_data(TargetEmStartArea_array:get_element(i));
-                local areaIconPos = areaIconPosList[targetEmAreaNo];
-                if areaIconPos ~= nil then
-                    local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
-                    for j = 0, startPointlist_size - 1 do
-                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
-                        local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                        local gimmick_MapAreaNum = get_MapAreaNumSafety_method:call(FieldAreaInfo);
-                        if sameArea_idx ~= nil and gimmick_MapAreaNum ~= targetEmAreaNo then
-                            goto continue;
-                        else
-                            local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
-                            if targetEmAreaNo == gimmick_MapAreaNum then
-                                if sameArea_idx == nil or distance < sameArea_shortest_distance then
-                                    sameArea_shortest_distance = distance;
-                                    sameArea_idx = j;
+                local emAreaNo = TargetEmStartArea_array:get_element(i);
+                if emAreaNo ~= nil then
+                    local targetEmAreaNo = Int32_value_field:get_data(emAreaNo);
+                    local areaIconPos = areaIconPosList[targetEmAreaNo];
+                    if areaIconPos ~= nil then
+                        local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
+                        for j = 0, startPointlist_size - 1 do
+                            local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
+                            local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+                            local gimmick_MapAreaNum = get_MapAreaNumSafety_method:call(FieldAreaInfo);
+                            if sameArea_idx ~= nil and gimmick_MapAreaNum ~= targetEmAreaNo then
+                                goto continue;
+                            else
+                                local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
+                                if targetEmAreaNo == gimmick_MapAreaNum then
+                                    if sameArea_idx == nil or distance < sameArea_shortest_distance then
+                                        sameArea_shortest_distance = distance;
+                                        sameArea_idx = j;
+                                    end
+                                elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                    if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
+                                        sameFloor_shortest_distance = distance;
+                                        sameFloor_idx = j;
+                                    end
+                                elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
+                                    diffFloor_shortest_distance = distance;
+                                    diffFloor_idx = j;
                                 end
-                            elseif get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
-                                if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                    sameFloor_shortest_distance = distance;
-                                    sameFloor_idx = j;
-                                end
-                            elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
-                                diffFloor_shortest_distance = distance;
-                                diffFloor_idx = j;
                             end
+                            ::continue::
                         end
-                        ::continue::
                     end
                 end
             end
