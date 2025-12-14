@@ -97,29 +97,25 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local VariousDataManager = Constants.get_Various_method:call(nil);
-if VariousDataManager ~= nil then
-    local VariousDataManagerSetting = VariousDataManager:get_type_definition():get_method("get_Setting"):call(VariousDataManager);
-    if VariousDataManagerSetting ~= nil then
-        local GUIVariousData = VariousDataManagerSetting:get_type_definition():get_method("get_GUIVariousData"):call(VariousDataManagerSetting);
-        if GUIVariousData ~= nil then
-            local GUINotifyWindowData = GUIVariousData:get_type_definition():get_method("get_NotifyWindowData"):call(GUIVariousData);
-            if GUINotifyWindowData ~= nil then
-                local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
-                local Setting_type_def = getSetting_method:get_return_type();
-                for id, idx in pairs(change_default_index_IDs) do
-                    local Setting = getSetting_method:call(GUINotifyWindowData, id);
-                    if Setting ~= nil then
-                        sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
-                    end
+local VariousDataManagerSetting = Constants.getVariousDataManagetSetting();
+if VariousDataManagerSetting ~= nil then
+    local GUIVariousData = Constants.VariousDataManagerSetting_type_def:get_method("get_GUIVariousData"):call(VariousDataManagerSetting);
+    if GUIVariousData ~= nil then
+        local GUINotifyWindowData = GUIVariousData:get_type_definition():get_method("get_NotifyWindowData"):call(GUIVariousData);
+        if GUINotifyWindowData ~= nil then
+            local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
+            local Setting_type_def = getSetting_method:get_return_type();
+            for id, idx in pairs(change_default_index_IDs) do
+                local Setting = getSetting_method:call(GUINotifyWindowData, id);
+                if Setting ~= nil then
+                    sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
                 end
-                GUINotifyWindowData = nil;
             end
-            GUIVariousData = nil;
+            GUINotifyWindowData = nil;
         end
-        VariousDataManagerSetting = nil;
+        GUIVariousData = nil;
     end
-    VariousDataManager = nil;
+    VariousDataManagerSetting = nil;
 end
 
 local function auto_close(notifyWindowApp, infoApp, id)

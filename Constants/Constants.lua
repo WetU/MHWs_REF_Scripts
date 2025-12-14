@@ -11,6 +11,7 @@ local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
 local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
 local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
 local get_Save_method = GA_type_def:get_method("get_Save"); -- static
+local get_Various_method = GA_type_def:get_method("get_Various"); -- static
 
 local GameFlowManager_type_def = get_GameFlow_method:get_return_type();
 local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
@@ -23,6 +24,8 @@ local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
 local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
+
+local get_Setting_method = get_Various_method:get_return_type():get_method("get_Setting");
 
 local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -55,10 +58,10 @@ local Constants = {
     QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
+    VariousDataManagerSetting_type_def = get_Setting_method:get_return_type(),
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
-    get_Various_method = GA_type_def:get_method("get_Various"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
@@ -80,6 +83,10 @@ local Constants = {
             end
         end
         return nil;
+    end,
+
+    getVariousDataManagetSetting = function()
+        return get_Setting_method:call(get_Various_method:call(nil));
     end
 };
 

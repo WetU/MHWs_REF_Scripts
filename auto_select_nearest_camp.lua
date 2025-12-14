@@ -3,6 +3,10 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
+local table = Constants.table;
+local pairs = Constants.pairs;
+local ipairs = Constants.ipairs;
+
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
@@ -10,9 +14,7 @@ local distance_method = sdk.find_type_definition("via.MathEx"):get_method("dista
 
 local getFloorNumFromAreaNum_method = sdk.find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
 
-local get_MAP3D_method = Constants.GUIManager_type_def:get_method("get_MAP3D");
-
-local get_MapStageDrawData_method = get_MAP3D_method:get_return_type():get_method("get_MapStageDrawData");
+local get_MapStageDrawData_method = Constants.VariousDataManagerSetting_type_def:get_method("get_MapStageDrawData");
 
 local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_method("getDrawData(app.FieldDef.STAGE)");
 
@@ -55,6 +57,15 @@ local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelecte
 local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
 
+local STAGES = {};
+for _, v in pairs(get_Stage_method:get_return_type():get_fields()) do
+    if v:is_static() == true then
+        table.insert(STAGES, v:get_data(nil));
+    end
+end
+
+local DrawDatas = nil;
+
 local hook_datas = {
     hasData = false,
     inputCtrl = nil,
@@ -71,16 +82,6 @@ local function clear_datas()
     };
 end
 
-local function getAreaIconPos(areaIconPosList, targetArea)
-    for i = 0, GenericList_get_Count_method:call(areaIconPosList) - 1 do
-        local AreaIconData = GenericList_get_Item_method:call(areaIconPosList, i);
-        if get_AreaNum_method:call(AreaIconData) == targetArea then
-            return get_AreaIconPos_method:call(AreaIconData);
-        end
-    end
-    return nil;
-end
-
 local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     if sameFloor_distance ~= nil and diffFloor_distance ~= nil then
         return diffFloor_distance < (sameFloor_distance * 0.45);
@@ -88,7 +89,25 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
+sdk.hook(GUI050001_type_def:get_method("initStartPoint"), function(args)
+    thread.get_hook_storage()["this_ptr"] = args[2];
+    if DrawDatas == nil then
+        DrawDatas = {};
+        local MapStageDrawData = get_MapStageDrawData_method:call(Constants.getVariousDataManagetSetting());
+        for _, stageID in ipairs(STAGES) do
+            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
+            if DrawData ~= nil then
+                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
+                local tempTbl = {};
+                for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
+                    local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
+                    tempTbl[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
+                end
+                DrawDatas[stageID] = tempTbl;
+            end
+        end
+    end
+end, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
     local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
     local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
@@ -97,7 +116,7 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, 
         if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local Stage = get_Stage_method:call(QuestViewData);
-            local areaIconPosList = get_AreaIconPosList_method:call(getDrawData_method:call(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)), Stage));
+            local areaIconPosList = DrawDatas[Stage];
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
             local sameArea_shortest_distance = nil;
             local sameArea_idx = nil;
@@ -107,7 +126,7 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, 
             local diffFloor_idx = nil;
             for i = 0, TargetEmStartArea_array:get_size() - 1 do
                 local targetEmAreaNo = Int32_value_field:get_data(TargetEmStartArea_array:get_element(i));
-                local areaIconPos = getAreaIconPos(areaIconPosList, targetEmAreaNo);
+                local areaIconPos = areaIconPosList[targetEmAreaNo];
                 if areaIconPos ~= nil then
                     local targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
                     for j = 0, startPointlist_size - 1 do
