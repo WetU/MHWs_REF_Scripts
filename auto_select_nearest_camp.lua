@@ -4,7 +4,6 @@ local sdk = Constants.sdk;
 local thread = Constants.thread;
 
 local table = Constants.table;
-local pairs = Constants.pairs;
 local ipairs = Constants.ipairs;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
@@ -58,7 +57,7 @@ local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevIt
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
 
 local STAGES = {};
-for _, v in pairs(get_Stage_method:get_return_type():get_fields()) do
+for _, v in ipairs(get_Stage_method:get_return_type():get_fields()) do
     if v:is_static() == true then
         table.insert(STAGES, v:get_data(nil));
     end
@@ -116,8 +115,8 @@ end, function()
         if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local Stage = get_Stage_method:call(QuestViewData);
-            local areaIconPosList = DrawDatas[Stage];
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
+            local areaIconPosList = DrawDatas[Stage];
             local sameArea_shortest_distance = nil;
             local sameArea_idx = nil;
             local sameFloor_shortest_distance = nil;

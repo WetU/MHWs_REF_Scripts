@@ -37,7 +37,7 @@ local HunterAttackPower_type_def = get_AttackPower_method:get_return_type();
 local get_AttibuteType_method = HunterAttackPower_type_def:get_method("get_AttibuteType");
 
 local WeaponAttr = {};
-for _, v in pairs(get_AttibuteType_method:get_return_type():get_fields()) do
+for _, v in Constants.ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
     if v:is_static() == true then
         local name = v:get_name();
         if name == "NONE" then
