@@ -85,7 +85,7 @@ local Constants = {
         return nil;
     end,
 
-    getVariousDataManagetSetting = function()
+    getVariousDataManagerSetting = function()
         return get_Setting_method:call(get_Various_method:call(nil));
     end
 };

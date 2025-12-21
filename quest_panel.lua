@@ -26,7 +26,7 @@ local GUI050000QuestListParts_type_def = sdk.find_type_definition("app.GUI050000
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
 local set_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("set_ViewQuestDataList(System.Collections.Generic.List`1<app.cGUIQuestViewData>)");
-local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("setSortDifficulty(System.Boolean, System.Boolean)");
+local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("setSortDifficulty(System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean)");
 local setSortNewest_method = GUI050000QuestListParts_type_def:get_method("setSortNewest(System.Boolean)");
 local PNLChangeSortType_field = GUI050000QuestListParts_type_def:get_field("_PNLChangeSortType");
 
@@ -36,7 +36,12 @@ local GUIQuestViewData_type_def = sdk.find_type_definition("app.cGUIQuestViewDat
 local get_MissionID_method = GUIQuestViewData_type_def:get_method("get_MissionID");
 local Session_field = GUIQuestViewData_type_def:get_field("Session");
 
-local get_isAutoAccept_method = Session_field:get_type():get_method("get_isAutoAccept");
+local get_SearchResult_method = Session_field:get_type():get_method("get_SearchResult");
+
+local SearchResultQuest_type_def = get_SearchResult_method:get_return_type();
+local isAutoAccept_field = SearchResultQuest_type_def:get_field("isAutoAccept");
+local memberNum_field = SearchResultQuest_type_def:get_field("memberNum");
+local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
 
 local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
 
@@ -60,9 +65,16 @@ local onlineLists = {
 };
 
 local function sortDifficulty(obj)
-    setSortDifficulty_method:call(obj, false, false);
+    setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
     set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
 end
+
+sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
+    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
+    if QuestViewType_field:get_data(QuestCounterContext) ~= GRID then
+        sdk.set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", GRID);
+    end
+end);
 
 sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), getThisPtr, function()
     local this_ptr = thread.get_hook_storage()["this_ptr"];
@@ -92,18 +104,19 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
     else
         for _, v in ipairs(onlineLists) do
             if curCategory == v then
-                local notAutoAccept = {};
+                local shouldHideItems = {};
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
                 local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
                 if ViewQuestDataList_size > 0 then
                     for i = 0, ViewQuestDataList_size - 1 do
                         local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                        if get_isAutoAccept_method:call(Session_field:get_data(quest_data)) ~= true then
-                            table.insert(notAutoAccept, quest_data);
+                        local SearchResultQuest = get_SearchResult_method:call(Session_field:get_data(quest_data));
+                        if isAutoAccept_field:get_data(SearchResultQuest) ~= true or memberNum_field:get_data(SearchResultQuest) == maxMemberNum_field:get_data(SearchResultQuest) then
+                            table.insert(shouldHideItems, quest_data);
                         end
                     end
-                    if #notAutoAccept > 0 then
-                        for _, v in ipairs(notAutoAccept) do
+                    if #shouldHideItems > 0 then
+                        for _, v in ipairs(shouldHideItems) do
                             Remove_method:call(ViewQuestDataList, v);
                         end
                         set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
@@ -126,12 +139,5 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                 break;
             end
         end
-    end
-end);
-
-sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
-    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
-    if QuestViewType_field:get_data(QuestCounterContext) ~= GRID then
-        sdk.set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", GRID);
     end
 end);

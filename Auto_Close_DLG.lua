@@ -97,7 +97,7 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local GUIVariousData = Constants.VariousDataManagerSetting_type_def:get_method("get_GUIVariousData"):call(Constants.getVariousDataManagetSetting());
+local GUIVariousData = Constants.VariousDataManagerSetting_type_def:get_method("get_GUIVariousData"):call(Constants.getVariousDataManagerSetting());
 if GUIVariousData ~= nil then
     local GUINotifyWindowData = GUIVariousData:get_type_definition():get_method("get_NotifyWindowData"):call(GUIVariousData);
     if GUINotifyWindowData ~= nil then

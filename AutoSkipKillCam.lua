@@ -8,9 +8,6 @@ local re = Constants.re;
 
 local getThisPtr = Constants.getThisPtr;
 
-local QuestDirector_type_def = Constants.QuestDirector_type_def;
-local get_Param_method = QuestDirector_type_def:get_method("get_Param");
-
 local HunterQuestActionController_type_def = sdk.find_type_definition("app.mcHunterQuestActionController");
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
@@ -34,7 +31,7 @@ local TYPE_MAX = GUI020201_CurType_field:get_type():get_field("MAX"):get_data(ni
 local FALSE_ptr = sdk.to_ptr(false);
 local ZERO_float_ptr = sdk.float_to_ptr(0.0);
 
-sdk.hook(QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
+sdk.hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
     return FALSE_ptr;
 end);
 
