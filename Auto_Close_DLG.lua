@@ -49,7 +49,7 @@ local GUIMessageInfo_type_def = get_TextInfo_method:get_return_type();
 local get_MsgID_method = GUIMessageInfo_type_def:get_method("get_MsgID");
 local get_Params_method = GUIMessageInfo_type_def:get_method("get_Params");
 
-local get_Item_method = get_Params_method:get_return_type():get_method("get_Item(System.Int32)"); -- 144D10300
+local get_Item_method = get_Params_method:get_return_type():get_method("get_Item(System.Int32)");
 
 local ParamData_type_def = get_Item_method:get_return_type();
 local ParamType_field = ParamData_type_def:get_field("ParamType");
@@ -129,11 +129,8 @@ end
 sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
-    if CurInfoApp ~= nil then
-        local Id = get_NotifyWindowId_method:call(CurInfoApp);
-        if Id == GUI000002_0000 then
-            auto_close(NotifyWindowApp, CurInfoApp, Id);
-        end
+    if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
+        auto_close(NotifyWindowApp, CurInfoApp, GUI000002_0000);
     end
 end);
 

@@ -57,9 +57,7 @@ end, function(retval)
 end);
 
 sdk.hook(HunterQuestActionController_type_def:get_method("requestDelayStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE, System.Single)"), function(args)
-    if sdk.to_float(args[4]) > 0.0 then
-        args[4] = ZERO_float_ptr;
-    end
+    args[4] = ZERO_float_ptr;
 end);
 
 local hook_datas = {
