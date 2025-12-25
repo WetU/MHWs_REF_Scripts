@@ -134,6 +134,10 @@ sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     end
 end);
 
+sdk.hook(GUI000003_type_def:get_method("setupDialog"), getThisPtr, function()
+    sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUI000003_type_def, "_DispMinTimer", 0.1);
+end);
+
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);

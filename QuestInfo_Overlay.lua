@@ -33,7 +33,8 @@ local get_HunterStatus_method = getHunterCharacter_method:get_return_type():get_
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
-local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
+local HunterAttackPower_type_def = get_AttackPower_method:get_return_type();
+local get_AttibuteType_method = HunterAttackPower_type_def:get_method("get_AttibuteType");
 
 local WeaponAttr = {};
 for _, v in Constants.ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
@@ -99,7 +100,7 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
-sdk.hook(Constants.GUIManager_type_def:get_method("onPlEquipChange"), nil, function()
+sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
     if QuestInfoCreated == true then
         getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
     end
