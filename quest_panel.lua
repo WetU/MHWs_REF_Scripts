@@ -135,7 +135,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                             set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                         end
                         setSortDifficulty_method:call(this_ptr, false, false, false, true, false, false, false);
-                        set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신순");
+                        set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신 순");
                     end
                     return;
                 end
