@@ -52,6 +52,7 @@ local Constants = {
     ShortcutPalletParam = nil,
 
     GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
+    GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = get_GUI_method:get_return_type(),
     ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
@@ -67,6 +68,7 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
+    requestCallTrigger_method = sdk.find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
 
     getThisPtr = function(args)
         thread.get_hook_storage()["this_ptr"] = args[2];

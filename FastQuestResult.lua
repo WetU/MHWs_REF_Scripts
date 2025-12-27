@@ -3,6 +3,8 @@ local Constants = _G.require("Constants/Constants");
 local sdk = Constants.sdk;
 local thread = Constants.thread;
 
+local getThisPtr = Constants.getThisPtr;
+
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 --<< GUI070000 Fix Quest Result >>--
@@ -33,6 +35,10 @@ local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
 local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
+
+local GUI070001_type_def = sdk.find_type_definition("app.GUI070001");
+local get_IsViewMode_method = GUI070001_type_def:get_method("get_IsViewMode");
+local skipAnimation_method = GUI070001_type_def:get_method("skipAnimation");
 
 local function skipJudgeAnimation(GUIPartsReward_ptr)
     if get__JudgeAnimationEnd_method:call(GUIPartsReward_ptr) == false then
@@ -112,6 +118,13 @@ sdk.hook(GUI070000_type_def:get_method("onClose"), function()
         Mode = nil,
         checkedNewItem = {}
     };
+end);
+
+sdk.hook(GUI070001_type_def:get_method("onOpen"), getThisPtr, function()
+    local this_ptr = thread.get_hook_storage()["this_ptr"];
+    if get_IsViewMode_method:call(this_ptr) == false then
+        skipAnimation_method:call(this_ptr);
+    end
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = sdk.find_type_definition("app.cGUI020100PanelQuestRewardItem");
@@ -209,7 +222,7 @@ end, function()
     hasContribution = nil;
 end);
 
-sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), Constants.getThisPtr, function()
+sdk.hook(GUI020100PanelQuestContribution_type_def:get_method("start"), getThisPtr, function()
     endQuestContribution_method:call(GUI020100_datas.GUI020100);
     Contribution_endFix_method:call(thread.get_hook_storage()["this_ptr"]);
     terminateQuestResultFlow();

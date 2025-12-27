@@ -31,6 +31,8 @@ local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWin
 local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
 local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
+local GUI000004_type_def = sdk.find_type_definition("app.GUI000004");
+
 local GUISystemModuleNotifyWindowApp_type_def = GUI000003_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
 local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("closeGUI");
@@ -127,19 +129,19 @@ local function auto_close(notifyWindowApp, infoApp, id)
 end
 
 sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
-    local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
+    local this_ptr = thread.get_hook_storage()["this_ptr"];
+    sdk.set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.1);
+    local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
         auto_close(NotifyWindowApp, CurInfoApp, GUI000002_0000);
     end
 end);
 
-sdk.hook(GUI000003_type_def:get_method("setupDialog"), getThisPtr, function()
-    sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUI000003_type_def, "_DispMinTimer", 0.1);
-end);
-
 sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
-    local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(thread.get_hook_storage()["this_ptr"]);
+    local this_ptr = thread.get_hook_storage()["this_ptr"];
+    sdk.set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.1);
+    local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
         local Id = get_NotifyWindowId_method:call(CurInfoApp);
@@ -185,6 +187,10 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
             end
         end
     end
+end);
+
+sdk.hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
+    sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUI000004_type_def, "_DispMinTimer", 0.1);
 end);
 
 sdk.hook(GUI080303_type_def:get_method("onOpen"), getThisPtr, function()
