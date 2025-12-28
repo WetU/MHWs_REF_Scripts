@@ -51,6 +51,7 @@ local Session_field = GUIQuestViewData_type_def:get_field("Session");
 local get_SearchResult_method = Session_field:get_type():get_method("get_SearchResult");
 
 local SearchResultQuest_type_def = get_SearchResult_method:get_return_type();
+local isLocked_field = SearchResultQuest_type_def:get_field("isLocked");
 local isAutoAccept_field = SearchResultQuest_type_def:get_field("isAutoAccept");
 local memberNum_field = SearchResultQuest_type_def:get_field("memberNum");
 local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
@@ -77,6 +78,13 @@ local onlineLists = {
 local function sortDifficulty(obj)
     setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
     set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
+end
+
+local function isJoinableNetQuest(obj)
+    if isLocked_field:get_data(obj) == true or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) then
+        return false;
+    end
+    return true;
 end
 
 hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
@@ -129,8 +137,7 @@ hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boole
                         local shouldHideItems = {};
                         for i = 0, ViewQuestDataList_size - 1 do
                             local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                            local SearchResultQuest = get_SearchResult_method:call(Session_field:get_data(quest_data));
-                            if isAutoAccept_field:get_data(SearchResultQuest) == false or memberNum_field:get_data(SearchResultQuest) == maxMemberNum_field:get_data(SearchResultQuest) then
+                            if isJoinableNetQuest(get_SearchResult_method:call(Session_field:get_data(quest_data))) == false then
                                 tinsert(shouldHideItems, quest_data);
                             end
                         end
