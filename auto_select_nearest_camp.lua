@@ -1,17 +1,20 @@
 local Constants = _G.require("Constants/Constants");
 
-local sdk = Constants.sdk;
-local thread = Constants.thread;
-
-local table = Constants.table;
 local ipairs = Constants.ipairs;
+
+local tinsert = Constants.tinsert;
+
+local find_type_definition = Constants.find_type_definition;
+local hook = Constants.hook;
+
+local get_hook_storage = Constants.get_hook_storage;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
-local distance_method = sdk.find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
+local distance_method = find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
-local getFloorNumFromAreaNum_method = sdk.find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
+local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
 
 local get_MapStageDrawData_method = Constants.VariousDataManagerSetting_type_def:get_method("get_MapStageDrawData");
 
@@ -19,19 +22,19 @@ local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_met
 
 local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
 
-local AreaIconData_type_def = sdk.find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
+local AreaIconData_type_def = find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
 local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
 
 local Int32_value_field = get_AreaNum_method:get_return_type():get_field("m_value");
 
-local GUI050001_type_def = sdk.find_type_definition("app.GUI050001");
+local GUI050001_type_def = find_type_definition("app.GUI050001");
 local get_CurrentStartPointList_method = GUI050001_type_def:get_method("get_CurrentStartPointList");
 local get_QuestOrderParam_method = GUI050001_type_def:get_method("get_QuestOrderParam");
 local setCurrentSelectStartPointIndex_method = GUI050001_type_def:get_method("setCurrentSelectStartPointIndex(System.Int32)");
 local StartPointList_field = GUI050001_type_def:get_field("_StartPointList");
 
-local get_BeaconGimmick_method = sdk.find_type_definition("app.cStartPointInfo"):get_method("get_BeaconGimmick");
+local get_BeaconGimmick_method = find_type_definition("app.cStartPointInfo"):get_method("get_BeaconGimmick");
 
 local GUIBeaconGimmick_type_def = get_BeaconGimmick_method:get_return_type();
 local getPos_method = GUIBeaconGimmick_type_def:get_method("getPos");
@@ -51,7 +54,7 @@ local get_Stage_method = GUIQuestViewData_type_def:get_method("get_Stage");
 
 local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
 
-local FluentScrollList_type_def = sdk.find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>");
+local FluentScrollList_type_def = find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelectedIndex");
 local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
 local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
@@ -60,7 +63,7 @@ local STAGES = {};
 for _, v in ipairs(get_Stage_method:get_return_type():get_fields()) do
     local name = v:get_name();
     if name ~= "INVALID" and name ~= "MAX" and v:is_static() == true then
-        table.insert(STAGES, v:get_data(nil));
+        tinsert(STAGES, v:get_data(nil));
     end
 end
 
@@ -91,14 +94,15 @@ local function getDrawDatas()
             if DrawData ~= nil then
                 local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
                 if AreaIconPosList ~= nil then
-                    local tempTbl = {};
                     for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
                         local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
                         if AreaIconData ~= nil then
-                            tempTbl[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
+                            if DrawDatas[stageID] == nil then
+                                DrawDatas[stageID] = {};
+                            end
+                            DrawDatas[stageID][get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
                         end
                     end
-                    DrawDatas[stageID] = tempTbl;
                 end
             end
         end
@@ -112,8 +116,8 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
+hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
     local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
         local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
@@ -190,7 +194,7 @@ sdk.hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, 
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
+hook(find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
     if hook_datas.hasData == true then
         local inputCtrl = hook_datas.inputCtrl;
         if getSelectedIndex_method:call(inputCtrl) ~= hook_datas.targetCampIdx then

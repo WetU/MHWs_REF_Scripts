@@ -1,12 +1,24 @@
 local _G = _G;
 
-local pairs = _G.pairs;
+local ipairs = _G.ipairs;
+
 local string = _G.string;
+local strmatch = string.match;
+
+local math = _G.math;
 
 local sdk = _G.sdk;
-local thread = _G.thread;
+local hook = sdk.hook;
+local find_type_definition = sdk.find_type_definition;
+local to_managed_object = sdk.to_managed_object;
 
-local GA_type_def = sdk.find_type_definition("app.GA");
+local get_hook_storage = _G.thread.get_hook_storage;
+
+local imgui = _G.imgui;
+local json = _G.json;
+local re = _G.re;
+
+local GA_type_def = find_type_definition("app.GA");
 local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
 local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
 local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
@@ -27,23 +39,46 @@ local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("
 
 local get_Setting_method = get_Various_method:get_return_type():get_method("get_Setting");
 
-local GenericList_type_def = sdk.find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
+local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local Constants = {
-    pairs = pairs,
-    ipairs = _G.ipairs,
+    pairs = _G.pairs,
+    ipairs = ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
-    math = _G.math,
-    string = string,
-    table = _G.table,
 
-    sdk = sdk,
-    re = _G.re,
-    thread = thread,
-    json = _G.json,
-    imgui = _G.imgui,
-    draw = _G.draw,
+    strmatch = strmatch,
+    strformat = string.format,
+    strgsub = string.gsub,
+
+    tinsert = _G.table.insert,
+
+    mathmodf = math.modf,
+    mathfloor = math.floor,
+
+    hook = hook,
+    find_type_definition = find_type_definition,
+    to_managed_object = to_managed_object,
+    to_ptr = sdk.to_ptr,
+    to_int64 = sdk.to_int64,
+    float_to_ptr = sdk.float_to_ptr,
+    set_native_field = sdk.set_native_field,
+    SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
+
+    get_hook_storage = get_hook_storage,
+
+    dump_file = json.dump_file,
+    load_file = json.load_file,
+
+    on_config_save = re.on_config_save,
+    on_script_reset = re.on_script_reset,
+    on_frame = re.on_frame,
+
+    load_font = imgui.load_font,
+    push_font = imgui.push_font,
+    pop_font = imgui.pop_font,
+
+    drawtext = _G.draw.text,
 
     ChatManager = nil,
     GUIManager = nil,
@@ -51,12 +86,12 @@ local Constants = {
     PugeeParam = nil,
     ShortcutPalletParam = nil,
 
-    GUIID_type_def = sdk.find_type_definition("app.GUIID.ID"),
-    GUIFunc_TYPE_type_def = sdk.find_type_definition("app.GUIFunc.TYPE"),
+    GUIID_type_def = find_type_definition("app.GUIID.ID"),
+    GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = get_GUI_method:get_return_type(),
-    ItemUtil_type_def = sdk.find_type_definition("app.ItemUtil"),
+    ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
-    QuestDirector_type_def = sdk.find_type_definition("app.cQuestDirector"),
+    QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
     VariousDataManagerSetting_type_def = get_Setting_method:get_return_type(),
@@ -68,19 +103,19 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
-    requestCallTrigger_method = sdk.find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
+    requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
 
     getThisPtr = function(args)
-        thread.get_hook_storage()["this_ptr"] = args[2];
+        get_hook_storage().this_ptr = args[2];
     end,
 
     getObject = function(args)
-        thread.get_hook_storage()["this"] = sdk.to_managed_object(args[2]);
+        get_hook_storage().this = to_managed_object(args[2]);
     end,
 
     getCallbackMethod = function(methods, name)
-        for _, v in pairs(methods) do
-            if string.match(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
+        for _, v in ipairs(methods) do
+            if strmatch(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
                 return v;
             end
         end
@@ -110,7 +145,7 @@ Constants.init = function()
     end
 end
 
-sdk.hook(sdk.find_type_definition("app.TitleState"):get_method("enter"), nil, function()
+hook(find_type_definition("app.TitleState"):get_method("enter"), nil, function()
     if isInitialized == true then
         isInitialized = false;
         Constants.ChatManager = nil;
@@ -128,5 +163,7 @@ if GameFlowManager ~= nil then
     end
     GameFlowManager = nil;
 end
+getStateName_method = nil;
+get_CurrentGameStateType_method = nil;
 
 return Constants;

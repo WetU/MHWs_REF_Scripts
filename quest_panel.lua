@@ -1,10 +1,14 @@
 local Constants = _G.require("Constants/Constants");
 
 local ipairs = Constants.ipairs;
-local table = Constants.table;
 
-local sdk = Constants.sdk;
-local thread = Constants.thread;
+local tinsert = Constants.tinsert;
+
+local find_type_definition = Constants.find_type_definition;
+local hook = Constants.hook;
+local set_native_field = Constants.set_native_field;
+
+local get_hook_storage = Constants.get_hook_storage;
 
 local getThisPtr = Constants.getThisPtr;
 
@@ -12,9 +16,9 @@ local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_set_Item_method = Constants.GenericList_set_Item_method;
 
-local checkQuestClear_method = sdk.find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
+local checkQuestClear_method = find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
 
-local GUI050000_type_def = sdk.find_type_definition("app.GUI050000");
+local GUI050000_type_def = find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
 
 local QuestCounterContext_type_def = get_QuestCounterContext_method:get_return_type();
@@ -22,7 +26,7 @@ local QuestViewType_field = QuestCounterContext_type_def:get_field("QuestViewTyp
 
 local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
 
-local GUI050000QuestListParts_type_def = sdk.find_type_definition("app.GUI050000QuestListParts");
+local GUI050000QuestListParts_type_def = find_type_definition("app.GUI050000QuestListParts");
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
 local set_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("set_ViewQuestDataList(System.Collections.Generic.List`1<app.cGUIQuestViewData>)");
@@ -40,7 +44,7 @@ local PNLChangeSortType_field = GUI050000QuestListParts_type_def:get_field("_PNL
 
 local Remove_method = get_ViewQuestDataList_method:get_return_type():get_method("Remove(app.cGUIQuestViewData)");
 
-local GUIQuestViewData_type_def = sdk.find_type_definition("app.cGUIQuestViewData");
+local GUIQuestViewData_type_def = find_type_definition("app.cGUIQuestViewData");
 local get_MissionID_method = GUIQuestViewData_type_def:get_method("get_MissionID");
 local Session_field = GUIQuestViewData_type_def:get_field("Session");
 
@@ -75,16 +79,16 @@ local function sortDifficulty(obj)
     set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
 end
 
-sdk.hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
-    local QuestCounterContext = get_QuestCounterContext_method:call(thread.get_hook_storage()["this_ptr"]);
+hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
+    local QuestCounterContext = get_QuestCounterContext_method:call(get_hook_storage().this_ptr);
     if QuestViewType_field:get_data(QuestCounterContext) ~= GRID then
-        sdk.set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", GRID);
+        set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", GRID);
     end
 end);
 
-sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
-    if get_IsCancel_method:call(this_ptr) ~= true then
+hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
+    if get_IsCancel_method:call(this_ptr) == false then
         local CATEGORY = get_ViewCategory_method:call(this_ptr);
         if CATEGORY == CATEGORY_FREE then
             sortDifficulty(this_ptr);
@@ -95,7 +99,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                 local uncleared_quests = {};
                 for i = 0, ViewQuestDataList_size - 1 do
                     local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                    table.insert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
+                    tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
                 end
                 local unclearedCount = #uncleared_quests;
                 local clearedCount = #cleared_quests;
@@ -107,6 +111,8 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                         GenericList_set_Item_method:call(ViewQuestDataList, unclearedCount + i, cleared_quests[i + 1]);
                     end
                 end
+                cleared_quests = nil;
+                uncleared_quests = nil;
             end
         elseif CATEGORY == CATEGORY_DECLARATION_HISTORY then
             setSortNewest_method:call(this_ptr, false);
@@ -117,15 +123,15 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
         else
             for _, v in ipairs(onlineLists) do
                 if CATEGORY == v then
-                    local shouldHideItems = {};
                     local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
                     local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
                     if ViewQuestDataList_size > 0 then
+                        local shouldHideItems = {};
                         for i = 0, ViewQuestDataList_size - 1 do
                             local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
                             local SearchResultQuest = get_SearchResult_method:call(Session_field:get_data(quest_data));
-                            if isAutoAccept_field:get_data(SearchResultQuest) ~= true or memberNum_field:get_data(SearchResultQuest) == maxMemberNum_field:get_data(SearchResultQuest) then
-                                table.insert(shouldHideItems, quest_data);
+                            if isAutoAccept_field:get_data(SearchResultQuest) == false or memberNum_field:get_data(SearchResultQuest) == maxMemberNum_field:get_data(SearchResultQuest) then
+                                tinsert(shouldHideItems, quest_data);
                             end
                         end
                         if #shouldHideItems > 0 then
@@ -134,6 +140,7 @@ sdk.hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.B
                             end
                             set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                         end
+                        shouldHideItems = nil;
                         setSortDifficulty_method:call(this_ptr, false, false, false, true, false, false, false);
                         set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신 순");
                     end

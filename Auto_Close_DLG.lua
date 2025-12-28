@@ -1,37 +1,44 @@
 local Constants = _G.require("Constants/Constants");
 
+local ipairs = Constants.ipairs;
 local pairs = Constants.pairs;
 local tonumber = Constants.tonumber;
 local tostring = Constants.tostring;
-local string = Constants.string;
+local strgsub = Constants.strgsub;
 
-local sdk = Constants.sdk;
-local thread = Constants.thread;
-local json = Constants.json;
-local re = Constants.re;
+local hook = Constants.hook;
+local find_type_definition = Constants.find_type_definition;
+local set_native_field = Constants.set_native_field;
+
+local get_hook_storage = Constants.get_hook_storage;
+
+local load_file = Constants.load_file;
+local dump_file = Constants.dump_file;
+
+local on_config_save = Constants.on_config_save;
 
 local getThisPtr = Constants.getThisPtr;
 
-local config = json.load_file("auto_close_DLG.json") or {};
+local config = load_file("auto_close_DLG.json") or {};
 
 local function saveConfig()
-    json.dump_file("auto_close_DLG.json", config);
+    dump_file("auto_close_DLG.json", config);
 end
 
 local addSystemLog_method = Constants.addSystemLog_method;
 
-local guid2str_method = sdk.find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
+local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
 local isVisibleGUI_method = Constants.GUIManager_type_def:get_method("isVisibleGUI(app.GUIID.ID)");
 local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil); -- static
 
-local GUI000002_type_def = sdk.find_type_definition("app.GUI000002");
+local GUI000002_type_def = find_type_definition("app.GUI000002");
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
 
-local GUI000003_type_def = sdk.find_type_definition("app.GUI000003");
+local GUI000003_type_def = find_type_definition("app.GUI000003");
 local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
 
-local GUI000004_type_def = sdk.find_type_definition("app.GUI000004");
+local GUI000004_type_def = find_type_definition("app.GUI000004");
 
 local GUISystemModuleNotifyWindowApp_type_def = GUI000003_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
@@ -72,7 +79,7 @@ local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
 local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
 local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
 
-local GUI080303_type_def = sdk.find_type_definition("app.GUI080303");
+local GUI080303_type_def = find_type_definition("app.GUI080303");
 local requestClose_method = GUI080303_type_def:get_method("requestClose(System.Boolean)");
 
 local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
@@ -108,7 +115,7 @@ if GUIVariousData ~= nil then
         for id, idx in pairs(change_default_index_IDs) do
             local Setting = getSetting_method:call(GUINotifyWindowData, id);
             if Setting ~= nil then
-                sdk.set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
+                set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
             end
         end
         GUINotifyWindowData = nil;
@@ -128,9 +135,9 @@ local function auto_close(notifyWindowApp, infoApp, id)
     closeGUI_method:call(notifyWindowApp);
 end
 
-sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
-    sdk.set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.1);
+hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
+    set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.1);
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
@@ -138,9 +145,9 @@ sdk.hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     end
 end);
 
-sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
-    local this_ptr = thread.get_hook_storage()["this_ptr"];
-    sdk.set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.1);
+hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
+    set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.1);
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
@@ -152,7 +159,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     local GUIMessageInfo = get_TextInfo_method:call(CurInfoApp);
                     local Params = get_Params_method:call(GUIMessageInfo);
                     local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
-                    msg = string.gsub(msg, "{([0-9]+)}", function(i)
+                    msg = strgsub(msg, "{([0-9]+)}", function(i)
                         local Param = get_Item_method:call(Params, tonumber(i));
                         local Type = ParamType_field:get_data(Param);
                         if Type == ParamType.GUID then
@@ -179,7 +186,7 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                 closeGUI_method:call(NotifyWindowApp);
             end
         else
-            for _, v in pairs(auto_close_IDs) do
+            for _, v in ipairs(auto_close_IDs) do
                 if Id == v then
                     auto_close(NotifyWindowApp, CurInfoApp, Id);
                     break;
@@ -189,12 +196,12 @@ sdk.hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     end
 end);
 
-sdk.hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
-    sdk.set_native_field(thread.get_hook_storage()["this_ptr"], GUI000004_type_def, "_DispMinTimer", 0.1);
+hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
+    set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.1);
 end);
 
-sdk.hook(GUI080303_type_def:get_method("onOpen"), getThisPtr, function()
-    requestClose_method:call(thread.get_hook_storage()["this_ptr"], true);
+hook(GUI080303_type_def:get_method("onOpen"), getThisPtr, function()
+    requestClose_method:call(get_hook_storage().this_ptr, true);
 end);
 
-re.on_config_save(saveConfig);
+on_config_save(saveConfig);

@@ -2,9 +2,10 @@ local Constants = _G.require("Constants/Constants");
 
 local ipairs = Constants.ipairs;
 
-local sdk = Constants.sdk;
+local find_type_definition = Constants.find_type_definition;
+local hook = Constants.hook;
 
-local GUI090002PartsItemReceive_type_def = sdk.find_type_definition("app.GUI090002PartsItemReceive");
+local GUI090002PartsItemReceive_type_def = find_type_definition("app.GUI090002PartsItemReceive");
 local get__Mode_method = GUI090002PartsItemReceive_type_def:get_method("get__Mode");
 local get__JudgeAnimationEnd_method = GUI090002PartsItemReceive_type_def:get_method("get__JudgeAnimationEnd");
 local get__WaitAnimationTime_method = GUI090002PartsItemReceive_type_def:get_method("get__WaitAnimationTime");
@@ -19,11 +20,11 @@ local MODE = {
 };
 
 local GUI090002PartsItemReceive_ptr = nil;
-sdk.hook(GUI090002PartsItemReceive_type_def:get_method("start(app.cGUIPartsRecieveItemsInfo, System.Collections.Generic.List`1<app.cReceiveItemInfo>)"), function(args)
+hook(GUI090002PartsItemReceive_type_def:get_method("start(app.cGUIPartsRecieveItemsInfo, System.Collections.Generic.List`1<app.cReceiveItemInfo>)"), function(args)
     GUI090002PartsItemReceive_ptr = args[2];
 end);
 
-sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, function()
+hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, function()
     if GUI090002PartsItemReceive_ptr ~= nil then
         local Mode = get__Mode_method:call(GUI090002PartsItemReceive_ptr);
         for _, v in ipairs(MODE) do
@@ -41,6 +42,8 @@ sdk.hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, 
     end
 end);
 
-sdk.hook(sdk.find_type_definition("app.GUI090002"):get_method("onClose"), function()
-    GUI090002PartsItemReceive_ptr = nil;
+hook(find_type_definition("app.GUI090002"):get_method("onClose"), function()
+    if GUI090002PartsItemReceive_ptr ~= nil then
+        GUI090002PartsItemReceive_ptr = nil;
+    end
 end);

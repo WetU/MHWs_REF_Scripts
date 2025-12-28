@@ -1,17 +1,28 @@
 local Constants = _G.require("Constants/Constants");
 
+local ipairs = Constants.ipairs;
 local pairs = Constants.pairs;
 local tostring = Constants.tostring;
 local tonumber = Constants.tonumber;
-local string = Constants.string;
-local math = Constants.math;
 
-local sdk = Constants.sdk;
-local re = Constants.re;
-local draw = Constants.draw;
-local imgui = Constants.imgui;
+local mathmodf = Constants.mathmodf;
+local mathfloor = Constants.mathfloor;
 
-local font = imgui.load_font(nil, 20);
+local strmatch = Constants.strmatch;
+local strformat = Constants.strformat;
+
+local find_type_definition = Constants.find_type_definition;
+local hook = Constants.hook;
+
+local load_font = Constants.load_font;
+local push_font = Constants.push_font;
+local pop_font = Constants.pop_font;
+
+local on_frame = Constants.on_frame;
+
+local drawtext = Constants.drawtext;
+
+local font = load_font(nil, 20);
 
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
@@ -27,7 +38,7 @@ local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local getHunterCharacter_method = sdk.find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
+local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
 
 local get_HunterStatus_method = getHunterCharacter_method:get_return_type():get_method("get_HunterStatus");
 
@@ -37,7 +48,7 @@ local HunterAttackPower_type_def = get_AttackPower_method:get_return_type();
 local get_AttibuteType_method = HunterAttackPower_type_def:get_method("get_AttibuteType");
 
 local WeaponAttr = {};
-for _, v in Constants.ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
+for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
     if v:is_static() == true then
         local name = v:get_name();
         if name == "NONE" then
@@ -96,17 +107,17 @@ end
 
 local function getQuestTimeInfo(questElapsedTime)
     oldElapsedTime = questElapsedTime;
-    local second, milisecond = math.modf(questElapsedTime % 60.0);
-    QuestTimer = string.format("%02d'%02d\"%02d", math.floor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(string.match(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
+    local second, milisecond = mathmodf(questElapsedTime % 60.0);
+    QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
-sdk.hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
+hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
     if QuestInfoCreated == true then
         getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
     end
 end);
 
-sdk.hook(QuestDirector_type_def:get_method("update"), function(args)
+hook(QuestDirector_type_def:get_method("update"), function(args)
     if QuestDirector_ptr == nil then
         local this_ptr = args[2];
         if get_IsActiveQuest_method:call(this_ptr) == true then
@@ -126,7 +137,7 @@ end, function()
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
-            DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
+            DeathCount = "다운 횟수: " .. tostring(mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
             getQuestTimeInfo(QuestElapsedTime);
             Hunter_AttackPower = get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)));
             getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
@@ -137,27 +148,27 @@ end, function()
     end
 end);
 
-sdk.hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), nil, function()
+hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), nil, function()
     if QuestInfoCreated == true then
         local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
-        DeathCount = "다운 횟수: " .. tostring(math.floor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
+        DeathCount = "다운 횟수: " .. tostring(mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
     end
 end);
 
-sdk.hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
+hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
     if QuestInfoCreated == true then
         DeathCount = "다운 횟수: 0 / " .. questMaxDeath;
     end
 end);
 
-re.on_frame(function()
+on_frame(function()
     if QuestInfoCreated == true then
-        imgui.push_font(font);
+        push_font(font);
         if curWeaponAttr ~= nil then
-            draw.text(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+            drawtext(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
         else
-            draw.text("" .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+            drawtext("" .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
         end
-        imgui.pop_font();
+        pop_font();
     end
 end);
