@@ -79,8 +79,7 @@ local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
 local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
 local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
 
-local GUI080303_type_def = find_type_definition("app.GUI080303");
-local requestClose_method = GUI080303_type_def:get_method("requestClose(System.Boolean)");
+local requestClose_method = Constants.requestClose_method;
 
 local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
 local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
@@ -200,7 +199,7 @@ hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
     set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.1);
 end);
 
-hook(GUI080303_type_def:get_method("onOpen"), getThisPtr, function()
+hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, function()
     requestClose_method:call(get_hook_storage().this_ptr, true);
 end);
 

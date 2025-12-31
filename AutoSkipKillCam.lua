@@ -127,6 +127,12 @@ hook(GUI020202_type_def:get_method("guiVisibleUpdate"), getThisPtr, function()
     end
 end);
 
+local requestClose_method = Constants.requestClose_method;
+
+hook(find_type_definition("app.GUI020204"):get_method("onOpen"), getThisPtr, function()
+    requestClose_method:call(get_hook_storage().this_ptr, true);
+end);
+
 on_script_reset(function()
     if hook_datas.isSetted == true then
         set_PlaySpeed_method:call(hook_datas.GUI, 1.0);

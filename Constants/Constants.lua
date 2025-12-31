@@ -41,6 +41,8 @@ local get_Setting_method = get_Various_method:get_return_type():get_method("get_
 
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
+local GUI070000_type_def = find_type_definition("app.GUI070000");
+
 local Constants = {
     pairs = _G.pairs,
     ipairs = ipairs,
@@ -86,6 +88,7 @@ local Constants = {
     PugeeParam = nil,
     ShortcutPalletParam = nil,
 
+    GUI070000_type_def = GUI070000_type_def,
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = get_GUI_method:get_return_type(),
@@ -104,6 +107,7 @@ local Constants = {
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
     requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
+    requestClose_method = GUI070000_type_def:get_method("requestClose(System.Boolean)"),
 
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
@@ -163,6 +167,7 @@ if GameFlowManager ~= nil then
     end
     GameFlowManager = nil;
 end
+get_GameFlow_method = nil;
 getStateName_method = nil;
 get_CurrentGameStateType_method = nil;
 

@@ -11,10 +11,8 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
-local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 
-local load_font = Constants.load_font;
 local push_font = Constants.push_font;
 local pop_font = Constants.pop_font;
 
@@ -22,7 +20,7 @@ local on_frame = Constants.on_frame;
 
 local drawtext = Constants.drawtext;
 
-local font = load_font(nil, 20);
+local font = Constants.load_font(nil, 20);
 
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
@@ -38,7 +36,7 @@ local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
+local getHunterCharacter_method = Constants.find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
 
 local get_HunterStatus_method = getHunterCharacter_method:get_return_type():get_method("get_HunterStatus");
 
