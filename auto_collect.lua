@@ -1,7 +1,10 @@
 local Constants = _G.require("Constants/Constants");
 
+local tostring = Constants.tostring;
 local ipairs = Constants.ipairs;
 local tinsert = Constants.tinsert;
+
+local log_debug = Constants.log_debug;
 
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
@@ -13,6 +16,8 @@ local get_hook_storage = Constants.get_hook_storage;
 
 local init = Constants.init;
 local getThisPtr = Constants.getThisPtr;
+
+local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
@@ -103,10 +108,6 @@ local getReward_method = find_type_definition("app.cSendItemInfo"):get_method("g
 
 local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
-
-local SupplyInfo_type_def = find_type_definition("app.cSupplyInfo");
-local SupplyInfo_ItemId_field = SupplyInfo_type_def:get_field("ItemId");
-local SupplyInfo_Count_field = SupplyInfo_type_def:get_field("Count");
 
 local SupportShipData_type_def = find_type_definition("app.user_data.SupportShipData.cData");
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");
@@ -288,7 +289,10 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     end
 end);
 
-hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()
+hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), function(args)
+    log_debug("FacilityMoriver args[3] : " .. tostring(to_int64(args[3]) & 1));
+    get_hook_storage().this_ptr = args[2];
+end, function()
     execMoriver(get_hook_storage().this_ptr);
 end);
 
@@ -304,31 +308,11 @@ hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), 
     resetSupplyNum_method:call(FacilityRallus_ptr);
 end);
 
-local isSupplyOnlyItem = nil;
 hook(find_type_definition("app.FacilitySupplyItems"):get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = to_int64(args[3]) & 0xFFFFFFFF;
     if Shikyu_method:call(nil, ItemId) == false then
-        isSupplyOnlyItem = false;
-        local storage = get_hook_storage();
-        storage.List_ptr = args[2];
-        storage.ItemId = ItemId;
-        storage.ItemNum = to_int64(args[4]) & 0xFFFF;
-        getSellItem_method:call(nil, ItemId, storage.ItemNum, STOCK_TYPE.BOX);
-    end
-end, function()
-    if isSupplyOnlyItem == false then
-        isSupplyOnlyItem = nil;
-        local storage = get_hook_storage();
-        local List_ptr = storage.List_ptr;
-        local ItemId = storage.ItemId;
-        local ItemNum = storage.ItemNum;
-        for i = 0, GenericList_get_Count_method:call(List_ptr) - 1 do
-            local SupplyInfo = GenericList_get_Item_method:call(List_ptr, i);
-            if SupplyInfo_ItemId_field:get_data(SupplyInfo) == ItemId and SupplyInfo_Count_field:get_data(SupplyInfo) >= ItemNum then
-                GenericList_RemoveAt_method:call(List_ptr, i);
-                break;
-            end
-        end
+        getSellItem_method:call(nil, ItemId, to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);
+        return SKIP_ORIGINAL;
     end
 end);
 

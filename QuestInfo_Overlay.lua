@@ -12,6 +12,7 @@ local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
 local hook = Constants.hook;
+local to_int64 = Constants.to_int64;
 
 local push_font = Constants.push_font;
 local pop_font = Constants.pop_font;
@@ -76,12 +77,12 @@ end
 local oldElapsedTime = nil;
 local oldWeaponAttr = nil;
 
+local curDeathCount = nil;
 local questMaxDeath = nil;
 local questTimeLimit = nil;
 
 local QuestInfoCreated = false;
 local QuestTimer = nil;
-local DeathCount = nil;
 local curWeaponAttr = nil;
 
 local QuestDirector_ptr = nil;
@@ -135,7 +136,7 @@ end, function()
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
-            DeathCount = "다운 횟수: " .. tostring(mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
+            curDeathCount = mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount));
             getQuestTimeInfo(QuestElapsedTime);
             Hunter_AttackPower = get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)));
             getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
@@ -146,16 +147,15 @@ end, function()
     end
 end);
 
-hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), nil, function()
-    if QuestInfoCreated == true then
-        local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
-        DeathCount = "다운 횟수: " .. tostring(mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount))) .. " / " .. questMaxDeath;
+hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
+    if QuestInfoCreated == true and (to_int64(args[4]) & 1) == 0 then
+        curDeathCount = curDeathCount + 1;
     end
 end);
 
 hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
     if QuestInfoCreated == true then
-        DeathCount = "다운 횟수: 0 / " .. questMaxDeath;
+        curDeathCount = 0;
     end
 end);
 
@@ -163,9 +163,9 @@ on_frame(function()
     if QuestInfoCreated == true then
         push_font(font);
         if curWeaponAttr ~= nil then
-            drawtext(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+            drawtext(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 250, 0xFFFFFFFF);
         else
-            drawtext("" .. "\n" .. QuestTimer .. "\n" .. DeathCount, 3719, 250, 0xFFFFFFFF);
+            drawtext("" .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 250, 0xFFFFFFFF);
         end
         pop_font();
     end

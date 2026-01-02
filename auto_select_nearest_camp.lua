@@ -9,6 +9,8 @@ local hook = Constants.hook;
 
 local get_hook_storage = Constants.get_hook_storage;
 
+local getThisPtr = Constants.getThisPtr;
+
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
@@ -116,7 +118,7 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-hook(GUI050001_type_def:get_method("initStartPoint"), Constants.getThisPtr, function()
+hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
     local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then

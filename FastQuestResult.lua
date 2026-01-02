@@ -18,13 +18,11 @@ local get_IDInt_method = GUI070000_type_def:get_method("get_IDInt");
 local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
 
 local GUIPartsReward_type_def = find_type_definition("app.cGUIPartsReward");
-local get__IsViewMode_method = GUIPartsReward_type_def:get_method("get__IsViewMode");
 local get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
 local get__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("get__WaitAnimationTime");
 local set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__WaitAnimationTime(System.Single)");
 local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
-local get__isRandomAmuletMode_method = GUIPartsReward_type_def:get_method("get__isRandomAmuletMode");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
 local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
@@ -43,68 +41,56 @@ local GUI070001_type_def = find_type_definition("app.GUI070001");
 local get_IsViewMode_method = GUI070001_type_def:get_method("get_IsViewMode");
 local skipAnimation_method = GUI070001_type_def:get_method("skipAnimation");
 
-local function skipJudgeAnimation(GUIPartsReward_ptr)
-    if get__JudgeAnimationEnd_method:call(GUIPartsReward_ptr) == false then
-        if get__WaitAnimationTime_method:call(GUIPartsReward_ptr) > 0.01 then
-            set__WaitAnimationTime_method:call(GUIPartsReward_ptr, 0.01);
+local function skipJudgeAnimation(GUIPartsReward)
+    if get__JudgeAnimationEnd_method:call(GUIPartsReward) == false then
+        if get__WaitAnimationTime_method:call(GUIPartsReward) > 0.01 then
+            set__WaitAnimationTime_method:call(GUIPartsReward, 0.01);
         end
-    elseif get__WaitControlTime_method:call(GUIPartsReward_ptr) > 0.01 then
-        set__WaitControlTime_method:call(GUIPartsReward_ptr, 0.01);
+    elseif get__WaitControlTime_method:call(GUIPartsReward) > 0.01 then
+        set__WaitControlTime_method:call(GUIPartsReward, 0.01);
     end
 end
 
-local GUI070000_datas = {
-    GUI070000 = nil,
-    GUIPartsReward_ptr = nil,
-    Mode = nil,
-    checkedNewItem = {}
-};
+local GUI070000 = nil;
+local GUIPartsReward_ptr = nil;
+local Mode = nil;
+local checkedNewItem = {};
 
 hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUIPartsReward.MODE, System.Boolean, System.Boolean)"), function(args)
-    if GUI070000_datas.GUIPartsReward_ptr == nil then
-        local storage = get_hook_storage();
-        storage.this_ptr = args[2];
-        storage.Mode_ptr = args[4];
-    else
-        get_hook_storage().Mode_ptr = args[4];
-    end
-end, function()
-    local storage = get_hook_storage();
-    if GUI070000_datas.GUIPartsReward_ptr == nil then
-        local this_ptr = storage.this_ptr;
-        if get__IsViewMode_method:call(this_ptr) == false then
+    if (to_int64(args[5]) & 1) == 0 then
+        if GUI070000 == nil then
+            local this_ptr = args[2];
             local Owner = get_Owner_method:call(this_ptr);
             if get_IDInt_method:call(Owner) == UI070000 then
-                GUI070000_datas.GUI070000 = Owner;
-                GUI070000_datas.GUIPartsReward_ptr = this_ptr;
-                GUI070000_datas.Mode = to_int64(storage.Mode_ptr) & 0xFFFFFFFF;
+                GUI070000 = Owner;
+                GUIPartsReward_ptr = this_ptr;
             end
         end
-    else
-        GUI070000_datas.Mode = to_int64(storage.Mode_ptr) & 0xFFFFFFFF;
+        Mode = to_int64(args[4]) & 0xFFFFFFFF;
+        if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
+            Mode = 2;
+        end
+    end
+end, function()
+    if GUIPartsReward_ptr ~= nil and Mode ~= 2 then
+        local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
+        for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
+            local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
+            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+                checkedNewItem[Mode] = true;
+                break;
+            end
+        end
     end
 end);
 
 hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), nil, function()
-    local GUIPartsReward_ptr = GUI070000_datas.GUIPartsReward_ptr;
     if GUIPartsReward_ptr ~= nil then
-        if get__isRandomAmuletMode_method:call(GUIPartsReward_ptr) == true then
+        if Mode == 2 then
             skipJudgeAnimation(GUIPartsReward_ptr);
         else
-            local Mode = GUI070000_datas.Mode;
-            if GUI070000_datas.checkedNewItem[Mode] == nil then
-                GUI070000_datas.checkedNewItem[Mode] = false;
-                local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
-                for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
-                    local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
-                    if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
-                        GUI070000_datas.checkedNewItem[Mode] = true;
-                        break;
-                    end
-                end
-            end
-            if GUI070000_datas.checkedNewItem[Mode] == false then
-                if get_CurCtrlInputPriority_method:call(GUI070000_datas.GUI070000) == 0 then
+            if checkedNewItem[Mode] ~= true then
+                if get_CurCtrlInputPriority_method:call(GUI070000) == 0 then
                     receiveAll_method:call(GUIPartsReward_ptr);
                 end
             elseif Mode == JUDGE then
@@ -115,14 +101,10 @@ hook(GUIPartsReward_type_def:get_method("onVisibleUpdate"), nil, function()
 end);
 
 hook(GUI070000_type_def:get_method("onClose"), function()
-    if GUI070000_datas.GUIPartsReward_ptr ~= nil then
-        GUI070000_datas = {
-            GUI070000 = nil,
-            GUIPartsReward_ptr = nil,
-            Mode = nil,
-            checkedNewItem = {}
-        };
-    end
+    GUI070000 = nil;
+    GUIPartsReward_ptr = nil;
+    Mode = nil;
+    checkedNewItem = {};
 end);
 
 hook(GUI070001_type_def:get_method("onOpen"), getThisPtr, function()
@@ -145,7 +127,7 @@ local JUDGE_MODE = {
 
 local Fix_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type():get_method("endFix");
 
-local GUI020100_type_def = get_MyOwner_method:get_return_type();
+local GUI020100_type_def = find_type_definition("app.GUI020100");
 local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
 local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
 local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
@@ -163,26 +145,21 @@ local Contribution_endFix_method = GUI020100PanelQuestContribution_type_def:get_
 
 local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("terminateQuestResult");
 
-local GUI020100_datas = {
-    GUI020100 = nil,
-    GUI020100PanelQuestRewardItem_ptr = nil
-};
+local GUI020100 = nil;
+local GUI020100PanelQuestRewardItem_ptr = nil;
 
 local function terminateQuestResultFlow()
     terminateQuestResult_method:call(Constants.GUIManager);
-    GUI020100_datas.GUI020100 = nil;
+    GUI020100 = nil;
 end
 
 hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), function(args)
-    local this_ptr = args[2];
-    GUI020100_datas.GUI020100PanelQuestRewardItem_ptr = this_ptr;
-    GUI020100_datas.GUI020100 = get_MyOwner_method:call(this_ptr);
+    GUI020100PanelQuestRewardItem_ptr = args[2];
+    GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem_ptr);
 end);
 
 hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
-    local GUI020100PanelQuestRewardItem_ptr = GUI020100_datas.GUI020100PanelQuestRewardItem_ptr;
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
-        local GUI020100 = GUI020100_datas.GUI020100;
         local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem_ptr);
         if JudgeMode == JUDGE_MODE.MODE01 then
             endQuestJudge_method:call(GUI020100);
@@ -193,8 +170,8 @@ hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, 
             if Reward_endFix_callback_method ~= nil then
                 Reward_endFix_callback_method:call(GUI020100PanelQuestRewardItem_ptr);
             end
-            GUI020100_datas.GUI020100 = nil;
-            GUI020100_datas.GUI020100PanelQuestRewardItem_ptr = nil;
+            GUI020100 = nil;
+            GUI020100PanelQuestRewardItem_ptr = nil;
         else
             endQuestReward_method:call(GUI020100);
         end
@@ -202,35 +179,34 @@ hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, 
 end);
 
 hook(GUI070000_type_def:get_method("onOpen"), function()
-    if GUI020100_datas.GUI020100 ~= nil then
-        GUI020100_datas.GUI020100 = nil;
+    if GUI020100 ~= nil then
+        GUI020100 = nil;
     end
-    if GUI020100_datas.GUI020100PanelQuestRewardItem_ptr ~= nil then
-        GUI020100_datas.GUI020100PanelQuestRewardItem_ptr = nil;
+    if GUI020100PanelQuestRewardItem_ptr ~= nil then
+        GUI020100PanelQuestRewardItem_ptr = nil;
     end
 end);
 
 local hasContribution = nil;
 hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
-    if GUI020100_datas.GUI020100PanelQuestRewardItem_ptr ~= nil then
-        GUI020100_datas.GUI020100PanelQuestRewardItem_ptr = nil;
+    if GUI020100PanelQuestRewardItem_ptr ~= nil then
+        GUI020100PanelQuestRewardItem_ptr = nil;
     end
-    hasContribution = hasContribution_method:call(GUI020100_datas.GUI020100);
-    if hasContribution == false then
+    if hasContribution_method:call(GUI020100) == false then
         get_hook_storage().this_ptr = args[2];
+        hasContribution = false;
     end
 end, function()
-    endQuestResultList_method:call(GUI020100_datas.GUI020100);
+    endQuestResultList_method:call(GUI020100);
     if hasContribution == false then
+        hasContribution = nil;
         Result_endFix_method:call(get_hook_storage().this_ptr);
-        quitResult_method:call(GUI020100_datas.GUI020100);
+        quitResult_method:call(GUI020100);
         terminateQuestResultFlow();
     end
-    hasContribution = nil;
 end);
 
 hook(GUI020100PanelQuestContribution_type_def:get_method("start"), getThisPtr, function()
-    local GUI020100 = GUI020100_datas.GUI020100;
     endQuestContribution_method:call(GUI020100);
     Contribution_endFix_method:call(get_hook_storage().this_ptr);
     quitResult_method:call(GUI020100);

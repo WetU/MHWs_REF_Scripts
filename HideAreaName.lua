@@ -1,5 +1,9 @@
 local Constants = _G.require("Constants/Constants");
 
+local tostring = Constants.tostring;
+
+local log_debug = Constants.log_debug;
+
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
@@ -22,5 +26,8 @@ end
 
 hook(GUI020206_type_def:get_method("requestStage(app.FieldDef.STAGE, app.GUI020206.RequestType)"), preHook_one);
 hook(GUI020206_type_def:get_method("requestLifeArea(app.FieldDef.LIFE_AREA, app.GUI020206.RequestType)"), preHook_one);
-hook(GUI020206_type_def:get_method("requestCamp(app.GimmickDef.ID, System.Boolean)"), preHook_SKIP);
+hook(GUI020206_type_def:get_method("requestCamp(app.GimmickDef.ID, System.Boolean)"), function(args)
+    log_debug("GUI020206 requestCamp args[4] : " .. tostring(to_int64(args[4]) & 1));
+    return SKIP_ORIGINAL;
+end);
 hook(GUI020206_type_def:get_method("requestBase(System.Guid, System.Guid, app.FieldDef.STAGE, app.FieldDef.LIFE_AREA, System.Boolean)"), preHook_SKIP);

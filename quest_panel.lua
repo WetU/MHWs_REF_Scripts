@@ -7,6 +7,7 @@ local tinsert = Constants.tinsert;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local set_native_field = Constants.set_native_field;
+local to_int64 = Constants.to_int64;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -94,72 +95,81 @@ hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
     end
 end);
 
-hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), getThisPtr, function()
-    local this_ptr = get_hook_storage().this_ptr;
-    if get_IsCancel_method:call(this_ptr) == false then
-        local CATEGORY = get_ViewCategory_method:call(this_ptr);
-        if CATEGORY == CATEGORY_FREE then
-            sortDifficulty(this_ptr);
-            local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
-            local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
-            if ViewQuestDataList_size > 0 then
-                local cleared_quests = {};
-                local uncleared_quests = {};
-                for i = 0, ViewQuestDataList_size - 1 do
-                    local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                    tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
-                end
-                local unclearedCount = #uncleared_quests;
-                local clearedCount = #cleared_quests;
-                if unclearedCount > 0 and clearedCount > 0 then
-                    for i = 0, unclearedCount - 1 do
-                        GenericList_set_Item_method:call(ViewQuestDataList, i, uncleared_quests[i + 1]);
+local isUserRequest = nil;
+hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), function(args)
+    if (to_int64(args[3]) & 1) == 0 then
+        isUserRequest = false;
+        get_hook_storage().this_ptr = args[2];
+    end
+end, function()
+    if isUserRequest == false then
+        local this_ptr = get_hook_storage().this_ptr;
+        if get_IsCancel_method:call(this_ptr) == false then
+            local CATEGORY = get_ViewCategory_method:call(this_ptr);
+            if CATEGORY == CATEGORY_FREE then
+                sortDifficulty(this_ptr);
+                local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+                local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
+                if ViewQuestDataList_size > 0 then
+                    local cleared_quests = {};
+                    local uncleared_quests = {};
+                    for i = 0, ViewQuestDataList_size - 1 do
+                        local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                        tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
                     end
-                    for i = 0, clearedCount - 1 do
-                        GenericList_set_Item_method:call(ViewQuestDataList, unclearedCount + i, cleared_quests[i + 1]);
-                    end
-                end
-                cleared_quests = nil;
-                uncleared_quests = nil;
-            end
-        elseif CATEGORY == CATEGORY_DECLARATION_HISTORY then
-            setSortNewest_method:call(this_ptr, false);
-            set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "새로운 순");
-        elseif CATEGORY == CATEGORY_KEEP_QUEST then
-            setSortDifficulty_method:call(this_ptr, false, false, false, false, false, false, true);
-            set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "수주 가능 수 적은 순");
-        else
-            for _, v in ipairs(onlineLists) do
-                if CATEGORY == v then
-                    local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
-                    local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
-                    if ViewQuestDataList_size > 0 then
-                        local shouldHideItems = {};
-                        for i = 0, ViewQuestDataList_size - 1 do
-                            local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                            if isJoinableNetQuest(get_SearchResult_method:call(Session_field:get_data(quest_data))) == false then
-                                tinsert(shouldHideItems, quest_data);
-                            end
+                    local unclearedCount = #uncleared_quests;
+                    local clearedCount = #cleared_quests;
+                    if unclearedCount > 0 and clearedCount > 0 then
+                        for i = 0, unclearedCount - 1 do
+                            GenericList_set_Item_method:call(ViewQuestDataList, i, uncleared_quests[i + 1]);
                         end
-                        if #shouldHideItems > 0 then
-                            for _, v in ipairs(shouldHideItems) do
-                                Remove_method:call(ViewQuestDataList, v);
-                            end
-                            set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                        for i = 0, clearedCount - 1 do
+                            GenericList_set_Item_method:call(ViewQuestDataList, unclearedCount + i, cleared_quests[i + 1]);
                         end
-                        shouldHideItems = nil;
-                        setSortDifficulty_method:call(this_ptr, false, false, false, true, false, false, false);
-                        set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신 순");
                     end
-                    return;
+                    cleared_quests = nil;
+                    uncleared_quests = nil;
                 end
-            end
-            for _, v in ipairs(SortDifficulty) do
-                if CATEGORY == v then
-                    sortDifficulty(this_ptr);
-                    break;
+            elseif CATEGORY == CATEGORY_DECLARATION_HISTORY then
+                setSortNewest_method:call(this_ptr, false);
+                set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "새로운 순");
+            elseif CATEGORY == CATEGORY_KEEP_QUEST then
+                setSortDifficulty_method:call(this_ptr, false, false, false, false, false, false, true);
+                set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "수주 가능 수 적은 순");
+            else
+                for _, v in ipairs(onlineLists) do
+                    if CATEGORY == v then
+                        local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+                        local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
+                        if ViewQuestDataList_size > 0 then
+                            local shouldHideItems = {};
+                            for i = 0, ViewQuestDataList_size - 1 do
+                                local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                                if isJoinableNetQuest(get_SearchResult_method:call(Session_field:get_data(quest_data))) == false then
+                                    tinsert(shouldHideItems, quest_data);
+                                end
+                            end
+                            if #shouldHideItems > 0 then
+                                for _, v in ipairs(shouldHideItems) do
+                                    Remove_method:call(ViewQuestDataList, v);
+                                end
+                                set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                            end
+                            shouldHideItems = nil;
+                            setSortDifficulty_method:call(this_ptr, false, false, false, true, false, false, false);
+                            set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신 순");
+                        end
+                        return;
+                    end
+                end
+                for _, v in ipairs(SortDifficulty) do
+                    if CATEGORY == v then
+                        sortDifficulty(this_ptr);
+                        break;
+                    end
                 end
             end
         end
+        isUserRequest = nil;
     end
 end);
