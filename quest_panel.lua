@@ -25,8 +25,6 @@ local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestC
 local QuestCounterContext_type_def = get_QuestCounterContext_method:get_return_type();
 local QuestViewType_field = QuestCounterContext_type_def:get_field("QuestViewType");
 
-local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
-
 local GUI050000QuestListParts_type_def = find_type_definition("app.GUI050000QuestListParts");
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
@@ -59,6 +57,8 @@ local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
 
 local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
 
+local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
+
 local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
 local CATEGORY_DECLARATION_HISTORY = CATEGORY_type_def:get_field("DECLARATION_HISTORY"):get_data(nil);
@@ -76,7 +76,7 @@ local onlineLists = {
     CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
 };
 
-local function sortDifficulty(obj)
+local function sortHighDifficulty(obj)
     setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
     set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
 end
@@ -107,7 +107,7 @@ end, function()
         if get_IsCancel_method:call(this_ptr) == false then
             local CATEGORY = get_ViewCategory_method:call(this_ptr);
             if CATEGORY == CATEGORY_FREE then
-                sortDifficulty(this_ptr);
+                sortHighDifficulty(this_ptr);
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
                 local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
                 if ViewQuestDataList_size > 0 then
@@ -164,7 +164,7 @@ end, function()
                 end
                 for _, v in ipairs(SortDifficulty) do
                     if CATEGORY == v then
-                        sortDifficulty(this_ptr);
+                        sortHighDifficulty(this_ptr);
                         break;
                     end
                 end

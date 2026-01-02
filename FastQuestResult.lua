@@ -135,7 +135,6 @@ local endRandomAmuletJudge_method = GUI020100_type_def:get_method("endRandomAmul
 local endQuestResultList_method = GUI020100_type_def:get_method("endQuestResultList");
 local endQuestContribution_method = GUI020100_type_def:get_method("endQuestContribution");
 local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
-local quitResult_method = GUI020100_type_def:get_method("quitResult");
 
 local GUI020100PanelQuestResultList_type_def = find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
@@ -201,7 +200,6 @@ end, function()
     if hasContribution == false then
         hasContribution = nil;
         Result_endFix_method:call(get_hook_storage().this_ptr);
-        quitResult_method:call(GUI020100);
         terminateQuestResultFlow();
     end
 end);
@@ -209,6 +207,5 @@ end);
 hook(GUI020100PanelQuestContribution_type_def:get_method("start"), getThisPtr, function()
     endQuestContribution_method:call(GUI020100);
     Contribution_endFix_method:call(get_hook_storage().this_ptr);
-    quitResult_method:call(GUI020100);
     terminateQuestResultFlow();
 end);
