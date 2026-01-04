@@ -58,8 +58,6 @@ local Constants = {
     mathmodf = math.modf,
     mathfloor = math.floor,
 
-    log_debug = _G.log.debug,
-
     hook = hook,
     find_type_definition = find_type_definition,
     to_ptr = sdk.to_ptr,

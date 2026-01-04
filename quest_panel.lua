@@ -25,6 +25,8 @@ local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestC
 local QuestCounterContext_type_def = get_QuestCounterContext_method:get_return_type();
 local QuestViewType_field = QuestCounterContext_type_def:get_field("QuestViewType");
 
+local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
+
 local GUI050000QuestListParts_type_def = find_type_definition("app.GUI050000QuestListParts");
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
@@ -41,6 +43,8 @@ local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("se
 local setSortNewest_method = GUI050000QuestListParts_type_def:get_method("setSortNewest(System.Boolean)");  -- true = old first, false = new first
 local PNLChangeSortType_field = GUI050000QuestListParts_type_def:get_field("_PNLChangeSortType");
 
+local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
+
 local Remove_method = get_ViewQuestDataList_method:get_return_type():get_method("Remove(app.cGUIQuestViewData)");
 
 local GUIQuestViewData_type_def = find_type_definition("app.cGUIQuestViewData");
@@ -54,10 +58,9 @@ local isLocked_field = SearchResultQuest_type_def:get_field("isLocked");
 local isAutoAccept_field = SearchResultQuest_type_def:get_field("isAutoAccept");
 local memberNum_field = SearchResultQuest_type_def:get_field("memberNum");
 local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
+local multiplaySetting_field = SearchResultQuest_type_def:get_field("multiplaySetting");
 
-local set_Message_method = PNLChangeSortType_field:get_type():get_method("set_Message(System.String)");
-
-local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
+local NPC_ONLY = multiplaySetting_field:get_type():get_field("NPC_ONLY"):get_data(nil);
 
 local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
@@ -76,13 +79,21 @@ local onlineLists = {
     CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
 };
 
-local function sortHighDifficulty(obj)
-    setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
-    set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
+local function setSortDifficulty(obj, type)
+    if type == 0 then
+        setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
+        set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
+    elseif type == 4 then
+        setSortDifficulty_method:call(obj, false, false, false, true, false, false, false);
+        set_Message_method:call(PNLChangeSortType_field:get_data(obj), "퀘스트 시작 최신 순");
+    elseif type == 7 then
+        setSortDifficulty_method:call(obj, false, false, false, false, false, false, true);
+        set_Message_method:call(PNLChangeSortType_field:get_data(obj), "수주 가능 수 적은 순");
+    end
 end
 
 local function isJoinableNetQuest(obj)
-    if isLocked_field:get_data(obj) == true or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) then
+    if isLocked_field:get_data(obj) == true or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) or multiplaySetting_field:get_data(obj) == NPC_ONLY then
         return false;
     end
     return true;
@@ -98,16 +109,17 @@ end);
 local isUserRequest = nil;
 hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), function(args)
     if (to_int64(args[3]) & 1) == 0 then
-        isUserRequest = false;
         get_hook_storage().this_ptr = args[2];
+        isUserRequest = false;
     end
 end, function()
     if isUserRequest == false then
+        isUserRequest = nil;
         local this_ptr = get_hook_storage().this_ptr;
         if get_IsCancel_method:call(this_ptr) == false then
             local CATEGORY = get_ViewCategory_method:call(this_ptr);
             if CATEGORY == CATEGORY_FREE then
-                sortHighDifficulty(this_ptr);
+                setSortDifficulty(this_ptr, 0);
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
                 local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
                 if ViewQuestDataList_size > 0 then
@@ -134,8 +146,7 @@ end, function()
                 setSortNewest_method:call(this_ptr, false);
                 set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "새로운 순");
             elseif CATEGORY == CATEGORY_KEEP_QUEST then
-                setSortDifficulty_method:call(this_ptr, false, false, false, false, false, false, true);
-                set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "수주 가능 수 적은 순");
+                setSortDifficulty(this_ptr, 7);
             else
                 for _, v in ipairs(onlineLists) do
                     if CATEGORY == v then
@@ -156,20 +167,18 @@ end, function()
                                 set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                             end
                             shouldHideItems = nil;
-                            setSortDifficulty_method:call(this_ptr, false, false, false, true, false, false, false);
-                            set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "퀘스트 시작 최신 순");
+                            setSortDifficulty(this_ptr, 4);
                         end
                         return;
                     end
                 end
                 for _, v in ipairs(SortDifficulty) do
                     if CATEGORY == v then
-                        sortHighDifficulty(this_ptr);
+                        setSortDifficulty(this_ptr, 0);
                         break;
                     end
                 end
             end
         end
-        isUserRequest = nil;
     end
 end);

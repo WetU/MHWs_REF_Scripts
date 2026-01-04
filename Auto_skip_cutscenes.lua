@@ -1,9 +1,9 @@
 local Constants = _G.require("Constants/Constants");
 
-local tostring = Constants.tostring;
+--local tostring = Constants.tostring;
 local ipairs = Constants.ipairs;
 
-local log_debug = Constants.log_debug;
+--local log_debug = Constants.log_debug;
 
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
@@ -33,7 +33,7 @@ local skipList = {
 local reqSkip = nil;
 hook(DemoMediator_type_def:get_method("onPlayStart(ace.DemoMediatorBase.cParamBase)"), function(args)
     local ID = get_ID_method:call(args[3]);
-    log_debug(tostring(ID));
+    --log_debug(tostring(ID));
     for _, v in ipairs(skipList) do
         if ID == v then
             get_hook_storage().this_ptr = args[2];
@@ -52,7 +52,7 @@ hook(DemoMediator_type_def:get_method("notifyCutSkipEnd"), getThisPtr, function(
     local this_ptr = get_hook_storage().this_ptr;
     local ID = get_CurrentTimelineEventID_method:call(this_ptr);
     if ID ~= nil then
-        log_debug(tostring(ID));
+        --log_debug(tostring(ID));
         for _, v in ipairs(skipList) do
             if ID == v then
                 requestSkip_method:call(this_ptr);

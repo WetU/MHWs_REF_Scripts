@@ -11,8 +11,11 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
+local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
+
+local get_hook_storage = Constants.get_hook_storage;
 
 local push_font = Constants.push_font;
 local pop_font = Constants.pop_font;
@@ -37,9 +40,16 @@ local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local getHunterCharacter_method = Constants.find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
+local ShellPlSlingerExCharge_type_def = find_type_definition("app.mcShellPlSlingerExCharge");
+local IsCharged_field = ShellPlSlingerExCharge_type_def:get_field("_IsCharged");
+local ChargeRate_field = ShellPlSlingerExCharge_type_def:get_field("_ChargeRate");
+local IsMaster_field = ShellPlSlingerExCharge_type_def:get_field("_IsMaster");
 
-local get_HunterStatus_method = getHunterCharacter_method:get_return_type():get_method("get_HunterStatus");
+local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
+
+local HunterCharacter_type_def = getHunterCharacter_method:get_return_type();
+local get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster");
+local get_HunterStatus_method = HunterCharacter_type_def:get_method("get_HunterStatus");
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
@@ -83,7 +93,8 @@ local questTimeLimit = nil;
 
 local QuestInfoCreated = false;
 local QuestTimer = nil;
-local curWeaponAttr = nil;
+local curWeaponAttr = "";
+local slingerChargeMax = "";
 
 local QuestDirector_ptr = nil;
 local Hunter_AttackPower = nil;
@@ -98,8 +109,8 @@ local function getWeaponAttr(attr)
                     break;
                 end
             end
-        elseif curWeaponAttr ~= nil then
-            curWeaponAttr = nil;
+        elseif curWeaponAttr ~= "" then
+            curWeaponAttr = "";
         end
     end
 end
@@ -113,6 +124,23 @@ end
 hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
     if QuestInfoCreated == true then
         getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
+    end
+end);
+
+local isMaster = nil;
+hook(ShellPlSlingerExCharge_type_def:get_method("update(System.Single)"), function(args)
+    if QuestInfoCreated == true then
+        local this_ptr = args[2];
+        if IsMaster_field:get_data(this_ptr) == true then
+            get_hook_storage().this_ptr = this_ptr;
+            isMaster = true;
+        end
+    end
+end, function()
+    if isMaster == true then
+        local this_ptr = get_hook_storage().this_ptr;
+        log.debug(tostring(ChargeRate_field:get_data(this_ptr)));
+        slingerChargeMax = IsCharged_field:get_data(this_ptr) == true and "슬링어 풀차지" or "";
     end
 end);
 
@@ -162,11 +190,7 @@ end);
 on_frame(function()
     if QuestInfoCreated == true then
         push_font(font);
-        if curWeaponAttr ~= nil then
-            drawtext(curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 250, 0xFFFFFFFF);
-        else
-            drawtext("" .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 250, 0xFFFFFFFF);
-        end
+        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
         pop_font();
     end
 end);

@@ -1,10 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 
-local tostring = Constants.tostring;
 local ipairs = Constants.ipairs;
 local tinsert = Constants.tinsert;
-
-local log_debug = Constants.log_debug;
 
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
@@ -289,10 +286,7 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     end
 end);
 
-hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), function(args)
-    log_debug("FacilityMoriver args[3] : " .. tostring(to_int64(args[3]) & 1));
-    get_hook_storage().this_ptr = args[2];
-end, function()
+hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()
     execMoriver(get_hook_storage().this_ptr);
 end);
 
