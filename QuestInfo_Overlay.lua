@@ -40,10 +40,9 @@ local ActiveQuestData_type_def = get_QuestData_method:get_return_type();
 local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
-local ShellPlSlingerExCharge_type_def = find_type_definition("app.mcShellPlSlingerExCharge");
-local IsCharged_field = ShellPlSlingerExCharge_type_def:get_field("_IsCharged");
-local ChargeRate_field = ShellPlSlingerExCharge_type_def:get_field("_ChargeRate");
-local IsMaster_field = ShellPlSlingerExCharge_type_def:get_field("_IsMaster");
+local SlingerExCharge_type_def = find_type_definition("app.HunterStatusWatchers.cSlingerExCharge");
+local isCharging_method = SlingerExCharge_type_def:get_method("isCharging(app.HunterCharacter)");
+local IsChargeMax_field = SlingerExCharge_type_def:get_field("_IsChargeMax");
 
 local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
 
@@ -127,20 +126,28 @@ hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCrea
     end
 end);
 
-local isMaster = nil;
-hook(ShellPlSlingerExCharge_type_def:get_method("update(System.Single)"), function(args)
-    if QuestInfoCreated == true then
-        local this_ptr = args[2];
-        if IsMaster_field:get_data(this_ptr) == true then
-            get_hook_storage().this_ptr = this_ptr;
-            isMaster = true;
-        end
+hook(SlingerExCharge_type_def:get_method("updateTimer"), function(args)
+    if QuestInfoCreated then
+        get_hook_storage().this_ptr = args[2];
     end
 end, function()
-    if isMaster == true then
+    if QuestInfoCreated then
         local this_ptr = get_hook_storage().this_ptr;
-        log.debug(tostring(ChargeRate_field:get_data(this_ptr)));
-        slingerChargeMax = IsCharged_field:get_data(this_ptr) == true and "슬링어 풀차지" or "";
+        if isCharging_method:call(this_ptr, getHunterCharacter_method:call(nil)) and IsChargeMax_field:get_data(this_ptr) then
+            slingerChargeMax = "슬링어 풀차지";
+        elseif slingerChargeMax ~= "" then
+            slingerChargeMax = "";
+        end
+    end
+end);
+
+hook(SlingerExCharge_type_def:get_method("resetTimer"), function()
+    if QuestInfoCreated then
+        get_hook_storage().this_ptr = args[2];
+    end
+end, function()
+    if QuestInfoCreated and isCharging_method:call(get_hook_storage().this_ptr, getHunterCharacter_method:call(nil)) ~= true and slingerChargeMax ~= "" then
+        slingerChargeMax = "";
     end
 end);
 
