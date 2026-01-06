@@ -62,6 +62,7 @@ local Constants = {
     find_type_definition = find_type_definition,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
+    to_valuetype = sdk.to_valuetype,
     float_to_ptr = sdk.float_to_ptr,
     set_native_field = sdk.set_native_field,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,

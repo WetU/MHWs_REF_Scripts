@@ -14,6 +14,7 @@ local strformat = Constants.strformat;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
+local to_valuetype = Constants.to_valuetype;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -41,7 +42,6 @@ local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
 local SlingerExCharge_type_def = find_type_definition("app.HunterStatusWatchers.cSlingerExCharge");
-local isCharging_method = SlingerExCharge_type_def:get_method("isCharging(app.HunterCharacter)");
 local IsChargeMax_field = SlingerExCharge_type_def:get_field("_IsChargeMax");
 
 local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
@@ -120,20 +120,18 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
 end
 
-hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
-    if QuestInfoCreated == true then
-        getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
-    end
-end);
-
-hook(SlingerExCharge_type_def:get_method("updateTimer"), function(args)
-    if QuestInfoCreated then
+local isMaster = nil;
+hook(SlingerExCharge_type_def:get_method("onUpdate(app.cHunterStatusWatcherBase.UPDATE_ARG)"), function(args)
+    if QuestInfoCreated and get_IsMaster_method:call(Character_field:get_data(to_valuetype(args[3], UPDATE_ARG_type_def))) then
         get_hook_storage().this_ptr = args[2];
+        isMaster = true;
     end
 end, function()
-    if QuestInfoCreated then
-        local this_ptr = get_hook_storage().this_ptr;
-        if isCharging_method:call(this_ptr, getHunterCharacter_method:call(nil)) and IsChargeMax_field:get_data(this_ptr) then
+    if isMaster then
+        isMaster = nil;
+        local IsChargeMax = IsChargeMax_field:get_data(get_hook_storage().this_ptr);
+        log.debug(tostring(IsChargeMax));
+        if IsChargeMax then
             slingerChargeMax = "슬링어 풀차지";
         elseif slingerChargeMax ~= "" then
             slingerChargeMax = "";
@@ -141,32 +139,31 @@ end, function()
     end
 end);
 
-hook(SlingerExCharge_type_def:get_method("resetTimer"), function()
+hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
     if QuestInfoCreated then
-        get_hook_storage().this_ptr = args[2];
-    end
-end, function()
-    if QuestInfoCreated and isCharging_method:call(get_hook_storage().this_ptr, getHunterCharacter_method:call(nil)) ~= true and slingerChargeMax ~= "" then
-        slingerChargeMax = "";
+        getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
     end
 end);
 
 hook(QuestDirector_type_def:get_method("update"), function(args)
-    if QuestDirector_ptr == nil then
+    if not QuestDirector_ptr then
         local this_ptr = args[2];
-        if get_IsActiveQuest_method:call(this_ptr) == true then
+        if get_IsActiveQuest_method:call(this_ptr) then
             QuestDirector_ptr = this_ptr;
         end
-    elseif get_IsActiveQuest_method:call(QuestDirector_ptr) == false then
+    elseif not get_IsActiveQuest_method:call(QuestDirector_ptr) then
         QuestDirector_ptr = nil;
-        if QuestInfoCreated == true then
+        if QuestInfoCreated then
             QuestInfoCreated = false;
+            if slingerChargeMax ~= "" then
+                slingerChargeMax = "";
+            end
         end
     end
 end, function()
     if QuestDirector_ptr ~= nil then
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
-        if QuestInfoCreated == false then
+        if not QuestInfoCreated then
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
@@ -183,19 +180,19 @@ end, function()
 end);
 
 hook(QuestDirector_type_def:get_method("applyQuestPlDie(System.Int32, System.Boolean)"), function(args)
-    if QuestInfoCreated == true and (to_int64(args[4]) & 1) == 0 then
+    if QuestInfoCreated and (to_int64(args[4]) & 1) == 0 then
         curDeathCount = curDeathCount + 1;
     end
 end);
 
 hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
-    if QuestInfoCreated == true then
+    if QuestInfoCreated then
         curDeathCount = 0;
     end
 end);
 
 on_frame(function()
-    if QuestInfoCreated == true then
+    if QuestInfoCreated then
         push_font(font);
         drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
         pop_font();
