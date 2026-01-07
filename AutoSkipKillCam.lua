@@ -14,6 +14,8 @@ local on_script_reset = Constants.on_script_reset;
 
 local getThisPtr = Constants.getThisPtr;
 
+local requestClose_method = Constants.requestClose_method;
+
 local HunterQuestActionController_type_def = find_type_definition("app.mcHunterQuestActionController");
 local showStamp_method = HunterQuestActionController_type_def:get_method("showStamp(app.mcHunterQuestActionController.QUEST_ACTION_TYPE)");
 
@@ -81,7 +83,7 @@ local hook_datas = {
 };
 
 local function postHook_guiVisibleUpdate()
-    if hook_datas.reqSkip == true and hook_datas.isSetted ~= true then
+    if hook_datas.reqSkip and hook_datas.isSetted ~= true then
         set_PlaySpeed_method:call(hook_datas.GUI, 10.0);
         hook_datas.isSetted = true;
         hook_datas.reqSkip = nil;
@@ -89,7 +91,7 @@ local function postHook_guiVisibleUpdate()
 end
 
 local function postHook_onCloseApp()
-    if hook_datas.isSetted == true then
+    if hook_datas.isSetted then
         set_PlaySpeed_method:call(hook_datas.GUI, 1.0);
         hook_datas.isSetted = nil;
         hook_datas.GUI = nil;
@@ -122,19 +124,17 @@ hook(GUI020216_type_def:get_method("onCloseApp"), nil, postHook_onCloseApp);
 
 hook(GUI020202_type_def:get_method("guiVisibleUpdate"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    if isInput_method:call(this_ptr, RETURN_TIME_SKIP) == true then
+    if isInput_method:call(this_ptr, RETURN_TIME_SKIP) then
         requestCallTrigger_method:call(Input_field:get_data(this_ptr), RETURN_TIME_SKIP);
     end
 end);
-
-local requestClose_method = Constants.requestClose_method;
 
 hook(find_type_definition("app.GUI020204"):get_method("onOpen"), getThisPtr, function()
     requestClose_method:call(get_hook_storage().this_ptr, true);
 end);
 
 on_script_reset(function()
-    if hook_datas.isSetted == true then
+    if hook_datas.isSetted then
         set_PlaySpeed_method:call(hook_datas.GUI, 1.0);
     end
 end);

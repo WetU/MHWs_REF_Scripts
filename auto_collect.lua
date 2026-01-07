@@ -140,7 +140,7 @@ local WeaponType = {
 local isSelfCall = false;
 local BOX_ptr = to_ptr(STOCK_TYPE.BOX);
 hook(changeItemNumFromDialogue_method, function(args)
-    if isSelfCall == true then
+    if isSelfCall then
         isSelfCall = false;
     else
         args[4] = BOX_ptr;
@@ -192,7 +192,7 @@ hook(FacilityManager_type_def:get_method("update"), function(args)
         pugee_hasReward = true;
     end
 end, function()
-    if pugee_hasReward == true then
+    if pugee_hasReward then
         pugee_hasReward = false;
         stroke_method:call(get_Pugee_method:call(get_hook_storage().this_ptr), true);
     end
@@ -214,7 +214,7 @@ hook(FacilityDining_type_def:get_method("addSupplyNum"), function(args)
         isFoodMax = true;
     end
 end, function()
-    if isFoodMax == true then
+    if isFoodMax then
         isFoodMax = nil;
         supplyFood_method:call(get_hook_storage().this_ptr);
     end
@@ -277,7 +277,7 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     init();
     local FacilityManager = get_Facility_method:call(nil);
     local FacilityMoriver = get_Moriver_method:call(FacilityManager);
-    if get__HavingCampfire_method:call(FacilityMoriver) == true then
+    if get__HavingCampfire_method:call(FacilityMoriver) then
         execMoriver(FacilityMoriver);
     end
     local FacilityDining = get_Dining_method:call(FacilityManager);
@@ -320,7 +320,7 @@ hook(find_type_definition("app.savedata.cShipParam"):get_method("setItems(System
             local cost = SupportShipData_get_Point_method:call(ShipData);
             for j = StockNum, 1, -1 do
                 local totalCost = cost * j;
-                if isEnoughPoint_method:call(nil, totalCost) == true then
+                if isEnoughPoint_method:call(nil, totalCost) then
                     local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
                         getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);

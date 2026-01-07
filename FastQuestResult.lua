@@ -76,7 +76,7 @@ end, function()
         local ItemGridParts = ItemGridParts_field:get_data(GUIPartsReward_ptr);
         for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
             local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
-            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) == true and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) == true then
+            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) then
                 checkedNewItem[Mode] = true;
                 break;
             end

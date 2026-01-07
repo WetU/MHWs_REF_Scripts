@@ -93,7 +93,7 @@ local function setSortDifficulty(obj, type)
 end
 
 local function isJoinableNetQuest(obj)
-    if isLocked_field:get_data(obj) == true or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) or multiplaySetting_field:get_data(obj) == NPC_ONLY then
+    if isLocked_field:get_data(obj) or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) or multiplaySetting_field:get_data(obj) == NPC_ONLY then
         return false;
     end
     return true;
@@ -127,7 +127,7 @@ end, function()
                     local uncleared_quests = {};
                     for i = 0, ViewQuestDataList_size - 1 do
                         local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                        tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) == true and cleared_quests or uncleared_quests, quest_data);
+                        tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) and cleared_quests or uncleared_quests, quest_data);
                     end
                     local unclearedCount = #uncleared_quests;
                     local clearedCount = #cleared_quests;

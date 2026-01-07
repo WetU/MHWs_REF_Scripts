@@ -128,7 +128,7 @@ local function auto_close(notifyWindowApp, infoApp, id)
         config[id] = isExistWindowEndFunc_method:call(infoApp);
         saveConfig();
     end
-    if config[id] == true then
+    if config[id] then
         executeWindowEndFunc_method:call(infoApp);
     end
     closeGUI_method:call(notifyWindowApp);
@@ -154,7 +154,7 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
         if Id == INVALID then
             if get_Caller_method:call(CurInfoApp):get_type_definition():get_full_name() == "app.NetworkErrorManager" then
                 local GUIManager = Constants.GUIManager;
-                if GUIManager ~= nil and isVisibleGUI_method:call(GUIManager, UI020100) == true then
+                if GUIManager ~= nil and isVisibleGUI_method:call(GUIManager, UI020100) then
                     local GUIMessageInfo = get_TextInfo_method:call(CurInfoApp);
                     local Params = get_Params_method:call(GUIMessageInfo);
                     local msg = guid2str_method:call(nil, get_MsgID_method:call(GUIMessageInfo));
@@ -179,7 +179,7 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     addSystemLog_method:call(Constants.ChatManager, msg);
                 end
                 endWindow_method:call(CurInfoApp, 0);
-                if isExistWindowEndFunc_method:call(CurInfoApp) == true then
+                if isExistWindowEndFunc_method:call(CurInfoApp) then
                     executeWindowEndFunc_method:call(CurInfoApp);
                 end
                 closeGUI_method:call(NotifyWindowApp);

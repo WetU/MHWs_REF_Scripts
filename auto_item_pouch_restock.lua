@@ -42,14 +42,14 @@ local PC = find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_d
 local mySetIdx = 0;
 
 local function restockItems(sendMessage)
-    if isValidData_method:call(nil, mySetIdx) == true then
+    if isValidData_method:call(nil, mySetIdx) then
         applyMySetToPouch_method:call(nil, mySetIdx);
-        if sendMessage == true then
+        if sendMessage then
             addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다: [" .. tostring(mySetIdx) .. "]");
         end
     else
         fillPouchItems_method:call(nil);
-        if sendMessage == true then
+        if sendMessage then
             addSystemLog_method:call(Constants.ChatManager, "아이템이 보충되었습니다.");
         end
     end
@@ -85,7 +85,7 @@ hook(GUI090001_type_def:get_method("onClose"), function(args)
         end
     end
 end, function()
-    if valid_GUI090001 == true then
+    if valid_GUI090001 then
         valid_GUI090001 = nil;
         if isActive_method:call(get_hook_storage().this_ptr) == false then
             restockItems(true);

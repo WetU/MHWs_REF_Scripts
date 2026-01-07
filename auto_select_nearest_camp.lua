@@ -64,7 +64,7 @@ local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextIt
 local STAGES = {};
 for _, v in ipairs(get_Stage_method:get_return_type():get_fields()) do
     local name = v:get_name();
-    if name ~= "INVALID" and name ~= "MAX" and v:is_static() == true then
+    if name ~= "INVALID" and name ~= "MAX" and v:is_static() then
         tinsert(STAGES, v:get_data(nil));
     end
 end
@@ -197,7 +197,7 @@ hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
 end);
 
 hook(find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
-    if hook_datas.hasData == true then
+    if hook_datas.hasData then
         local inputCtrl = hook_datas.inputCtrl;
         if getSelectedIndex_method:call(inputCtrl) ~= hook_datas.targetCampIdx then
             hook_datas.selectMethod:call(inputCtrl);

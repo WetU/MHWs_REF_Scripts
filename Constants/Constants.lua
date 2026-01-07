@@ -23,7 +23,7 @@ local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
 local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
 local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
 local get_Save_method = GA_type_def:get_method("get_Save"); -- static
-local get_Various_method = GA_type_def:get_method("get_Various"); -- static
+local get_VariousData_method = GA_type_def:get_method("get_VariousData");
 
 local GameFlowManager_type_def = get_GameFlow_method:get_return_type();
 local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
@@ -36,8 +36,6 @@ local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
 local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
-
-local get_Setting_method = get_Various_method:get_return_type():get_method("get_Setting");
 
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -62,7 +60,6 @@ local Constants = {
     find_type_definition = find_type_definition,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
-    to_valuetype = sdk.to_valuetype,
     float_to_ptr = sdk.float_to_ptr,
     set_native_field = sdk.set_native_field,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
@@ -97,10 +94,11 @@ local Constants = {
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
-    VariousDataManagerSetting_type_def = get_Setting_method:get_return_type(),
+    VariousDataManagerSetting_type_def = get_VariousData_method:get_return_type(),
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
+    get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
@@ -127,13 +125,13 @@ local Constants = {
     end,
 
     getVariousDataManagerSetting = function()
-        return get_Setting_method:call(get_Various_method:call(nil));
+        return get_VariousData_method:call(nil);
     end
 };
 
 local isInitialized = false;
 Constants.init = function()
-    if isInitialized == false then
+    if not isInitialized then
         isInitialized = true;
         Constants.ChatManager = get_Chat_method:call(nil);
         Constants.GUIManager = get_GUI_method:call(nil);
@@ -150,7 +148,7 @@ Constants.init = function()
 end
 
 hook(find_type_definition("app.TitleState"):get_method("enter"), nil, function()
-    if isInitialized == true then
+    if isInitialized then
         isInitialized = false;
         Constants.ChatManager = nil;
         Constants.GUIManager = nil;

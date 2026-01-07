@@ -38,7 +38,7 @@ hook(DemoMediator_type_def:get_method("onPlayStart(ace.DemoMediatorBase.cParamBa
         end
     end
 end, function()
-    if reqSkip == true then
+    if reqSkip then
         reqSkip = nil;
         requestSkip_method:call(get_hook_storage().this_ptr);
     end
