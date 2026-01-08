@@ -133,10 +133,12 @@ end
 
 local isMaster = nil;
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
-    local this_ptr = args[2];
-    if get_IsMaster_method:call(Chara_field:get_data(this_ptr)) then
-        get_hook_storage().this_ptr = this_ptr;
-        isMaster = true;
+    if QuestInfoCreated then
+        local this_ptr = args[2];
+        if get_IsMaster_method:call(Chara_field:get_data(this_ptr)) then
+            get_hook_storage().this_ptr = this_ptr;
+            isMaster = true;
+        end
     end
 end, function(retval)
     if isMaster then
@@ -148,10 +150,8 @@ end, function(retval)
                 maxChargeTime = get_ExChargeSlingerTime_method:call(get_PlParam_method:call(nil));
             end
             slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxChargeTime and "슬링어 풀차지" or "";
-        elseif Phase == SHOOT then
-            if slingerChargeMax ~= "" then
-                slingerChargeMax = "";
-            end
+        elseif Phase == SHOOT and slingerChargeMax ~= "" then
+            slingerChargeMax = "";
         end
     end
     return retval;
@@ -164,12 +164,12 @@ hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCrea
 end);
 
 hook(QuestDirector_type_def:get_method("update"), function(args)
-    if not QuestDirector_ptr then
+    if QuestDirector_ptr == nil then
         local this_ptr = args[2];
         if get_IsActiveQuest_method:call(this_ptr) then
             QuestDirector_ptr = this_ptr;
         end
-    elseif not get_IsActiveQuest_method:call(QuestDirector_ptr) then
+    elseif get_IsActiveQuest_method:call(QuestDirector_ptr) == false then
         QuestDirector_ptr = nil;
         if QuestInfoCreated then
             QuestInfoCreated = false;

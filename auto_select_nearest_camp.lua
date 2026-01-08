@@ -160,21 +160,23 @@ hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
                                     end
                                     areaIconPos = areaIconPosList[targetEmAreaNo];
                                 end
-                                if targetEmFloorNo == nil then
-                                    if Stage == nil then
-                                        Stage = get_Stage_method:call(QuestViewData);
+                                if areaIconPos ~= nil then
+                                    if targetEmFloorNo == nil then
+                                        if Stage == nil then
+                                            Stage = get_Stage_method:call(QuestViewData);
+                                        end
+                                        targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
                                     end
-                                    targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
-                                end
-                                local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
-                                if get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
-                                    if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                        sameFloor_shortest_distance = distance;
-                                        sameFloor_idx = j;
+                                    local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
+                                    if get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                        if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
+                                            sameFloor_shortest_distance = distance;
+                                            sameFloor_idx = j;
+                                        end
+                                    elseif sameFloor_distance == nil and (diffFloor_idx == nil or distance < diffFloor_shortest_distance) then
+                                        diffFloor_shortest_distance = distance;
+                                        diffFloor_idx = j;
                                     end
-                                elseif sameFloor_distance == nil and (diffFloor_idx == nil or distance < diffFloor_shortest_distance) then
-                                    diffFloor_shortest_distance = distance;
-                                    diffFloor_idx = j;
                                 end
                             end
                         end

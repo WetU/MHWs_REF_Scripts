@@ -23,7 +23,7 @@ local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
 local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
 local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
 local get_Save_method = GA_type_def:get_method("get_Save"); -- static
-local get_VariousData_method = GA_type_def:get_method("get_VariousData");
+local get_VariousData_method = GA_type_def:get_method("get_VariousData"); -- static
 
 local GameFlowManager_type_def = get_GameFlow_method:get_return_type();
 local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
