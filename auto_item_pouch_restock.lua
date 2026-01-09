@@ -33,12 +33,6 @@ local restockMenus = {
     MenuType_type_def:get_field("ITEM_BOX"):get_data(nil)
 };
 
-local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
-local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
-local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurrentIndex(app.ItemDef.PALLET_TYPE)");
-
-local PC = find_type_definition("app.ItemDef.PALLET_TYPE"):get_field("PC"):get_data(nil); -- static
-
 local mySetIdx = 0;
 
 local function restockItems(sendMessage)
@@ -59,10 +53,6 @@ end
 local function PlayerStartRiding(retval)
     if IsArenaQuest_method:call(nil) == false then
         restockItems(false);
-    end
-    local ShortcutPalletParam = Constants.ShortcutPalletParam;
-    if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
-        setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
     end
     return retval;
 end

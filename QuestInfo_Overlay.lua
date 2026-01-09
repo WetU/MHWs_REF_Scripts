@@ -14,6 +14,7 @@ local strformat = Constants.strformat;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
+local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -27,7 +28,9 @@ local drawtext = Constants.drawtext;
 local font = Constants.load_font(nil, 20);
 
 local get_PlParam_method = Constants.get_PlParam_method;
-local get_ExChargeSlingerTime_method = get_PlParam_method:get_return_type():get_method("get_ExChargeSlingerTime");
+
+local PlayerGlobalParam_type_def = get_PlParam_method:get_return_type();
+local get_ExChargeSlingerTime_method = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerTime");
 
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
@@ -103,24 +106,24 @@ local questTimeLimit = nil;
 
 local QuestInfoCreated = false;
 local QuestTimer = nil;
-local curWeaponAttr = "";
-local slingerChargeMax = "";
+local curWeaponAttr = nil;
+local slingerChargeMax = nil;
 
 local QuestDirector_ptr = nil;
 local Hunter_AttackPower = nil;
 
 local function getWeaponAttr(attr)
-    if oldWeaponAttr ~= attr then
-        oldWeaponAttr = attr;
-        if attr ~= nil then
-            for k, v in pairs(WeaponAttr) do
-                if attr == v then
-                    curWeaponAttr = k;
-                    break;
-                end
-            end
-        elseif curWeaponAttr ~= "" then
+    if attr == nil then
+        if curWeaponAttr ~= "" then
             curWeaponAttr = "";
+        end
+    elseif oldWeaponAttr ~= attr then
+        oldWeaponAttr = attr;
+        for k, v in pairs(WeaponAttr) do
+            if attr == v then
+                curWeaponAttr = k;
+                break;
+            end
         end
     end
 end
@@ -128,7 +131,7 @@ end
 local function getQuestTimeInfo(questElapsedTime)
     oldElapsedTime = questElapsedTime;
     local second, milisecond = mathmodf(questElapsedTime % 60.0);
-    QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0) .. " / " .. questTimeLimit;
+    QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0);
 end
 
 local isMaster = nil;
@@ -146,9 +149,6 @@ end, function(retval)
         local this_ptr = get_hook_storage().this_ptr;
         local Phase = Phase_field:get_data(this_ptr);
         if Phase == CHARGE_START or Phase == CHARGE_LOOP then
-            if maxChargeTime == nil then
-                maxChargeTime = get_ExChargeSlingerTime_method:call(get_PlParam_method:call(nil));
-            end
             slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxChargeTime and "슬링어 풀차지" or "";
         elseif Phase == SHOOT and slingerChargeMax ~= "" then
             slingerChargeMax = "";
@@ -173,15 +173,22 @@ hook(QuestDirector_type_def:get_method("update"), function(args)
         QuestDirector_ptr = nil;
         if QuestInfoCreated then
             QuestInfoCreated = false;
-            if slingerChargeMax ~= "" then
-                slingerChargeMax = "";
-            end
+            oldElapsedTime = nil;
+            oldWeaponAttr = nil;
+            curDeathCount = nil;
+            questMaxDeath = nil;
+            questTimeLimit = nil;
+            QuestTimer = nil;
+            curWeaponAttr = nil;
+            slingerChargeMax = nil;
+            Hunter_AttackPower = nil;
         end
     end
 end, function()
     if QuestDirector_ptr ~= nil then
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
         if not QuestInfoCreated then
+            slingerChargeMax = "";
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
@@ -212,7 +219,23 @@ end);
 on_frame(function()
     if QuestInfoCreated then
         push_font(font);
-        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
+        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
         pop_font();
     end
 end);
+
+local PlayerGlobalParam = get_PlParam_method:call(nil);
+if PlayerGlobalParam ~= nil then
+    maxChargeTime = get_ExChargeSlingerTime_method:call(PlayerGlobalParam);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestReplicaLeaveActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedStampTime", 0.0);
+end
+PlayerGlobalParam = nil;
+get_PlParam_method = nil;
+PlayerGlobalParam_type_def = nil;
+get_ExChargeSlingerTime_method = nil;
