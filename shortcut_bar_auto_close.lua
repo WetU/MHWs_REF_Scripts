@@ -19,7 +19,7 @@ local GUI020600_type_def = find_type_definition("app.GUI020600");
 
 local lastClosedTime = nil;
 
-hook(GUI020600_type_def:get_method("onHudOpen"), nil, function()
+hook(GUI020600_type_def:get_method("onHudOpen"), function()
 	if lastClosedTime ~= nil and (get_UpTimeSecond_method:call(nil) - lastClosedTime) >= 5.0 then
 		local ShortcutPalletParam = Constants.ShortcutPalletParam;
 		if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
@@ -30,7 +30,7 @@ hook(GUI020600_type_def:get_method("onHudOpen"), nil, function()
 end);
 
 hook(GUI020600_type_def:get_method("execute(System.Int32)"), getObject, function()
-	get_hook_storage().this:write_float(0x344, 0.5);
+	get_hook_storage().this:write_float(0x344, 0.2);
 end);
 
 hook(GUI020600_type_def:get_method("onHudClose"), nil, function()

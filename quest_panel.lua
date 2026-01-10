@@ -66,17 +66,15 @@ local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
 local CATEGORY_DECLARATION_HISTORY = CATEGORY_type_def:get_field("DECLARATION_HISTORY"):get_data(nil);
 local CATEGORY_KEEP_QUEST = CATEGORY_type_def:get_field("KEEP_QUEST"):get_data(nil);
+local CATEGORY_RECRUITMENT_LOBBY = CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil);
+local CATEGORY_LINK_MEMBER = CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil);
+local CATEGORY_SERCH_RESCUE_SIGNAL = CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil);
 local SortDifficulty = {
     CATEGORY_type_def:get_field("STORY"):get_data(nil),
     CATEGORY_type_def:get_field("EVENT"):get_data(nil),
     CATEGORY_type_def:get_field("ARENA"):get_data(nil),
     CATEGORY_type_def:get_field("FREE_TA"):get_data(nil),
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
-};
-local onlineLists = {
-    CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil),
-    CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil),
-    CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil)
 };
 
 local function setSortDifficulty(obj, type)
@@ -147,31 +145,49 @@ end, function()
                 set_Message_method:call(PNLChangeSortType_field:get_data(this_ptr), "새로운 순");
             elseif CATEGORY == CATEGORY_KEEP_QUEST then
                 setSortDifficulty(this_ptr, 7);
-            else
-                for _, v in ipairs(onlineLists) do
-                    if CATEGORY == v then
-                        local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
-                        local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
-                        if ViewQuestDataList_size > 0 then
-                            local shouldHideItems = {};
-                            for i = 0, ViewQuestDataList_size - 1 do
-                                local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                                if isJoinableNetQuest(get_SearchResult_method:call(Session_field:get_data(quest_data))) == false then
-                                    tinsert(shouldHideItems, quest_data);
-                                end
-                            end
-                            if #shouldHideItems > 0 then
-                                for _, v in ipairs(shouldHideItems) do
-                                    Remove_method:call(ViewQuestDataList, v);
-                                end
-                                set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
-                            end
-                            shouldHideItems = nil;
-                            setSortDifficulty(this_ptr, 4);
+            elseif CATEGORY == CATEGORY_SERCH_RESCUE_SIGNAL then
+                local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+                local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
+                if ViewQuestDataList_size > 0 then
+                    local shouldHideItems = {};
+                    for i = 0, ViewQuestDataList_size - 1 do
+                        local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                        local SearchResult = get_SearchResult_method:call(Session_field:get_data(quest_data));
+                        if isAutoAccept_field:get_data(SearchResult) == false or (memberNum_field:get_data(SearchResult) >= maxMemberNum_field:get_data(SearchResult)) then
+                            tinsert(shouldHideItems, quest_data);
                         end
-                        return;
                     end
+                    if #shouldHideItems > 0 then
+                        for _, v in ipairs(shouldHideItems) do
+                            Remove_method:call(ViewQuestDataList, v);
+                        end
+                        set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                    end
+                    shouldHideItems = nil;
+                    setSortDifficulty(this_ptr, 4);
                 end
+            elseif CATEGORY == CATEGORY_RECRUITMENT_LOBBY or CATEGORY == CATEGORY_LINK_MEMBER then
+                local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
+                local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
+                if ViewQuestDataList_size > 0 then
+                    local shouldHideItems = {};
+                    for i = 0, ViewQuestDataList_size - 1 do
+                        local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
+                        local SearchResult = get_SearchResult_method:call(Session_field:get_data(quest_data));
+                        if isLocked_field:get_data(SearchResult) or isAutoAccept_field:get_data(SearchResult) == false or (memberNum_field:get_data(SearchResult) >= maxMemberNum_field:get_data(SearchResult)) or multiplaySetting_field:get_data(SearchResult) == NPC_ONLY then
+                            tinsert(shouldHideItems, quest_data);
+                        end
+                    end
+                    if #shouldHideItems > 0 then
+                        for _, v in ipairs(shouldHideItems) do
+                            Remove_method:call(ViewQuestDataList, v);
+                        end
+                        set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
+                    end
+                    shouldHideItems = nil;
+                    setSortDifficulty(this_ptr, 4);
+                end
+            else
                 for _, v in ipairs(SortDifficulty) do
                     if CATEGORY == v then
                         setSortDifficulty(this_ptr, 0);

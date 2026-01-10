@@ -36,7 +36,7 @@ local get_Component_method = Panel_field:get_type():get_method("get_Component");
 local set_PlaySpeed_method = get_Component_method:get_return_type():get_method("set_PlaySpeed(System.Single)");
 
 local FALSE_ptr = to_ptr(false);
-local ZERO_float_ptr = float_to_ptr(0.0);
+local ZERO_float_ptr = Constants.ZERO_float_ptr;
 
 hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
     return FALSE_ptr;

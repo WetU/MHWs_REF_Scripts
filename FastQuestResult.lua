@@ -1,5 +1,7 @@
 local Constants = _G.require("Constants/Constants");
 
+local ipairs = Constants.ipairs;
+
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
@@ -115,10 +117,17 @@ hook(GUI070001_type_def:get_method("onOpen"), getThisPtr, function()
 end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = find_type_definition("app.cGUI020100PanelQuestRewardItem");
-local Reward_endFix_method = GUI020100PanelQuestRewardItem_type_def:get_method("endFix");
-local Reward_endFix_callback_method = Constants.getCallbackMethod(GUI020100PanelQuestRewardItem_type_def:get_methods(), "endFix");
+local GUI020100PanelQuestRewardItem_methods = GUI020100PanelQuestRewardItem_type_def:get_methods();
+local Reward_endFix_method = nil;
+local Reward_endFix_callback_method = Constants.getCallbackMethod(GUI020100PanelQuestRewardItem_methods, "endFix");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
+for _, v in ipairs(GUI020100PanelQuestRewardItem_methods) do
+    if v:get_name() == "endFix" then
+        Reward_endFix_method = v;
+        break;
+    end
+end
 
 local JUDGE_MODE_type_def = JudgeMode_field:get_type();
 local JUDGE_MODE = {

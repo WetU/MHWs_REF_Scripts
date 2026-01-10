@@ -11,6 +11,7 @@ local sdk = _G.sdk;
 local hook = sdk.hook;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
+local float_to_ptr = sdk.float_to_ptr;
 
 local get_hook_storage = _G.thread.get_hook_storage;
 
@@ -58,9 +59,10 @@ local Constants = {
 
     hook = hook,
     find_type_definition = find_type_definition,
+    to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
-    float_to_ptr = sdk.float_to_ptr,
+    float_to_ptr = float_to_ptr,
     set_native_field = sdk.set_native_field,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
 
@@ -78,6 +80,8 @@ local Constants = {
     pop_font = imgui.pop_font,
 
     drawtext = _G.draw.text,
+
+    ZERO_float_ptr = float_to_ptr(0.0),
 
     ChatManager = nil,
     GUIManager = nil,
@@ -98,6 +102,7 @@ local Constants = {
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
+    get_Network_method = GA_type_def:get_method("get_Network"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),

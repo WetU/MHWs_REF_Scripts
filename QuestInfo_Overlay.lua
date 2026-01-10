@@ -90,10 +90,7 @@ for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
     end
 end
 
-local PHASE_type_def = Phase_field:get_type();
-local CHARGE_START = PHASE_type_def:get_field("CHARGE_START"):get_data(nil);
-local CHARGE_LOOP = PHASE_type_def:get_field("CHARGE_LOOP"):get_data(nil);
-local SHOOT = PHASE_type_def:get_field("SHOOT"):get_data(nil);
+local CHARGE_LOOP = Phase_field:get_type():get_field("CHARGE_LOOP"):get_data(nil);
 
 local maxChargeTime = nil;
 
@@ -147,10 +144,9 @@ end, function(retval)
     if isMaster then
         isMaster = nil;
         local this_ptr = get_hook_storage().this_ptr;
-        local Phase = Phase_field:get_data(this_ptr);
-        if Phase == CHARGE_START or Phase == CHARGE_LOOP then
+        if Phase_field:get_data(this_ptr) == CHARGE_LOOP then
             slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxChargeTime and "슬링어 풀차지" or "";
-        elseif Phase == SHOOT and slingerChargeMax ~= "" then
+        elseif slingerChargeMax ~= "" then
             slingerChargeMax = "";
         end
     end
