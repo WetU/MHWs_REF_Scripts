@@ -6,6 +6,7 @@ local tonumber = Constants.tonumber;
 local tostring = Constants.tostring;
 local strgsub = Constants.strgsub;
 
+local call_object_func = Constants.call_object_func;
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
 local set_native_field = Constants.set_native_field;
@@ -105,9 +106,9 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local GUIVariousData = Constants.VariousDataManagerSetting_type_def:get_method("get_GUIVariousData"):call(Constants.getVariousDataManagerSetting());
+local GUIVariousData = call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
 if GUIVariousData ~= nil then
-    local GUINotifyWindowData = GUIVariousData:get_type_definition():get_method("get_NotifyWindowData"):call(GUIVariousData);
+    local GUINotifyWindowData = call_object_func(GUIVariousData, "get_NotifyWindowData");
     if GUINotifyWindowData ~= nil then
         local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
         local Setting_type_def = getSetting_method:get_return_type();

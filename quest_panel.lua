@@ -90,13 +90,6 @@ local function setSortDifficulty(obj, type)
     end
 end
 
-local function isJoinableNetQuest(obj)
-    if isLocked_field:get_data(obj) or isAutoAccept_field:get_data(obj) == false or (memberNum_field:get_data(obj) >= maxMemberNum_field:get_data(obj)) or multiplaySetting_field:get_data(obj) == NPC_ONLY then
-        return false;
-    end
-    return true;
-end
-
 hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
     local QuestCounterContext = get_QuestCounterContext_method:call(get_hook_storage().this_ptr);
     if QuestViewType_field:get_data(QuestCounterContext) ~= GRID then

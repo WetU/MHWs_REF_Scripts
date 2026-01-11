@@ -11,6 +11,7 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
+local call_object_func = Constants.call_object_func;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
@@ -26,11 +27,6 @@ local on_frame = Constants.on_frame;
 local drawtext = Constants.drawtext;
 
 local font = Constants.load_font(nil, 20);
-
-local get_PlParam_method = Constants.get_PlParam_method;
-
-local PlayerGlobalParam_type_def = get_PlParam_method:get_return_type();
-local get_ExChargeSlingerTime_method = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerTime");
 
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
@@ -49,13 +45,12 @@ local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 local StrongSlingerShoot_type_def = find_type_definition("app.PlayerCommonAction.cStrongSlingerShoot");
 local Phase_field = StrongSlingerShoot_type_def:get_field("_Phase");
 local ChargeTimer_field = StrongSlingerShoot_type_def:get_field("_ChargeTimer");
-local Chara_field = StrongSlingerShoot_type_def:get_field("<Chara>k__BackingField");
+local get_Chara_method = Constants.get_Chara_method;
 
 local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
 
-local HunterCharacter_type_def = getHunterCharacter_method:get_return_type();
-local get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster");
-local get_HunterStatus_method = HunterCharacter_type_def:get_method("get_HunterStatus");
+local get_IsMaster_method = Constants.get_IsMaster_method;
+local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
 
 local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
 
@@ -135,7 +130,7 @@ local isMaster = nil;
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
     if QuestInfoCreated then
         local this_ptr = args[2];
-        if get_IsMaster_method:call(Chara_field:get_data(this_ptr)) then
+        if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) then
             get_hook_storage().this_ptr = this_ptr;
             isMaster = true;
         end
@@ -220,9 +215,10 @@ on_frame(function()
     end
 end);
 
-local PlayerGlobalParam = get_PlParam_method:call(nil);
+local PlayerGlobalParam = Constants.get_PlParam_method:call(nil);
 if PlayerGlobalParam ~= nil then
-    maxChargeTime = get_ExChargeSlingerTime_method:call(PlayerGlobalParam);
+    local PlayerGlobalParam_type_def = PlayerGlobalParam:get_type_definition();
+    maxChargeTime = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerTime"):call(PlayerGlobalParam);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
@@ -230,8 +226,5 @@ if PlayerGlobalParam ~= nil then
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearStampTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireStampTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedStampTime", 0.0);
+    PlayerGlobalParam = nil;
 end
-PlayerGlobalParam = nil;
-get_PlParam_method = nil;
-PlayerGlobalParam_type_def = nil;
-get_ExChargeSlingerTime_method = nil;

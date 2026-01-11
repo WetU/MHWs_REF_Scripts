@@ -8,6 +8,7 @@ local strmatch = string.match;
 local math = _G.math;
 
 local sdk = _G.sdk;
+local call_object_func = sdk.call_object_func;
 local hook = sdk.hook;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
@@ -20,15 +21,10 @@ local json = _G.json;
 local re = _G.re;
 
 local GA_type_def = find_type_definition("app.GA");
-local get_Chat_method = GA_type_def:get_method("get_Chat"); -- static
-local get_GameFlow_method = GA_type_def:get_method("get_GameFlow"); -- static
-local get_GUI_method = GA_type_def:get_method("get_GUI"); -- static
-local get_Save_method = GA_type_def:get_method("get_Save"); -- static
-local get_VariousData_method = GA_type_def:get_method("get_VariousData"); -- static
-
-local GameFlowManager_type_def = get_GameFlow_method:get_return_type();
-local getStateName_method = GameFlowManager_type_def:get_method("getStateName(ace.GameStateType)");
-local get_CurrentGameStateType_method = GameFlowManager_type_def:get_method("get_CurrentGameStateType");
+local get_Chat_method = GA_type_def:get_method("get_Chat");
+local get_GUI_method = GA_type_def:get_method("get_GUI");
+local get_Save_method = GA_type_def:get_method("get_Save");
+local get_VariousData_method = GA_type_def:get_method("get_VariousData");
 
 local getCurrentUserSaveData_method = get_Save_method:get_return_type():get_method("getCurrentUserSaveData");
 
@@ -37,6 +33,10 @@ local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
 local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
+
+local get_Chara_method = find_type_definition("app.cHunterActionBase"):get_method("get_Chara");
+
+local HunterCharacter_type_def = get_Chara_method:get_return_type();
 
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -59,6 +59,7 @@ local Constants = {
 
     hook = hook,
     find_type_definition = find_type_definition,
+    call_object_func = call_object_func,
     to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
@@ -93,6 +94,7 @@ local Constants = {
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = get_GUI_method:get_return_type(),
+    HunterCharacter_type_def = HunterCharacter_type_def,
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
@@ -101,9 +103,12 @@ local Constants = {
     VariousDataManagerSetting_type_def = get_VariousData_method:get_return_type(),
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
+    get_Chara_method = get_Chara_method,
     get_Facility_method = GA_type_def:get_method("get_Facility"),
+    get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster"),
     get_Network_method = GA_type_def:get_method("get_Network"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
+    get_VariousData_method = get_VariousData_method,
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
@@ -120,17 +125,21 @@ local Constants = {
         get_hook_storage().this = to_managed_object(args[2]);
     end,
 
-    getCallbackMethod = function(methods, name)
-        for _, v in ipairs(methods) do
-            if strmatch(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
-                return v;
+    getMethod = function(methods, name, isCallback)
+        if isCallback then
+            for _, v in ipairs(methods) do
+                if strmatch(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
+                    return v;
+                end
+            end
+        else
+            for _, v in ipairs(methods) do
+                if v:get_name() == name then
+                    return v;
+                end
             end
         end
         return nil;
-    end,
-
-    getVariousDataManagerSetting = function()
-        return get_VariousData_method:call(nil);
     end
 };
 
@@ -163,15 +172,12 @@ hook(find_type_definition("app.TitleState"):get_method("enter"), nil, function()
     end
 end);
 
-local GameFlowManager = get_GameFlow_method:call(nil);
+local GameFlowManager = GA_type_def:get_method("get_GameFlow"):call(nil);
 if GameFlowManager ~= nil then
-    if getStateName_method:call(GameFlowManager, get_CurrentGameStateType_method:call(GameFlowManager)) == "IngameState" then
+    if call_object_func(GameFlowManager, "getStateName(ace.GameStateType)", call_object_func(GameFlowManager, "get_CurrentGameStateType")) == "IngameState" then
         Constants.init();
     end
     GameFlowManager = nil;
 end
-get_GameFlow_method = nil;
-getStateName_method = nil;
-get_CurrentGameStateType_method = nil;
 
 return Constants;

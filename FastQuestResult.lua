@@ -1,7 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local ipairs = Constants.ipairs;
-
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
@@ -9,6 +7,8 @@ local to_int64 = Constants.to_int64;
 local get_hook_storage = Constants.get_hook_storage;
 
 local getThisPtr = Constants.getThisPtr;
+
+local getMethod = Constants.getMethod;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
@@ -118,16 +118,10 @@ end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100PanelQuestRewardItem_type_def = find_type_definition("app.cGUI020100PanelQuestRewardItem");
 local GUI020100PanelQuestRewardItem_methods = GUI020100PanelQuestRewardItem_type_def:get_methods();
-local Reward_endFix_method = nil;
-local Reward_endFix_callback_method = Constants.getCallbackMethod(GUI020100PanelQuestRewardItem_methods, "endFix");
+local Reward_endFix_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", false);
+local Reward_endFix_callback_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", true);
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
-for _, v in ipairs(GUI020100PanelQuestRewardItem_methods) do
-    if v:get_name() == "endFix" then
-        Reward_endFix_method = v;
-        break;
-    end
-end
 
 local JUDGE_MODE_type_def = JudgeMode_field:get_type();
 local JUDGE_MODE = {
@@ -169,12 +163,12 @@ local function terminateQuestResultFlow()
     GUI020100 = nil;
 end
 
-hook(GUI020100PanelQuestRewardItem_type_def:get_method("start"), function(args)
+hook(getMethod(GUI020100PanelQuestRewardItem_methods, "start", false), function(args)
     GUI020100PanelQuestRewardItem_ptr = args[2];
     GUI020100 = get_MyOwner_method:call(GUI020100PanelQuestRewardItem_ptr);
 end);
 
-hook(GUI020100PanelQuestRewardItem_type_def:get_method("onVisibleUpdate"), nil, function()
+hook(getMethod(GUI020100PanelQuestRewardItem_methods, "onVisibleUpdate", false), nil, function()
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
         local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem_ptr);
         if JudgeMode == JUDGE_MODE.MODE01 then

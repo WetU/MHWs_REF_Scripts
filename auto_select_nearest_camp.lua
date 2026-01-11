@@ -88,7 +88,7 @@ local function clear_datas()
 end
 
 local function getDrawDatas()
-    local MapStageDrawData = get_MapStageDrawData_method:call(Constants.getVariousDataManagerSetting());
+    local MapStageDrawData = get_MapStageDrawData_method:call(Constants.get_VariousData_method:call(nil));
     if MapStageDrawData ~= nil then
         DrawDatas = {};
         for _, stageID in ipairs(STAGES) do
