@@ -5,8 +5,6 @@ local hook = Constants.hook;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local getMethod = Constants.getMethod;
-
 local get_Chara_method = Constants.get_Chara_method;
 local get_IsMaster_method = Constants.get_IsMaster_method;
 
@@ -23,14 +21,6 @@ local departure_method = FastTravelGo_type_def:get_method("departure");
 local Type_field = FastTravelGo_type_def:get_field("_Type");
 
 local QUEST_START = Type_field:get_type():get_field("QUEST_START"):get_data(nil);
-
-local PorterNoRideFastTravelGo_type_def = find_type_definition("app.PlayerCommonAction.cPorterNoRideFastTravelGo");
-local PorterNoRide_methods = PorterNoRideFastTravelGo_type_def:get_methods();
-local PorterNoRide_startFTFade_method = getMethod(PorterNoRide_methods, "startFTFade", false);
-local PorterNoRide_startFTFade_callback_method = getMethod(PorterNoRide_methods, "startFTFade", true);
-local PorterNoRide_Type_field = PorterNoRideFastTravelGo_type_def:get_field("_Type");
-
-local PorterNoRide_QUEST_START = PorterNoRide_Type_field:get_type():get_field("QUEST_START"):get_data(nil);
 
 local PorterRideFastTravelGo_type_def = find_type_definition("app.PlayerCommonAction.cPorterRideFastTravelGo");
 local PorterRide_departure_method = PorterRideFastTravelGo_type_def:get_method("departure");
@@ -55,21 +45,6 @@ end, function()
     if skipAction then
         skipAction = nil;
         departure_method:call(get_hook_storage().this_ptr);
-    end
-end);
-
-hook(getMethod(PorterNoRide_methods, "setupArrivalInfo", false), function(args)
-    local this_ptr = args[2];
-    if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) and (PorterNoRide_Type_field:get_data(this_ptr) ~= PorterNoRide_QUEST_START or getMemberNum_method:call(get_UserInfoManager_method:call(get_Network_method:call(nil)), QUEST) <= 1) then
-        get_hook_storage().this_ptr = this_ptr;
-        skipAction = true;
-    end
-end, function()
-    if skipAction then
-        skipAction = nil;
-        local this_ptr = get_hook_storage().this_ptr;
-        PorterNoRide_startFTFade_method:call(this_ptr, false);
-        PorterNoRide_startFTFade_callback_method:call(this_ptr);
     end
 end);
 

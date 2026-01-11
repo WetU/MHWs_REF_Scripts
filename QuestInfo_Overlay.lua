@@ -52,10 +52,10 @@ local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamG
 local get_IsMaster_method = Constants.get_IsMaster_method;
 local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
 
-local get_AttackPower_method = get_HunterStatus_method:get_return_type():get_method("get_AttackPower");
+local HunterStatus_type_def = get_HunterStatus_method:get_return_type();
+local get_AttackPower_method = HunterStatus_type_def:get_method("get_AttackPower");
 
-local HunterAttackPower_type_def = get_AttackPower_method:get_return_type();
-local get_AttibuteType_method = HunterAttackPower_type_def:get_method("get_AttibuteType");
+local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
 
 local WeaponAttr = {};
 for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
@@ -87,7 +87,7 @@ end
 
 local CHARGE_LOOP = Phase_field:get_type():get_field("CHARGE_LOOP"):get_data(nil);
 
-local maxChargeTime = nil;
+local maxSlingerChargeTime = nil;
 
 local oldElapsedTime = nil;
 local oldWeaponAttr = nil;
@@ -102,7 +102,6 @@ local curWeaponAttr = nil;
 local slingerChargeMax = nil;
 
 local QuestDirector_ptr = nil;
-local Hunter_AttackPower = nil;
 
 local function getWeaponAttr(attr)
     if attr == nil then
@@ -126,21 +125,21 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0);
 end
 
-local isMaster = nil;
+local isMasterPlayer = nil;
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
     if QuestInfoCreated then
         local this_ptr = args[2];
         if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) then
             get_hook_storage().this_ptr = this_ptr;
-            isMaster = true;
+            isMasterPlayer = true;
         end
     end
 end, function(retval)
-    if isMaster then
-        isMaster = nil;
+    if isMasterPlayer then
+        isMasterPlayer = nil;
         local this_ptr = get_hook_storage().this_ptr;
         if Phase_field:get_data(this_ptr) == CHARGE_LOOP then
-            slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxChargeTime and "슬링어 풀차지" or "";
+            slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxSlingerChargeTime and "슬링어 풀차지" or "";
         elseif slingerChargeMax ~= "" then
             slingerChargeMax = "";
         end
@@ -148,9 +147,15 @@ end, function(retval)
     return retval;
 end);
 
-hook(HunterAttackPower_type_def:get_method("setWeaponAttackPower(app.cHunterCreateInfo)"), nil, function()
-    if QuestInfoCreated then
-        getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
+hook(HunterStatus_type_def:get_method("setEquipPower(app.HunterCharacter)"), function(args)
+    if QuestInfoCreated and get_IsMaster_method:call(args[3]) then
+        get_hook_storage().HunterAttackPower = get_AttackPower_method:call(args[2]);
+        isMasterPlayer = true;
+    end
+end, function()
+    if isMasterPlayer then
+        isMasterPlayer = nil;
+        getWeaponAttr(get_AttibuteType_method:call(get_hook_storage().HunterAttackPower));
     end
 end);
 
@@ -172,7 +177,6 @@ hook(QuestDirector_type_def:get_method("update"), function(args)
             QuestTimer = nil;
             curWeaponAttr = nil;
             slingerChargeMax = nil;
-            Hunter_AttackPower = nil;
         end
     end
 end, function()
@@ -186,8 +190,7 @@ end, function()
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             curDeathCount = mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount));
             getQuestTimeInfo(QuestElapsedTime);
-            Hunter_AttackPower = get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)));
-            getWeaponAttr(get_AttibuteType_method:call(Hunter_AttackPower));
+            getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)))));
             QuestInfoCreated = true;
         elseif QuestElapsedTime ~= oldElapsedTime then
             getQuestTimeInfo(QuestElapsedTime);
@@ -218,7 +221,7 @@ end);
 local PlayerGlobalParam = Constants.get_PlParam_method:call(nil);
 if PlayerGlobalParam ~= nil then
     local PlayerGlobalParam_type_def = PlayerGlobalParam:get_type_definition();
-    maxChargeTime = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerTime"):call(PlayerGlobalParam);
+    maxSlingerChargeTime = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerSpeedRate"):call(PlayerGlobalParam);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
