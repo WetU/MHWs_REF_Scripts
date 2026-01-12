@@ -125,28 +125,31 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0);
 end
 
-local isMasterPlayer = nil;
+local isMasterPlayerShoot = nil;
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
     if QuestInfoCreated then
         local this_ptr = args[2];
         if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) then
             get_hook_storage().this_ptr = this_ptr;
-            isMasterPlayer = true;
+            isMasterPlayerShoot = true;
         end
     end
 end, function(retval)
-    if isMasterPlayer then
-        isMasterPlayer = nil;
+    if isMasterPlayerShoot then
+        isMasterPlayerShoot = nil;
         local this_ptr = get_hook_storage().this_ptr;
-        if Phase_field:get_data(this_ptr) == CHARGE_LOOP then
-            slingerChargeMax = ChargeTimer_field:get_data(this_ptr) >= maxSlingerChargeTime and "슬링어 풀차지" or "";
-        elseif slingerChargeMax ~= "" then
+        if Phase_field:get_data(this_ptr) == CHARGE_LOOP and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
+            slingerChargeMax = "슬링어 풀차지";
+            return retval;
+        end
+        if slingerChargeMax ~= "" then
             slingerChargeMax = "";
         end
     end
     return retval;
 end);
 
+local isMasterPlayer = nil;
 hook(HunterStatus_type_def:get_method("setEquipPower(app.HunterCharacter)"), function(args)
     if QuestInfoCreated and get_IsMaster_method:call(args[3]) then
         get_hook_storage().HunterAttackPower = get_AttackPower_method:call(args[2]);
