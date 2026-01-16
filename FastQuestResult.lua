@@ -8,6 +8,8 @@ local get_hook_storage = Constants.get_hook_storage;
 
 local getThisPtr = Constants.getThisPtr;
 
+local requestCallTrigger_method = Constants.requestCallTrigger_method;
+
 local getMethod = Constants.getMethod;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
@@ -120,8 +122,11 @@ local GUI020100PanelQuestRewardItem_type_def = find_type_definition("app.cGUI020
 local GUI020100PanelQuestRewardItem_methods = GUI020100PanelQuestRewardItem_type_def:get_methods();
 local Reward_endFix_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", false);
 local Reward_endFix_callback_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", true);
+local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl");
 local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
+
+local finish_method = get_FixControl_method:get_return_type():get_method("finish");
 
 local JUDGE_MODE_type_def = JudgeMode_field:get_type();
 local JUDGE_MODE = {
@@ -131,20 +136,21 @@ local JUDGE_MODE = {
 
 local GUI020100_type_def = get_MyOwner_method:get_return_type();
 local hasContribution_method = GUI020100_type_def:get_method("hasContribution");
-local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
-local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
-local endQuestResultList_method = GUI020100_type_def:get_method("endQuestResultList");
-local endQuestContribution_method = GUI020100_type_def:get_method("endQuestContribution");
-local jumpFixQuestJudge_method = GUI020100_type_def:get_method("jumpFixQuestJudge");
 local quitResult_method = GUI020100_type_def:get_method("quitResult");
+local InputCtrl_field = GUI020100_type_def:get_field("_InputCtrl");
 
 local GUI020100PanelQuestResultList_type_def = find_type_definition("app.cGUI020100PanelQuestResultList");
 local Result_endFix_method = GUI020100PanelQuestResultList_type_def:get_method("endFix");
+
+local GUI020100PanelQuestContribution_type_def = find_type_definition("app.cGUI020100PanelQuestContribution");
+local Contribution_endFix_method = GUI020100PanelQuestContribution_type_def:get_method("endFix");
 
 local GUIManager_type_def = Constants.GUIManager_type_def;
 local hasRandomAmuletJudge_method = GUIManager_type_def:get_method("hasRandomAmuletJudge");
 local hasJudgeItemIgnoreRandomAmulet_method = GUIManager_type_def:get_method("hasJudgeItemIgnoreRandomAmulet");
 local terminateQuestResult_method = GUIManager_type_def:get_method("terminateQuestResult");
+
+local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT"):get_data(nil);
 
 local GUI020100 = nil;
 local GUI020100PanelQuestRewardItem_ptr = nil;
@@ -171,21 +177,24 @@ end);
 hook(getMethod(GUI020100PanelQuestRewardItem_methods, "onVisibleUpdate", false), nil, function()
     if GUI020100PanelQuestRewardItem_ptr ~= nil then
         local JudgeMode = JudgeMode_field:get_data(GUI020100PanelQuestRewardItem_ptr);
-        if JudgeMode == JUDGE_MODE.MODE01 then
-            endQuestJudge_method:call(GUI020100);
-            if hasRandomAmuletJudge_method:call(Constants.GUIManager) == false then
-                endReward();
-            end
-        elseif JudgeMode == JUDGE_MODE.MODE02 then
-            jumpFixQuestJudge_method:call(GUI020100);
-            quitResult_method:call(GUI020100);
+        if JudgeMode == JUDGE_MODE.MODE02 then
+            requestCallTrigger_method:call(InputCtrl_field:get_data(GUI020100), JUST_TIMING_SHORTCUT);
             GUI020100 = nil;
             GUI020100PanelQuestRewardItem_ptr = nil;
         else
-            endQuestReward_method:call(GUI020100);
             local GUIManager = Constants.GUIManager;
-            if hasJudgeItemIgnoreRandomAmulet_method:call(GUIManager) == false and hasRandomAmuletJudge_method:call(GUIManager) == false then
-                endReward();
+            if JudgeMode == JUDGE_MODE.MODE01 then
+                if hasRandomAmuletJudge_method:call(GUIManager) == false then
+                    endReward();
+                else
+                    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem_ptr));
+                end
+            else
+                if hasJudgeItemIgnoreRandomAmulet_method:call(GUIManager) == false and hasRandomAmuletJudge_method:call(GUIManager) == false then
+                    endReward();
+                else
+                    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem_ptr));
+                end
             end
         end
     end
@@ -206,14 +215,13 @@ hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
     end
     get_hook_storage().this_ptr = args[2];
 end, function()
-    endQuestResultList_method:call(GUI020100);
     Result_endFix_method:call(get_hook_storage().this_ptr);
     if hasContribution_method:call(GUI020100) == false then
         terminateQuestResultFlow();
     end
 end);
 
-hook(find_type_definition("app.cGUI020100PanelQuestContribution"):get_method("start"), nil, function()
-    endQuestContribution_method:call(GUI020100);
+hook(GUI020100PanelQuestContribution_type_def:get_method("start"), getThisPtr, function()
+    Contribution_endFix_method:call(get_hook_storage().this_ptr);
     terminateQuestResultFlow();
 end);

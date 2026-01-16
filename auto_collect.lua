@@ -42,7 +42,6 @@ local get_Facility_method = Constants.get_Facility_method;
 local FacilityManager_type_def = get_Facility_method:get_return_type();
 local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
-local get_Pugee_method = FacilityManager_type_def:get_method("get_Pugee");
 
 local FacilityDining_type_def = get_Dining_method:get_return_type();
 local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
@@ -88,9 +87,8 @@ local get_Rewards_method = LargeWorkshopParam_type_def:get_method("get_Rewards")
 local clearRewardItem_method = LargeWorkshopParam_type_def:get_method("clearRewardItem(System.Int32)");
 local LargeWorkshop_MAX_ITEM_NUM = LargeWorkshopParam_type_def:get_field("MAX_ITEM_NUM"):get_data(nil); -- static
 
-local stroke_method = get_Pugee_method:get_return_type():get_method("stroke(System.Boolean)");
-
-local getCoolTimer_method = Constants.PugeeParam_type_def:get_method("getCoolTimer");
+local FacilityPugee_type_def = find_type_definition("app.FacilityPugee");
+local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)");
 
 local FacilityRallus_type_def = find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
@@ -184,18 +182,16 @@ hook(find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival")
     end
 end);
 
-local pugee_hasReward = false;
-hook(FacilityManager_type_def:get_method("update"), function(args)
-    local PugeeParam = Constants.PugeeParam;
-    if PugeeParam ~= nil and getCoolTimer_method:call(PugeeParam) <= 0.0 then
-        get_hook_storage().this_ptr = args[2];
-        pugee_hasReward = true;
+local FacilityPugee = nil;
+hook(FacilityPugee_type_def:get_method("isEnableCoolTimer"), function(args)
+    if FacilityPugee == nil then
+        FacilityPugee = args[2];
     end
-end, function()
-    if pugee_hasReward then
-        pugee_hasReward = false;
-        stroke_method:call(get_Pugee_method:call(get_hook_storage().this_ptr), true);
+end, function(retval)
+    if (to_int64(retval) & 1) == 0 then
+        stroke_method:call(FacilityPugee);
     end
+    return retval;
 end);
 
 local SupplyFoodMax = nil;

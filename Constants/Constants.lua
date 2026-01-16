@@ -30,7 +30,6 @@ local getCurrentUserSaveData_method = get_Save_method:get_return_type():get_meth
 
 local UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type();
 local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
-local get_Pugee_method = UserSaveParam_type_def:get_method("get_Pugee");
 
 local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
 
@@ -87,7 +86,6 @@ local Constants = {
     ChatManager = nil,
     GUIManager = nil,
     UserSaveData = nil,
-    PugeeParam = nil,
     ShortcutPalletParam = nil,
 
     GUI070000_type_def = GUI070000_type_def,
@@ -96,7 +94,6 @@ local Constants = {
     GUIManager_type_def = get_GUI_method:get_return_type(),
     HunterCharacter_type_def = HunterCharacter_type_def,
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
-    PugeeParam_type_def  = get_Pugee_method:get_return_type(),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
@@ -154,7 +151,6 @@ Constants.init = function()
             local UserSaveData = getCurrentUserSaveData_method:call(SaveDataManager);
             if UserSaveData ~= nil then
                 Constants.UserSaveData = UserSaveData;
-                Constants.PugeeParam = get_Pugee_method:call(UserSaveData);
                 Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
             end
         end
@@ -167,7 +163,6 @@ hook(find_type_definition("app.TitleState"):get_method("enter"), nil, function()
         Constants.ChatManager = nil;
         Constants.GUIManager = nil;
         Constants.UserSaveData = nil;
-        Constants.PugeeParam = nil;
         Constants.ShortcutPalletParam = nil;
     end
 end);
