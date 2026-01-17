@@ -77,14 +77,14 @@ local SortDifficulty = {
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
 };
 
-local function setSortDifficulty(obj, type)
-    if type == 0 then
+local function setSortDifficulty(obj, sortType)
+    if sortType == 0 then
         setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
         set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
-    elseif type == 4 then
+    elseif sortType == 4 then
         setSortDifficulty_method:call(obj, false, false, false, true, false, false, false);
         set_Message_method:call(PNLChangeSortType_field:get_data(obj), "퀘스트 시작 최신 순");
-    elseif type == 7 then
+    elseif sortType == 7 then
         setSortDifficulty_method:call(obj, false, false, false, false, false, false, true);
         set_Message_method:call(PNLChangeSortType_field:get_data(obj), "수주 가능 수 적은 순");
     end

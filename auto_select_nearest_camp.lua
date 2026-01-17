@@ -1,8 +1,6 @@
 local Constants = _G.require("Constants/Constants");
 
-local ipairs = Constants.ipairs;
-
-local tinsert = Constants.tinsert;
+local pairs = Constants.pairs;
 
 local find_type_definition = Constants.find_type_definition;
 local create_int32 = Constants.create_int32;
@@ -62,20 +60,14 @@ local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
 
 local requestSelectIndexCore_method = find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
 
-local STAGES = {};
-for _, v in ipairs(get_Stage_method:get_return_type():get_fields()) do
-    local name = v:get_name();
-    if name ~= "INVALID" and name ~= "MAX" and v:is_static() then
-        tinsert(STAGES, v:get_data(nil));
-    end
-end
+local STAGES = Constants.STAGES;
 
 local DrawDatas = nil;
 
 local function getDrawDatas(MapStageDrawData)
     if MapStageDrawData ~= nil then
         DrawDatas = {};
-        for _, stageID in ipairs(STAGES) do
+        for _, stageID in pairs(STAGES) do
             local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
             if DrawData ~= nil then
                 local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);

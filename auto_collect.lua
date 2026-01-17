@@ -102,7 +102,7 @@ local getRewardItemData_method = find_type_definition("app.GimmickRewardUtil"):g
 local getReward_method = find_type_definition("app.cSendItemInfo"):get_method("getReward(System.Boolean, System.Boolean)");
 
 local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
-local ST502 = find_type_definition("app.FieldDef.STAGE"):get_field("ST502"):get_data(nil); -- static
+local ST502 = Constants.STAGES.ST502;
 
 local SupportShipData_type_def = find_type_definition("app.user_data.SupportShipData.cData");
 local SupportShipData_get_ItemId_method = SupportShipData_type_def:get_method("get_ItemId");

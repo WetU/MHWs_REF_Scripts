@@ -18,8 +18,8 @@ local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local UI070000 = Constants.GUIID_type_def:get_field("UI070000"):get_data(nil); -- static
 
 local GUI070000_type_def = Constants.GUI070000_type_def;
-local get_IDInt_method = GUI070000_type_def:get_method("get_IDInt");
-local get_CurCtrlInputPriority_method = GUI070000_type_def:get_method("get_CurCtrlInputPriority");
+local get_IDInt_method = Constants.get_IDInt_method;
+local get_CurCtrlInputPriority_method = Constants.get_CurCtrlInputPriority_method;
 
 local GUIPartsReward_type_def = find_type_definition("app.cGUIPartsReward");
 local get__JudgeAnimationEnd_method = GUIPartsReward_type_def:get_method("get__JudgeAnimationEnd");
@@ -28,18 +28,19 @@ local set__WaitAnimationTime_method = GUIPartsReward_type_def:get_method("set__W
 local get__WaitControlTime_method = GUIPartsReward_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
-local get_Owner_method = GUIPartsReward_type_def:get_method("get_Owner");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
+
+local get_Owner_method = GUIPartsReward_type_def:get_parent_type():get_method("get_Owner");
 
 local JUDGE = find_type_definition("app.cGUIPartsReward.MODE"):get_field("JUDGE"):get_data(nil); -- static
 
 local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPartsFluent");
-local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem"); -- via.gui.SelectItem
-local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_method("get__PanelNewMark"); -- via.gui.Panel
+local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
+local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_parent_type():get_parent_type():get_method("get__PanelNewMark");
 
 local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
 
-local get_ActualVisible_method = get__PanelNewMark_method:get_return_type():get_method("get_ActualVisible");
+local get_ActualVisible_method = Constants.get_ActualVisible_method;
 
 local GUI070001_type_def = find_type_definition("app.GUI070001");
 local get_IsViewMode_method = GUI070001_type_def:get_method("get_IsViewMode");
@@ -55,6 +56,14 @@ local function skipJudgeAnimation(GUIPartsReward)
     end
 end
 
+local function GUIPartsReward_getMode(mode_ptr, isRandomAmulet_ptr)
+    local mode = to_int64(mode_ptr) & 0xFFFFFFFF;
+    if mode == JUDGE and (to_int64(isRandomAmulet_ptr) & 1) == 1 then
+        mode = 2;
+    end
+    return mode;
+end
+
 local GUI070000 = nil;
 local GUIPartsReward_ptr = nil;
 local Mode = nil;
@@ -68,16 +77,10 @@ hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUI
             if get_IDInt_method:call(Owner) == UI070000 then
                 GUI070000 = Owner;
                 GUIPartsReward_ptr = this_ptr;
-                Mode = to_int64(args[4]) & 0xFFFFFFFF;
-                if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
-                    Mode = 2;
-                end
+                Mode = GUIPartsReward_getMode(args[4], args[6]);
             end
         else
-            Mode = to_int64(args[4]) & 0xFFFFFFFF;
-            if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
-                Mode = 2;
-            end
+            Mode = GUIPartsReward_getMode(args[4], args[6]);
         end
     end
 end, function()
@@ -127,9 +130,12 @@ local GUI020100PanelQuestRewardItem_type_def = find_type_definition("app.cGUI020
 local GUI020100PanelQuestRewardItem_methods = GUI020100PanelQuestRewardItem_type_def:get_methods();
 local Reward_endFix_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", false);
 local Reward_endFix_callback_method = getMethod(GUI020100PanelQuestRewardItem_methods, "endFix", true);
-local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_FixControl");
-local get_MyOwner_method = GUI020100PanelQuestRewardItem_type_def:get_method("get_MyOwner");
 local JudgeMode_field = GUI020100PanelQuestRewardItem_type_def:get_field("JudgeMode");
+
+local GUI020100PanelFixBase_type_def = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type();
+local get_FixControl_method = GUI020100PanelFixBase_type_def:get_method("get_FixControl");
+
+local get_MyOwner_method = GUI020100PanelFixBase_type_def:get_parent_type():get_method("get_MyOwner");
 
 local finish_method = get_FixControl_method:get_return_type():get_method("finish");
 

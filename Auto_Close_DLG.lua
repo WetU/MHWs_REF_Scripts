@@ -31,7 +31,7 @@ local requestClose_method = Constants.requestClose_method;
 
 local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
-local isVisibleGUI_method = Constants.GUIManager_type_def:get_method("isVisibleGUI(app.GUIID.ID)");
+local isVisibleGUI_method = Constants.GUIManager_type_def:get_parent_type():get_method("isVisibleGUI(app.GUIID.ID)");
 local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil); -- static
 
 local GUI000002_type_def = find_type_definition("app.GUI000002");
@@ -48,11 +48,13 @@ local closeGUI_method = GUISystemModuleNotifyWindowApp_type_def:get_method("clos
 
 local GUINotifyWindowInfoApp_type_def = get__CurInfoApp_method:get_return_type();
 local get_NotifyWindowId_method = GUINotifyWindowInfoApp_type_def:get_method("get_NotifyWindowId");
-local get_Caller_method = GUINotifyWindowInfoApp_type_def:get_method("get_Caller");
-local get_TextInfo_method = GUINotifyWindowInfoApp_type_def:get_method("get_TextInfo");
-local isExistWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("isExistWindowEndFunc");
-local endWindow_method = GUINotifyWindowInfoApp_type_def:get_method("endWindow(System.Int32)");
-local executeWindowEndFunc_method = GUINotifyWindowInfoApp_type_def:get_method("executeWindowEndFunc");
+
+local GUINotifyWindowInfo_type_def = GUINotifyWindowInfoApp_type_def:get_parent_type();
+local get_Caller_method = GUINotifyWindowInfo_type_def:get_method("get_Caller");
+local get_TextInfo_method = GUINotifyWindowInfo_type_def:get_method("get_TextInfo");
+local isExistWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("isExistWindowEndFunc");
+local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(System.Int32)");
+local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
 
 local NotifyWindowID_type_def = get_NotifyWindowId_method:get_return_type();
 
