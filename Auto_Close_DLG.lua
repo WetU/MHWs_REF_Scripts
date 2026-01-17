@@ -27,6 +27,7 @@ local function saveConfig()
 end
 
 local addSystemLog_method = Constants.addSystemLog_method;
+local requestClose_method = Constants.requestClose_method;
 
 local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
@@ -79,8 +80,6 @@ local ParamValue_type_def = ParamValue_field:get_type();
 local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
 local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
 local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
-
-local requestClose_method = Constants.requestClose_method;
 
 local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
 local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);

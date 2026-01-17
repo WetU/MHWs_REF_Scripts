@@ -18,7 +18,11 @@ local distance_method = find_type_definition("via.MathEx"):get_method("distance(
 
 local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
 
-local get_MapStageDrawData_method = Constants.VariousDataManagerSetting_type_def:get_method("get_MapStageDrawData");
+local get_MAP3D_method = Constants.GUIManager_type_def:get_method("get_MAP3D");
+
+local GUIMapController_type_def = get_MAP3D_method:get_return_type();
+local get_MapStageDrawData_method = GUIMapController_type_def:get_method("get_MapStageDrawData");
+local setSelectFloor_method = GUIMapController_type_def:get_method("setSelectFloor(System.Int32)");
 
 local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_method("getDrawData(app.FieldDef.STAGE)");
 
@@ -56,10 +60,7 @@ local get_Stage_method = GUIQuestViewData_type_def:get_method("get_Stage");
 
 local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
 
-local FluentScrollList_type_def = find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>");
-local getSelectedIndex_method = FluentScrollList_type_def:get_method("getSelectedIndex");
-local selectPrevItem_method = FluentScrollList_type_def:get_method("selectPrevItem");
-local selectNextItem_method = FluentScrollList_type_def:get_method("selectNextItem");
+local requestSelectIndexCore_method = find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
 
 local STAGES = {};
 for _, v in ipairs(get_Stage_method:get_return_type():get_fields()) do
@@ -71,24 +72,7 @@ end
 
 local DrawDatas = nil;
 
-local hook_datas = {
-    hasData = false,
-    inputCtrl = nil,
-    targetCampIdx = nil,
-    selectMethod = nil
-};
-
-local function clear_datas()
-    hook_datas = {
-        hasData = false,
-        inputCtrl = nil,
-        targetCampIdx = nil,
-        selectMethod = nil
-    };
-end
-
-local function getDrawDatas()
-    local MapStageDrawData = get_MapStageDrawData_method:call(Constants.get_VariousData_method:call(nil));
+local function getDrawDatas(MapStageDrawData)
     if MapStageDrawData ~= nil then
         DrawDatas = {};
         for _, stageID in ipairs(STAGES) do
@@ -118,64 +102,61 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
+local function setVars(GUI050001, guiMapController, startPointIdx, startPointFloorNum)
+    setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
+    requestSelectIndexCore_method:call(InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001)), startPointIdx, 0);
+    setSelectFloor_method:call(guiMapController, startPointFloorNum);
+end
+
+hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(retval)
     local this_ptr = get_hook_storage().this_ptr;
     local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
         local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
         local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
         if startPointlist_size > 1 then
+            local GUIMapController = get_MAP3D_method:call(Constants.GUIManager);
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
-            local Stage = nil;
+            local Stage = get_Stage_method:call(QuestViewData);
             local areaIconPosList = nil;
-            local sameArea_shortest_distance = nil;
-            local sameArea_idx = nil;
-            local sameFloor_shortest_distance = nil;
-            local sameFloor_idx = nil;
-            local diffFloor_shortest_distance = nil;
-            local diffFloor_idx = nil;
+            local sameArea_idx, sameArea_FloorNum = nil, nil;
+            local sameFloor_shortest_distance, sameFloor_idx, sameFloor_FloorNum = nil, nil, nil;
+            local diffFloor_shortest_distance, diffFloor_idx, diffFloor_FloorNum = nil, nil, nil;
             for i = 0, TargetEmStartArea_array:get_size() - 1 do
-                local emAreaNo = TargetEmStartArea_array:get_element(i);
-                if emAreaNo ~= nil then
-                    local targetEmAreaNo = Int32_value_field:get_data(emAreaNo);
-                    if targetEmAreaNo ~= nil then
-                        local areaIconPos, targetEmFloorNo = nil, nil;
+                local emAreaNum = TargetEmStartArea_array:get_element(i);
+                if emAreaNum ~= nil then
+                    local targetEmAreaNum = Int32_value_field:get_data(emAreaNum);
+                    if targetEmAreaNum ~= nil then
+                        local areaIconPos, targetEmFloorNum = nil, nil;
                         for j = 0, startPointlist_size - 1 do
                             local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
                             local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                            if targetEmAreaNo == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
-                                sameArea_idx = j;
+                            local Beacon_FloorNum = get_MapFloorNumSafety_method:call(FieldAreaInfo);
+                            if targetEmAreaNum == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
+                                sameArea_idx, sameArea_FloorNum = j, Beacon_FloorNum;
                                 break;
                             else
                                 if areaIconPos == nil then
                                     if areaIconPosList == nil then
-                                        if Stage == nil then
-                                            Stage = get_Stage_method:call(QuestViewData);
-                                        end
                                         if DrawDatas == nil then
-                                            getDrawDatas();
+                                            getDrawDatas(get_MapStageDrawData_method:call(GUIMapController));
                                         end
                                         areaIconPosList = DrawDatas[Stage];
                                     end
-                                    areaIconPos = areaIconPosList[targetEmAreaNo];
+                                    areaIconPos = areaIconPosList[targetEmAreaNum];
                                 end
                                 if areaIconPos ~= nil then
-                                    if targetEmFloorNo == nil then
-                                        if Stage == nil then
-                                            Stage = get_Stage_method:call(QuestViewData);
-                                        end
-                                        targetEmFloorNo = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNo);
+                                    if targetEmFloorNum == nil then
+                                        targetEmFloorNum = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNum);
                                     end
                                     local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
-                                    if get_MapFloorNumSafety_method:call(FieldAreaInfo) == targetEmFloorNo then
+                                    if Beacon_FloorNum == targetEmFloorNum then
                                         if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                            sameFloor_shortest_distance = distance;
-                                            sameFloor_idx = j;
+                                            sameFloor_shortest_distance, sameFloor_idx, sameFloor_FloorNum = distance, j, Beacon_FloorNum;
                                         end
                                     elseif sameFloor_distance == nil and (diffFloor_idx == nil or distance < diffFloor_shortest_distance) then
-                                        diffFloor_shortest_distance = distance;
-                                        diffFloor_idx = j;
+                                        diffFloor_shortest_distance, diffFloor_idx, diffFloor_FloorNum = distance, j, Beacon_FloorNum;
                                     end
                                 end
                             end
@@ -186,25 +167,16 @@ hook(GUI050001_type_def:get_method("initStartPoint"), getThisPtr, function()
                     end
                 end
             end
-            local targetStartPoint_idx = sameArea_idx or (calcbyFloor(sameFloor_shortest_distance, diffFloor_shortest_distance) == true and diffFloor_idx) or sameFloor_idx or diffFloor_idx;
-            if targetStartPoint_idx ~= nil and targetStartPoint_idx > 0 then
-                setCurrentSelectStartPointIndex_method:call(this_ptr, targetStartPoint_idx);
-                hook_datas.targetCampIdx = targetStartPoint_idx;
-                hook_datas.inputCtrl = InputCtrl_field:get_data(StartPointList_field:get_data(this_ptr));
-                hook_datas.selectMethod = (targetStartPoint_idx + 1) < (startPointlist_size * 0.5) and selectPrevItem_method or selectNextItem_method;
-                hook_datas.hasData = true;
+            if sameArea_idx ~= nil and sameArea_idx > 0 then
+                setVars(this_ptr, GUIMapController, sameArea_idx, sameArea_FloorNum);
+            elseif calcbyFloor(sameFloor_shortest_distance, diffFloor_shortest_distance) and diffFloor_idx > 0 then
+                setVars(this_ptr, GUIMapController, diffFloor_idx, diffFloor_FloorNum);
+            elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
+                setVars(this_ptr, GUIMapController, sameFloor_idx, sameFloor_FloorNum);
+            elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
+                setVars(this_ptr, GUIMapController, diffFloor_idx, diffFloor_FloorNum);
             end
         end
     end
-end);
-
-hook(find_type_definition("app.GUI050001_AcceptList"):get_method("onVisibleUpdate"), nil, function()
-    if hook_datas.hasData then
-        local inputCtrl = hook_datas.inputCtrl;
-        if getSelectedIndex_method:call(inputCtrl) ~= hook_datas.targetCampIdx then
-            hook_datas.selectMethod:call(inputCtrl);
-        else
-            clear_datas();
-        end
-    end
+    return retval;
 end);

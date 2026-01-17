@@ -24,7 +24,6 @@ local GA_type_def = find_type_definition("app.GA");
 local get_Chat_method = GA_type_def:get_method("get_Chat");
 local get_GUI_method = GA_type_def:get_method("get_GUI");
 local get_Save_method = GA_type_def:get_method("get_Save");
-local get_VariousData_method = GA_type_def:get_method("get_VariousData");
 
 local getCurrentUserSaveData_method = get_Save_method:get_return_type():get_method("getCurrentUserSaveData");
 
@@ -40,6 +39,8 @@ local HunterCharacter_type_def = get_Chara_method:get_return_type();
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local GUI070000_type_def = find_type_definition("app.GUI070000");
+
+local GUIInputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 
 local Constants = {
     pairs = _G.pairs,
@@ -97,7 +98,6 @@ local Constants = {
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
     UserSaveParam_type_def = UserSaveParam_type_def,
-    VariousDataManagerSetting_type_def = get_VariousData_method:get_return_type(),
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
     get_Chara_method = get_Chara_method,
@@ -105,13 +105,13 @@ local Constants = {
     get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster"),
     get_Network_method = GA_type_def:get_method("get_Network"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
-    get_VariousData_method = get_VariousData_method,
+    get_VariousData_method = GA_type_def:get_method("get_VariousData"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
-    requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
+    requestCallTrigger_method = GUIInputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
     requestClose_method = GUI070000_type_def:get_method("requestClose(System.Boolean)"),
 
     getThisPtr = function(args)

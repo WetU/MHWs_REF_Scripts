@@ -68,11 +68,16 @@ hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUI
             if get_IDInt_method:call(Owner) == UI070000 then
                 GUI070000 = Owner;
                 GUIPartsReward_ptr = this_ptr;
+                Mode = to_int64(args[4]) & 0xFFFFFFFF;
+                if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
+                    Mode = 2;
+                end
             end
-        end
-        Mode = to_int64(args[4]) & 0xFFFFFFFF;
-        if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
-            Mode = 2;
+        else
+            Mode = to_int64(args[4]) & 0xFFFFFFFF;
+            if Mode == JUDGE and (to_int64(args[6]) & 1) == 1 then
+                Mode = 2;
+            end
         end
     end
 end, function()

@@ -29,8 +29,6 @@ end
 local GUI010100_type_def = find_type_definition("app.GUI010100");
 local Input_field = GUI010100_type_def:get_field("_Input");
 
-local BUTTON = find_type_definition("app.GUI010100.RNO"):get_field("BUTTON"):get_data(nil); -- static
-
 local requestCallTrigger_method = Constants.requestCallTrigger_method;
 
 local TITLE_START = Constants.GUIFunc_TYPE_type_def:get_field("TITLE_START"):get_data(nil);
@@ -50,8 +48,6 @@ hook(find_type_definition("app.GUI010002"):get_method("onOpen"), getObject, func
     this:write_float(0x220, this:read_float(0x224));
 end);
 
-hook(GUI010100_type_def:get_method("onOpen"), getThisPtr, function()
-    local this_ptr = get_hook_storage().this_ptr;
-    set_native_field(this_ptr, GUI010100_type_def, "_Rno", BUTTON);
-    requestCallTrigger_method:call(Input_field:get_data(this_ptr), TITLE_START);
+hook(GUI010100_type_def:get_method("guiVisibleUpdate"), getThisPtr, function()
+    requestCallTrigger_method:call(Input_field:get_data(get_hook_storage().this_ptr), TITLE_START);
 end);
