@@ -40,8 +40,6 @@ local GenericList_type_def = find_type_definition("System.Collections.Generic.Li
 
 local GUI070000_type_def = find_type_definition("app.GUI070000");
 
-local GUIInputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>");
-
 local Constants = {
     pairs = _G.pairs,
     ipairs = ipairs,
@@ -60,6 +58,7 @@ local Constants = {
     hook = hook,
     find_type_definition = find_type_definition,
     call_object_func = call_object_func,
+    create_int32 = sdk.create_int32,
     to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
@@ -111,7 +110,7 @@ local Constants = {
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
-    requestCallTrigger_method = GUIInputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
+    requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
     requestClose_method = GUI070000_type_def:get_method("requestClose(System.Boolean)"),
 
     getThisPtr = function(args)

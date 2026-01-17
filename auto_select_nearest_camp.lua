@@ -5,7 +5,9 @@ local ipairs = Constants.ipairs;
 local tinsert = Constants.tinsert;
 
 local find_type_definition = Constants.find_type_definition;
+local create_int32 = Constants.create_int32;
 local hook = Constants.hook;
+local to_ptr = Constants.to_ptr;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -20,9 +22,7 @@ local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUt
 
 local get_MAP3D_method = Constants.GUIManager_type_def:get_method("get_MAP3D");
 
-local GUIMapController_type_def = get_MAP3D_method:get_return_type();
-local get_MapStageDrawData_method = GUIMapController_type_def:get_method("get_MapStageDrawData");
-local setSelectFloor_method = GUIMapController_type_def:get_method("setSelectFloor(System.Int32)");
+local get_MapStageDrawData_method = get_MAP3D_method:get_return_type():get_method("get_MapStageDrawData");
 
 local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_method("getDrawData(app.FieldDef.STAGE)");
 
@@ -102,10 +102,9 @@ local function calcbyFloor(sameFloor_distance, diffFloor_distance)
     return nil;
 end
 
-local function setVars(GUI050001, guiMapController, startPointIdx, startPointFloorNum)
+local function setVars(GUI050001, startPointIdx)
     setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
     requestSelectIndexCore_method:call(InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001)), startPointIdx, 0);
-    setSelectFloor_method:call(guiMapController, startPointFloorNum);
 end
 
 hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(retval)
@@ -115,7 +114,6 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
         local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
         local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
         if startPointlist_size > 1 then
-            local GUIMapController = get_MAP3D_method:call(Constants.GUIManager);
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
             local Stage = get_Stage_method:call(QuestViewData);
@@ -140,7 +138,7 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                                 if areaIconPos == nil then
                                     if areaIconPosList == nil then
                                         if DrawDatas == nil then
-                                            getDrawDatas(get_MapStageDrawData_method:call(GUIMapController));
+                                            getDrawDatas(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)));
                                         end
                                         areaIconPosList = DrawDatas[Stage];
                                     end
@@ -168,13 +166,17 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                 end
             end
             if sameArea_idx ~= nil and sameArea_idx > 0 then
-                setVars(this_ptr, GUIMapController, sameArea_idx, sameArea_FloorNum);
+                setVars(this_ptr, sameArea_idx);
+                retval = to_ptr(create_int32(sameArea_FloorNum));
             elseif calcbyFloor(sameFloor_shortest_distance, diffFloor_shortest_distance) and diffFloor_idx > 0 then
-                setVars(this_ptr, GUIMapController, diffFloor_idx, diffFloor_FloorNum);
+                setVars(this_ptr, diffFloor_idx);
+                retval = to_ptr(create_int32(diffFloor_FloorNum));
             elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                setVars(this_ptr, GUIMapController, sameFloor_idx, sameFloor_FloorNum);
+                setVars(this_ptr, sameFloor_idx);
+                retval = to_ptr(create_int32(sameFloor_FloorNum));
             elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                setVars(this_ptr, GUIMapController, diffFloor_idx, diffFloor_FloorNum);
+                setVars(this_ptr, diffFloor_idx);
+                retval = to_ptr(create_int32(diffFloor_FloorNum));
             end
         end
     end
