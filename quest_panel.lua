@@ -73,7 +73,6 @@ local SortDifficulty = {
     CATEGORY_type_def:get_field("STORY"):get_data(nil),
     CATEGORY_type_def:get_field("EVENT"):get_data(nil),
     CATEGORY_type_def:get_field("ARENA"):get_data(nil),
-    CATEGORY_type_def:get_field("FREE_TA"):get_data(nil),
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
 };
 

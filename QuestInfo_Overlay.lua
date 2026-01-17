@@ -28,6 +28,11 @@ local drawtext = Constants.drawtext;
 
 local font = Constants.load_font(nil, 20);
 
+local get_PlParam_method = Constants.get_PlParam_method;
+
+local PlayerGlobalParam_type_def = get_PlParam_method:get_return_type();
+local get_ExChargeSlingerSpeedRate_method = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerSpeedRate");
+
 local QuestDirector_type_def = Constants.QuestDirector_type_def;
 local get_IsActiveQuest_method = QuestDirector_type_def:get_method("get_IsActiveQuest");
 local get_QuestData_method = QuestDirector_type_def:get_method("get_QuestData");
@@ -138,8 +143,10 @@ end, function(retval)
     if isMasterPlayerShoot then
         isMasterPlayerShoot = nil;
         local this_ptr = get_hook_storage().this_ptr;
-        if Phase_field:get_data(this_ptr) == CHARGE_LOOP and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
-            slingerChargeMax = "슬링어 풀차지";
+        if Phase_field:get_data(this_ptr) == CHARGE_LOOP and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime then
+            if slingerChargeMax ~= "슬링어 풀차지" then
+                slingerChargeMax = "슬링어 풀차지";
+            end
             return retval;
         end
         if slingerChargeMax ~= "" then
@@ -187,6 +194,9 @@ end, function()
         local QuestElapsedTime = get_QuestElapsedTime_method:call(QuestDirector_ptr);
         if not QuestInfoCreated then
             slingerChargeMax = "";
+            if maxSlingerChargeTime == nil then
+                maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(get_PlParam_method:call(nil));
+            end
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
             questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
@@ -221,10 +231,9 @@ on_frame(function()
     end
 end);
 
-local PlayerGlobalParam = Constants.get_PlParam_method:call(nil);
+local PlayerGlobalParam = get_PlParam_method:call(nil);
 if PlayerGlobalParam ~= nil then
-    local PlayerGlobalParam_type_def = PlayerGlobalParam:get_type_definition();
-    maxSlingerChargeTime = PlayerGlobalParam_type_def:get_method("get_ExChargeSlingerSpeedRate"):call(PlayerGlobalParam);
+    maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(PlayerGlobalParam);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
     set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);

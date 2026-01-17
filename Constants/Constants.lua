@@ -42,8 +42,6 @@ local GUI070000_type_def = find_type_definition("app.GUI070000");
 local GUIBaseApp_type_def = GUI070000_type_def:get_parent_type();
 local GUIBase_type_def = GUIBaseApp_type_def:get_parent_type();
 
-local PlayObject_type_def = find_type_definition("via.gui.PlayObject");
-
 local Constants = {
     pairs = _G.pairs,
     ipairs = ipairs,
@@ -105,14 +103,12 @@ local Constants = {
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
-    get_ActualVisible_method = PlayObject_type_def:get_method("get_ActualVisible"),
+    get_ActualVisible_method = find_type_definition("via.gui.PlayObject"):get_method("get_ActualVisible"),
     get_Chara_method = get_Chara_method,
-    get_Component_method = PlayObject_type_def:get_method("get_Component"),
     get_CurCtrlInputPriority_method = GUIBase_type_def:get_method("get_CurCtrlInputPriority"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
     get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster"),
-    get_Network_method = GA_type_def:get_method("get_Network"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     get_VariousData_method = GA_type_def:get_method("get_VariousData"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
@@ -123,6 +119,8 @@ local Constants = {
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
     requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
     requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boolean)"),
+
+    GUI_field = GUIBase_type_def:get_field("_GUI"),
 
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
