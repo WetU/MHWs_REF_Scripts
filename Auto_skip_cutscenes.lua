@@ -30,11 +30,13 @@ local skipList = {
 local reqSkip = nil;
 hook(DemoMediator_type_def:get_method("onPlayStart(ace.DemoMediatorBase.cParamBase)"), function(args)
     local ID = get_ID_method:call(args[3]);
-    for _, v in ipairs(skipList) do
-        if ID == v then
-            get_hook_storage().this_ptr = args[2];
-            reqSkip = true;
-            break;
+    if ID ~= nil then
+        for _, v in ipairs(skipList) do
+            if ID == v then
+                get_hook_storage().this_ptr = args[2];
+                reqSkip = true;
+                break;
+            end
         end
     end
 end, function()

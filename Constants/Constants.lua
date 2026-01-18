@@ -160,7 +160,6 @@ end
 local isInitialized = false;
 Constants.init = function()
     if not isInitialized then
-        isInitialized = true;
         Constants.ChatManager = get_Chat_method:call(nil);
         Constants.GUIManager = get_GUI_method:call(nil);
         local SaveDataManager = get_Save_method:call(nil);
@@ -171,6 +170,7 @@ Constants.init = function()
                 Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
             end
         end
+        isInitialized = true;
     end
 end
 

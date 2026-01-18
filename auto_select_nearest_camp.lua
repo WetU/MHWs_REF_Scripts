@@ -87,13 +87,6 @@ local function getDrawDatas(MapStageDrawData)
     end
 end
 
-local function calcbyFloor(sameFloor_distance, diffFloor_distance)
-    if sameFloor_distance ~= nil and diffFloor_distance ~= nil then
-        return diffFloor_distance < (sameFloor_distance * 0.45);
-    end
-    return nil;
-end
-
 local function setVars(GUI050001, startPointIdx)
     setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
     requestSelectIndexCore_method:call(InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001)), startPointIdx, 0);
@@ -110,65 +103,64 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
             local TargetEmStartArea_array = get_TargetEmStartArea_method:call(QuestViewData);
             local Stage = get_Stage_method:call(QuestViewData);
             local areaIconPosList = nil;
-            local sameArea_idx, sameArea_FloorNum = nil, nil;
             local sameFloor_shortest_distance, sameFloor_idx, sameFloor_FloorNum = nil, nil, nil;
             local diffFloor_shortest_distance, diffFloor_idx, diffFloor_FloorNum = nil, nil, nil;
             for i = 0, TargetEmStartArea_array:get_size() - 1 do
-                local emAreaNum = TargetEmStartArea_array:get_element(i);
-                if emAreaNum ~= nil then
-                    local targetEmAreaNum = Int32_value_field:get_data(emAreaNum);
-                    if targetEmAreaNum ~= nil then
-                        local areaIconPos, targetEmFloorNum = nil, nil;
-                        for j = 0, startPointlist_size - 1 do
-                            local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
-                            local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
-                            local Beacon_FloorNum = get_MapFloorNumSafety_method:call(FieldAreaInfo);
-                            if targetEmAreaNum == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
-                                sameArea_idx, sameArea_FloorNum = j, Beacon_FloorNum;
-                                break;
-                            else
-                                if areaIconPos == nil then
-                                    if areaIconPosList == nil then
-                                        if DrawDatas == nil then
-                                            getDrawDatas(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)));
-                                        end
-                                        areaIconPosList = DrawDatas[Stage];
-                                    end
-                                    areaIconPos = areaIconPosList[targetEmAreaNum];
-                                end
-                                if areaIconPos ~= nil then
-                                    if targetEmFloorNum == nil then
-                                        targetEmFloorNum = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNum);
-                                    end
-                                    local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
-                                    if Beacon_FloorNum == targetEmFloorNum then
-                                        if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
-                                            sameFloor_shortest_distance, sameFloor_idx, sameFloor_FloorNum = distance, j, Beacon_FloorNum;
-                                        end
-                                    elseif sameFloor_distance == nil and (diffFloor_idx == nil or distance < diffFloor_shortest_distance) then
-                                        diffFloor_shortest_distance, diffFloor_idx, diffFloor_FloorNum = distance, j, Beacon_FloorNum;
-                                    end
-                                end
+                local targetEmAreaNum = Int32_value_field:get_data(TargetEmStartArea_array:get_element(i));
+                if targetEmAreaNum ~= nil then
+                    local areaIconPos, targetEmFloorNum = nil, nil;
+                    for j = 0, startPointlist_size - 1 do
+                        local BeaconGimmick = get_BeaconGimmick_method:call(GenericList_get_Item_method:call(startPointlist, j));
+                        local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+                        if targetEmAreaNum == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
+                            if j > 0 then
+                                setVars(this_ptr, j);
+                                return to_ptr(create_int32(get_MapFloorNumSafety_method:call(FieldAreaInfo)));
                             end
+                            return retval;
                         end
-                        if sameArea_idx ~= nil then
-                            break;
+                        if areaIconPos == nil then
+                            if areaIconPosList == nil then
+                                if DrawDatas == nil then
+                                    getDrawDatas(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)));
+                                end
+                                areaIconPosList = DrawDatas[Stage];
+                            end
+                            areaIconPos = areaIconPosList[targetEmAreaNum];
+                        end
+                        if areaIconPos ~= nil then
+                            if targetEmFloorNum == nil then
+                                targetEmFloorNum = getFloorNumFromAreaNum_method:call(nil, Stage, targetEmAreaNum);
+                            end
+                            local distance = distance_method:call(nil, areaIconPos, getPos_method:call(BeaconGimmick));
+                            local Beacon_FloorNum = get_MapFloorNumSafety_method:call(FieldAreaInfo);
+                            if Beacon_FloorNum == targetEmFloorNum then
+                                if sameFloor_idx == nil or distance < sameFloor_shortest_distance then
+                                    sameFloor_shortest_distance, sameFloor_idx, sameFloor_FloorNum = distance, j, Beacon_FloorNum;
+                                end
+                            elseif diffFloor_idx == nil or distance < diffFloor_shortest_distance then
+                                diffFloor_shortest_distance, diffFloor_idx, diffFloor_FloorNum = distance, j, Beacon_FloorNum;
+                            end
                         end
                     end
                 end
             end
-            if sameArea_idx ~= nil and sameArea_idx > 0 then
-                setVars(this_ptr, sameArea_idx);
-                retval = to_ptr(create_int32(sameArea_FloorNum));
-            elseif calcbyFloor(sameFloor_shortest_distance, diffFloor_shortest_distance) and diffFloor_idx > 0 then
-                setVars(this_ptr, diffFloor_idx);
-                retval = to_ptr(create_int32(diffFloor_FloorNum));
+            if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil then
+                if diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
+                    if diffFloor_idx > 0 then
+                        setVars(this_ptr, diffFloor_idx);
+                        return to_ptr(create_int32(diffFloor_FloorNum));
+                    end
+                elseif sameFloor_idx > 0 then
+                    setVars(this_ptr, sameFloor_idx);
+                    return to_ptr(create_int32(sameFloor_FloorNum));
+                end
             elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
                 setVars(this_ptr, sameFloor_idx);
-                retval = to_ptr(create_int32(sameFloor_FloorNum));
+                return to_ptr(create_int32(sameFloor_FloorNum));
             elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
                 setVars(this_ptr, diffFloor_idx);
-                retval = to_ptr(create_int32(diffFloor_FloorNum));
+                return to_ptr(create_int32(diffFloor_FloorNum));
             end
         end
     end

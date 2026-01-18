@@ -90,7 +90,9 @@ for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
     end
 end
 
-local CHARGE_LOOP = Phase_field:get_type():get_field("CHARGE_LOOP"):get_data(nil);
+local PHASE_type_def = Phase_field:get_type();
+local CHARGE_START = PHASE_type_def:get_field("CHARGE_START"):get_data(nil);
+local CHARGE_LOOP = PHASE_type_def:get_field("CHARGE_LOOP"):get_data(nil);
 
 local maxSlingerChargeTime = nil;
 
@@ -107,6 +109,17 @@ local curWeaponAttr = nil;
 local slingerChargeMax = nil;
 
 local QuestDirector_ptr = nil;
+
+local function applyPlayerGlobalParams(PlayerGlobalParam)
+    maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(PlayerGlobalParam);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestReplicaLeaveActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedStampTime", 0.0);
+end
 
 local function getWeaponAttr(attr)
     if attr == nil then
@@ -143,13 +156,12 @@ end, function(retval)
     if isMasterPlayerShoot then
         isMasterPlayerShoot = nil;
         local this_ptr = get_hook_storage().this_ptr;
-        if Phase_field:get_data(this_ptr) == CHARGE_LOOP and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime then
+        local Phase = Phase_field:get_data(this_ptr);
+        if (Phase == CHARGE_START or Phase == CHARGE_LOOP) and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime then
             if slingerChargeMax ~= "슬링어 풀차지" then
                 slingerChargeMax = "슬링어 풀차지";
             end
-            return retval;
-        end
-        if slingerChargeMax ~= "" then
+        elseif slingerChargeMax ~= "" then
             slingerChargeMax = "";
         end
     end
@@ -195,11 +207,11 @@ end, function()
         if not QuestInfoCreated then
             slingerChargeMax = "";
             if maxSlingerChargeTime == nil then
-                maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(get_PlParam_method:call(nil));
+                applyPlayerGlobalParams(get_PlParam_method:call(nil));
             end
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
-            questTimeLimit = tostring(getTimeLimit_method:call(ActiveQuestData)) .. "분";
-            questMaxDeath = tostring(getQuestLife_method:call(ActiveQuestData));
+            questTimeLimit = getTimeLimit_method:call(ActiveQuestData) .. "분";
+            questMaxDeath = getQuestLife_method:call(ActiveQuestData);
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             curDeathCount = mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount));
             getQuestTimeInfo(QuestElapsedTime);
@@ -226,20 +238,7 @@ end);
 on_frame(function()
     if QuestInfoCreated then
         push_font(font);
-        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. tostring(curDeathCount) .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
+        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. curDeathCount .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
         pop_font();
     end
 end);
-
-local PlayerGlobalParam = get_PlParam_method:call(nil);
-if PlayerGlobalParam ~= nil then
-    maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(PlayerGlobalParam);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestReplicaLeaveActionWaitTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearStampTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireStampTime", 0.0);
-    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedStampTime", 0.0);
-    PlayerGlobalParam = nil;
-end
