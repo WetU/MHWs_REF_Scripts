@@ -11,7 +11,6 @@ local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local init = Constants.init;
 local getThisPtr = Constants.getThisPtr;
 
 local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
@@ -44,11 +43,8 @@ local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 
 local FacilityDining_type_def = get_Dining_method:get_return_type();
-local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
+local isSuppliableFoodMax_method = FacilityDining_type_def:get_method("isSuppliableFoodMax");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
-local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
-
-local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
 local FacilityMoriver_type_def = get_Moriver_method:get_return_type();
 local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
@@ -182,39 +178,20 @@ hook(find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival")
     end
 end);
 
-local FacilityPugee = nil;
-hook(FacilityPugee_type_def:get_method("isEnableCoolTimer"), function(args)
-    if FacilityPugee == nil then
-        FacilityPugee = args[2];
-    end
-end, function(retval)
+local TRUE_ptr = to_ptr(true);
+hook(FacilityPugee_type_def:get_method("isEnableCoolTimer"), getThisPtr, function(retval)
     if (to_int64(retval) & 1) == 0 then
-        stroke_method:call(FacilityPugee);
+        stroke_method:call(get_hook_storage().this_ptr, true);
+        return TRUE_ptr;
     end
     return retval;
 end);
 
-local SupplyFoodMax = nil;
-local function getSupplyFoodMax(facilityDining)
-    if SupplyFoodMax == nil then
-        SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(facilityDining));
+local function getSuppliedFood(facilityDining)
+    if isSuppliableFoodMax_method:call(facilityDining) then
+        supplyFood_method:call(facilityDining);
     end
-    return SupplyFoodMax;
 end
-
-local isFoodMax = nil;
-hook(FacilityDining_type_def:get_method("addSupplyNum"), function(args)
-    local this_ptr = args[2];
-    if getSuppliableFoodNum_method:call(this_ptr) >= getSupplyFoodMax(this_ptr) - 1 then
-        get_hook_storage().this_ptr = this_ptr;
-        isFoodMax = true;
-    end
-end, function()
-    if isFoodMax then
-        isFoodMax = nil;
-        supplyFood_method:call(get_hook_storage().this_ptr);
-    end
-end);
 
 local function getItemFromMoriver(moriverInfo, completedTbl)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
@@ -270,16 +247,16 @@ local function execMoriver(facilityMoriver)
 end
 
 hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function()
-    init();
     local FacilityManager = get_Facility_method:call(nil);
     local FacilityMoriver = get_Moriver_method:call(FacilityManager);
     if get__HavingCampfire_method:call(FacilityMoriver) then
         execMoriver(FacilityMoriver);
     end
-    local FacilityDining = get_Dining_method:call(FacilityManager);
-    if getSuppliableFoodNum_method:call(FacilityDining) >= getSupplyFoodMax(FacilityDining) then
-        supplyFood_method:call(FacilityDining);
-    end
+    getSuppliedFood(get_Dining_method:call(FacilityManager));
+end);
+
+hook(FacilityDining_type_def:get_method("addSupplyNum"), getThisPtr, function()
+    getSuppliedFood(get_hook_storage().this_ptr);
 end);
 
 hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()
@@ -298,7 +275,7 @@ hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), 
     resetSupplyNum_method:call(FacilityRallus_ptr);
 end);
 
-hook(find_type_definition("app.FacilitySupplyItems"):get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
+hook(Constants.FacilitySupplyItems_type_def:get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = to_int64(args[3]) & 0xFFFFFFFF;
     if Shikyu_method:call(nil, ItemId) == false then
         getSellItem_method:call(nil, ItemId, to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);

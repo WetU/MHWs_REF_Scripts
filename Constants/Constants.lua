@@ -92,6 +92,7 @@ local Constants = {
     UserSaveData = nil,
     ShortcutPalletParam = nil,
 
+    FacilitySupplyItems_type_def = find_type_definition("app.FacilitySupplyItems"),
     GUI070000_type_def = GUI070000_type_def,
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
@@ -157,39 +158,12 @@ for _, v in ipairs(find_type_definition("app.FieldDef.STAGE"):get_fields()) do
     end
 end
 
-local isInitialized = false;
-Constants.init = function()
-    if not isInitialized then
-        Constants.ChatManager = get_Chat_method:call(nil);
-        Constants.GUIManager = get_GUI_method:call(nil);
-        local SaveDataManager = get_Save_method:call(nil);
-        if SaveDataManager ~= nil then
-            local UserSaveData = getCurrentUserSaveData_method:call(SaveDataManager);
-            if UserSaveData ~= nil then
-                Constants.UserSaveData = UserSaveData;
-                Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
-            end
-        end
-        isInitialized = true;
-    end
-end
-
-hook(find_type_definition("app.TitleState"):get_method("enter"), nil, function()
-    if isInitialized then
-        isInitialized = false;
-        Constants.ChatManager = nil;
-        Constants.GUIManager = nil;
-        Constants.UserSaveData = nil;
-        Constants.ShortcutPalletParam = nil;
-    end
-end);
-
-local GameFlowManager = GA_type_def:get_method("get_GameFlow"):call(nil);
-if GameFlowManager ~= nil then
-    if call_object_func(GameFlowManager, "getStateName(ace.GameStateType)", call_object_func(GameFlowManager, "get_CurrentGameStateType")) == "IngameState" then
-        Constants.init();
-    end
-    GameFlowManager = nil;
+do
+    Constants.ChatManager = get_Chat_method:call(nil);
+    Constants.GUIManager = get_GUI_method:call(nil);
+    local UserSaveData = getCurrentUserSaveData_method:call(get_Save_method:call(nil));
+    Constants.UserSaveData = UserSaveData;
+    Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
 end
 
 return Constants;

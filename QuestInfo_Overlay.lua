@@ -48,16 +48,14 @@ local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
 local StrongSlingerShoot_type_def = find_type_definition("app.PlayerCommonAction.cStrongSlingerShoot");
-local Phase_field = StrongSlingerShoot_type_def:get_field("_Phase");
 local ChargeTimer_field = StrongSlingerShoot_type_def:get_field("_ChargeTimer");
 local get_Chara_method = Constants.get_Chara_method;
 
-local getHunterCharacter_method = find_type_definition("app.GUIActionGuideParamGetter"):get_method("getHunterCharacter"); -- static
-
 local get_IsMaster_method = Constants.get_IsMaster_method;
-local get_HunterStatus_method = Constants.HunterCharacter_type_def:get_method("get_HunterStatus");
 
-local HunterStatus_type_def = get_HunterStatus_method:get_return_type();
+local getHunterStatus_method = Constants.FacilitySupplyItems_type_def:get_method("getHunterStatus"); -- static
+
+local HunterStatus_type_def = getHunterStatus_method:get_return_type();
 local get_AttackPower_method = HunterStatus_type_def:get_method("get_AttackPower");
 
 local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
@@ -89,10 +87,6 @@ for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
         end
     end
 end
-
-local PHASE_type_def = Phase_field:get_type();
-local CHARGE_START = PHASE_type_def:get_field("CHARGE_START"):get_data(nil);
-local CHARGE_LOOP = PHASE_type_def:get_field("CHARGE_LOOP"):get_data(nil);
 
 local maxSlingerChargeTime = nil;
 
@@ -155,17 +149,17 @@ hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
 end, function(retval)
     if isMasterPlayerShoot then
         isMasterPlayerShoot = nil;
-        local this_ptr = get_hook_storage().this_ptr;
-        local Phase = Phase_field:get_data(this_ptr);
-        if (Phase == CHARGE_START or Phase == CHARGE_LOOP) and ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime then
-            if slingerChargeMax ~= "슬링어 풀차지" then
-                slingerChargeMax = "슬링어 풀차지";
-            end
-        elseif slingerChargeMax ~= "" then
-            slingerChargeMax = "";
+        if ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
+            slingerChargeMax = "슬링어 풀차지";
         end
     end
     return retval;
+end);
+
+hook(StrongSlingerShoot_type_def:get_method("doExit"), function()
+    if slingerChargeMax ~= "" then
+        slingerChargeMax = "";
+    end
 end);
 
 local isMasterPlayer = nil;
@@ -215,7 +209,7 @@ end, function()
             local QuestPlDieCount = QuestPlDieCount_field:get_data(QuestDirector_ptr);
             curDeathCount = mathfloor(v_field:get_data(QuestPlDieCount) / m_field:get_data(QuestPlDieCount));
             getQuestTimeInfo(QuestElapsedTime);
-            getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(get_HunterStatus_method:call(getHunterCharacter_method:call(nil)))));
+            getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(getHunterStatus_method:call(nil))));
             QuestInfoCreated = true;
         elseif QuestElapsedTime ~= oldElapsedTime then
             getQuestTimeInfo(QuestElapsedTime);

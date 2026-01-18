@@ -107,23 +107,6 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local GUIVariousData = call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
-if GUIVariousData ~= nil then
-    local GUINotifyWindowData = call_object_func(GUIVariousData, "get_NotifyWindowData");
-    if GUINotifyWindowData ~= nil then
-        local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
-        local Setting_type_def = getSetting_method:get_return_type();
-        for id, idx in pairs(change_default_index_IDs) do
-            local Setting = getSetting_method:call(GUINotifyWindowData, id);
-            if Setting ~= nil then
-                set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
-            end
-        end
-        GUINotifyWindowData = nil;
-    end
-    GUIVariousData = nil;
-end
-
 local function auto_close(notifyWindowApp, infoApp, id)
     endWindow_method:call(infoApp, 0);
     if config[id] == nil then
@@ -206,3 +189,20 @@ hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, fun
 end);
 
 on_config_save(saveConfig);
+
+do
+    local GUIVariousData = call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
+    if GUIVariousData ~= nil then
+        local GUINotifyWindowData = call_object_func(GUIVariousData, "get_NotifyWindowData");
+        if GUINotifyWindowData ~= nil then
+            local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
+            local Setting_type_def = getSetting_method:get_return_type();
+            for id, idx in pairs(change_default_index_IDs) do
+                local Setting = getSetting_method:call(GUINotifyWindowData, id);
+                if Setting ~= nil then
+                    set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
+                end
+            end
+        end
+    end
+end

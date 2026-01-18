@@ -62,30 +62,7 @@ local requestSelectIndexCore_method = find_type_definition("ace.cGUIInputCtrl_Fl
 
 local STAGES = Constants.STAGES;
 
-local DrawDatas = nil;
-
-local function getDrawDatas(MapStageDrawData)
-    if MapStageDrawData ~= nil then
-        DrawDatas = {};
-        for _, stageID in pairs(STAGES) do
-            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
-            if DrawData ~= nil then
-                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
-                if AreaIconPosList ~= nil then
-                    for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
-                        local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
-                        if AreaIconData ~= nil then
-                            if DrawDatas[stageID] == nil then
-                                DrawDatas[stageID] = {};
-                            end
-                            DrawDatas[stageID][get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
+local DrawDatas = {};
 
 local function setVars(GUI050001, startPointIdx)
     setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
@@ -121,9 +98,6 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                         end
                         if areaIconPos == nil then
                             if areaIconPosList == nil then
-                                if DrawDatas == nil then
-                                    getDrawDatas(get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager)));
-                                end
                                 areaIconPosList = DrawDatas[Stage];
                             end
                             areaIconPos = areaIconPosList[targetEmAreaNum];
@@ -145,15 +119,10 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                     end
                 end
             end
-            if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil then
-                if diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
-                    if diffFloor_idx > 0 then
-                        setVars(this_ptr, diffFloor_idx);
-                        return to_ptr(create_int32(diffFloor_FloorNum));
-                    end
-                elseif sameFloor_idx > 0 then
-                    setVars(this_ptr, sameFloor_idx);
-                    return to_ptr(create_int32(sameFloor_FloorNum));
+            if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
+                if diffFloor_idx > 0 then
+                    setVars(this_ptr, diffFloor_idx);
+                    return to_ptr(create_int32(diffFloor_FloorNum));
                 end
             elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
                 setVars(this_ptr, sameFloor_idx);
@@ -166,3 +135,25 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
     end
     return retval;
 end);
+
+do
+    local MapStageDrawData = get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager));
+    if MapStageDrawData ~= nil then
+        for _, stageID in pairs(STAGES) do
+            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
+            if DrawData ~= nil then
+                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
+                if AreaIconPosList ~= nil then
+                    DrawDatas[stageID] = {};
+                    local thisStage = DrawDatas[stageID];
+                    for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
+                        local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
+                        if AreaIconData ~= nil then
+                            thisStage[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end

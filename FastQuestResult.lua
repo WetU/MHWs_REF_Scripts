@@ -226,8 +226,11 @@ hook(GUI020100PanelQuestResultList_type_def:get_method("start"), function(args)
     end
     get_hook_storage().this_ptr = args[2];
 end, function()
-    Result_endFix_method:call(get_hook_storage().this_ptr);
-    if hasContribution_method:call(GUI020100) == false then
+    local this_ptr = get_hook_storage().this_ptr;
+    if hasContribution_method:call(GUI020100) then
+        finish_method:call(get_FixControl_method:call(this_ptr));
+    else
+        Result_endFix_method:call(this_ptr);
         terminateQuestResultFlow();
     end
 end);
