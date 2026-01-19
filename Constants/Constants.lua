@@ -60,6 +60,7 @@ local Constants = {
     hook = hook,
     find_type_definition = find_type_definition,
     call_object_func = call_object_func,
+    create_instance = sdk.create_instance,
     create_int32 = sdk.create_int32,
     to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,

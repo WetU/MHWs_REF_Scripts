@@ -5,6 +5,7 @@ local tinsert = Constants.tinsert;
 
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
+local create_instance = Constants.create_instance;
 local to_ptr = Constants.to_ptr;
 local to_int64 = Constants.to_int64;
 local set_native_field = Constants.set_native_field;
@@ -131,8 +132,10 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
+local dummy_STOCK_TYPE = create_instance(STOCK_TYPE_type_def);
+set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOX);
 local isSelfCall = false;
-local BOX_ptr = to_ptr(STOCK_TYPE.BOX);
+local BOX_ptr = to_ptr(dummy_STOCK_TYPE);
 hook(changeItemNumFromDialogue_method, function(args)
     if isSelfCall then
         isSelfCall = false;

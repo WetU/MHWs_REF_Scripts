@@ -48,8 +48,16 @@ local getTimeLimit_method = ActiveQuestData_type_def:get_method("getTimeLimit");
 local getQuestLife_method = ActiveQuestData_type_def:get_method("getQuestLife");
 
 local StrongSlingerShoot_type_def = find_type_definition("app.PlayerCommonAction.cStrongSlingerShoot");
+local Phase_field = StrongSlingerShoot_type_def:get_field("_Phase");
+local AmmoType_field = StrongSlingerShoot_type_def:get_field("_AmmoType");
 local ChargeTimer_field = StrongSlingerShoot_type_def:get_field("_ChargeTimer");
 local get_Chara_method = Constants.get_Chara_method;
+
+local SHOOT = Phase_field:get_type():get_field("SHOOT"):get_data(nil);
+
+local END = find_type_definition("ace.ActionDef.UPDATE_RESULT"):get_field("END"):get_data(nil);
+
+local EX_CHARGE = find_type_definition("app.HunterDef.SLINGER_AMMO_TYPE"):get_field("EX_CHARGE"):get_data(nil);
 
 local get_IsMaster_method = Constants.get_IsMaster_method;
 
@@ -137,29 +145,34 @@ local function getQuestTimeInfo(questElapsedTime)
     QuestTimer = strformat("%02d'%02d\"%02d", mathfloor(questElapsedTime / 60.0), second, milisecond ~= 0.0 and tonumber(strmatch(tostring(milisecond), "%.(%d%d)")) or 0);
 end
 
-local isMasterPlayerShoot = nil;
+local isMasterPlayerShootUpdate = nil;
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
     if QuestInfoCreated then
         local this_ptr = args[2];
-        if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) then
+        if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) and AmmoType_field:get_data(this_ptr) == EX_CHARGE then
             get_hook_storage().this_ptr = this_ptr;
-            isMasterPlayerShoot = true;
+            isMasterPlayerShootUpdate = true;
         end
     end
 end, function(retval)
-    if isMasterPlayerShoot then
-        isMasterPlayerShoot = nil;
-        if ChargeTimer_field:get_data(get_hook_storage().this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
-            slingerChargeMax = "슬링어 풀차지";
+    if isMasterPlayerShootUpdate then
+        isMasterPlayerShootUpdate = nil;
+        if to_int64(retval) & 0xFFFFFFFF == END then
+            if slingerChargeMax ~= "" then
+                slingerChargeMax = "";
+            end
+        else
+            local this_ptr = get_hook_storage().this_ptr;
+            if Phase_field:get_data(this_ptr) == SHOOT then
+                if slingerChargeMax ~= "" then
+                    slingerChargeMax = "";
+                end
+            elseif ChargeTimer_field:get_data(this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
+                slingerChargeMax = "슬링어 풀차지";
+            end
         end
     end
     return retval;
-end);
-
-hook(StrongSlingerShoot_type_def:get_method("doExit"), function()
-    if slingerChargeMax ~= "" then
-        slingerChargeMax = "";
-    end
 end);
 
 local isMasterPlayer = nil;
