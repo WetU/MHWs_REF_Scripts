@@ -132,13 +132,16 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
-local dummy_STOCK_TYPE = create_instance(STOCK_TYPE_type_def);
-set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOX);
-local isSelfCall = false;
-local BOX_ptr = to_ptr(dummy_STOCK_TYPE);
+local BOX_ptr = nil;
+do
+    local dummy_STOCK_TYPE = create_instance(STOCK_TYPE_type_def);
+    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOX);
+    BOX_ptr = to_ptr(dummy_STOCK_TYPE);
+end
+local isSelfCall = nil;
 hook(changeItemNumFromDialogue_method, function(args)
     if isSelfCall then
-        isSelfCall = false;
+        isSelfCall = nil;
     else
         args[4] = BOX_ptr;
     end

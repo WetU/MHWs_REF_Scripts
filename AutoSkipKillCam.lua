@@ -3,7 +3,6 @@ local Constants = _G.require("Constants/Constants");
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_ptr = Constants.to_ptr;
-local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
 
