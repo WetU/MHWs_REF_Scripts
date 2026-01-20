@@ -167,8 +167,15 @@ end, function(retval)
                 if slingerChargeMax ~= "" then
                     slingerChargeMax = "";
                 end
-            elseif ChargeTimer_field:get_data(this_ptr) >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
-                slingerChargeMax = "슬링어 풀차지";
+            else
+                local ChargeTimer = ChargeTimer_field:get_data(this_ptr);
+                if ChargeTimer == nil then
+                    if slingerChargeMax ~= "" then
+                        slingerChargeMax = "";
+                    end
+                elseif ChargeTimer >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
+                    slingerChargeMax = "슬링어 풀차지";
+                end
             end
         end
     end
