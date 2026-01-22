@@ -5,9 +5,8 @@ local tinsert = Constants.tinsert;
 
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
-local create_instance = Constants.create_instance;
-local to_ptr = Constants.to_ptr;
 local to_int64 = Constants.to_int64;
+local to_ptr = Constants.to_ptr;
 local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
@@ -132,20 +131,7 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
-local BOX_ptr = nil;
-do
-    local dummy_STOCK_TYPE = create_instance(STOCK_TYPE_type_def);
-    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOX);
-    BOX_ptr = to_ptr(dummy_STOCK_TYPE);
-end
-local isSelfCall = nil;
-hook(changeItemNumFromDialogue_method, function(args)
-    if isSelfCall then
-        isSelfCall = nil;
-    else
-        args[4] = BOX_ptr;
-    end
-end);
+local TRUE_ptr = to_ptr(true);
 
 hook(find_type_definition("app.FacilityCollection"):get_method("lotItem"), nil, function()
     local NPCParam_array = get_CollectionNPC_method:call(get_Collection_method:call(Constants.UserSaveData));
@@ -184,7 +170,6 @@ hook(find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival")
     end
 end);
 
-local TRUE_ptr = to_ptr(true);
 hook(FacilityPugee_type_def:get_method("isEnableCoolTimer"), getThisPtr, function(retval)
     if (to_int64(retval) & 1) == 0 then
         stroke_method:call(get_hook_storage().this_ptr, true);
@@ -205,7 +190,6 @@ local function getItemFromMoriver(moriverInfo, completedTbl)
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
-            isSelfCall = true;
             changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE.BOX, true);
         end
     end

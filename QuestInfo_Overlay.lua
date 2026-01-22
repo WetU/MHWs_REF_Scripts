@@ -11,7 +11,6 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
-local call_object_func = Constants.call_object_func;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;

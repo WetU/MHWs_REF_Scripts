@@ -2,7 +2,6 @@ local Constants = _G.require("Constants/Constants");
 
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
-local to_ptr = Constants.to_ptr;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -31,7 +30,7 @@ local GUI020216_CurType_field = GUI020216_type_def:get_field("_CurType");
 local GUI_field = Constants.GUI_field;
 local set_PlaySpeed_method = GUI_field:get_type():get_method("set_PlaySpeed(System.Single)");
 
-local FALSE_ptr = to_ptr(false);
+local FALSE_ptr = Constants.to_ptr(false);
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 
 hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
