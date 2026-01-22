@@ -6,7 +6,6 @@ local tinsert = Constants.tinsert;
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
 local to_int64 = Constants.to_int64;
-local to_ptr = Constants.to_ptr;
 local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
@@ -131,7 +130,7 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
-local TRUE_ptr = to_ptr(true);
+local TRUE_ptr = Constants.to_ptr(true);
 
 hook(find_type_definition("app.FacilityCollection"):get_method("lotItem"), nil, function()
     local NPCParam_array = get_CollectionNPC_method:call(get_Collection_method:call(Constants.UserSaveData));

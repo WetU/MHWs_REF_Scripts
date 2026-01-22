@@ -8,7 +8,6 @@ local strmatch = string.match;
 local math = _G.math;
 
 local sdk = _G.sdk;
-local set_native_field = sdk.set_native_field;
 local hook = sdk.hook;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
@@ -60,12 +59,12 @@ local Constants = {
     hook = hook,
     find_type_definition = find_type_definition,
     call_object_func = sdk.call_object_func,
+    set_native_field = sdk.set_native_field,
     create_int32 = sdk.create_int32,
     to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
     float_to_ptr = float_to_ptr,
-    set_native_field = set_native_field,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
 
     get_hook_storage = get_hook_storage,
