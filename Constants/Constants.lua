@@ -34,9 +34,11 @@ local HunterCharacter_type_def = get_Chara_method:get_return_type();
 
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
-local GUI070000_type_def = find_type_definition("app.GUI070000");
-local GUIBaseApp_type_def = GUI070000_type_def:get_parent_type();
+local GUI000002_type_def = find_type_definition("app.GUI000002");
+local GUIBaseApp_type_def = GUI000002_type_def:get_parent_type();
 local GUIBase_type_def = GUIBaseApp_type_def:get_parent_type();
+
+local InputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 
 local Constants = {
     pairs = _G.pairs,
@@ -62,7 +64,6 @@ local Constants = {
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
     to_float = sdk.to_float,
-    float_to_ptr = float_to_ptr,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
 
     get_hook_storage = get_hook_storage,
@@ -81,6 +82,7 @@ local Constants = {
     drawtext = _G.draw.text,
 
     ZERO_float_ptr = float_to_ptr(0.0),
+    SMALL_float_ptr = float_to_ptr(0.01),
 
     STAGES = {},
 
@@ -90,7 +92,7 @@ local Constants = {
     ShortcutPalletParam = ShortcutPalletParam,
 
     FacilitySupplyItems_type_def = find_type_definition("app.FacilitySupplyItems"),
-    GUI070000_type_def = GUI070000_type_def,
+    GUI000002_type_def = GUI000002_type_def,
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = GUIManager:get_type_definition(),
@@ -103,9 +105,9 @@ local Constants = {
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
     get_ActualVisible_method = find_type_definition("via.gui.PlayObject"):get_method("get_ActualVisible"),
     get_Chara_method = get_Chara_method,
-    get_CurCtrlInputPriority_method = GUIBase_type_def:get_method("get_CurCtrlInputPriority"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
+    get_InputPriority_method = InputCtrl_type_def:get_method("get_InputPriority"),
     get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     get_VariousData_method = GA_type_def:get_method("get_VariousData"),
@@ -115,7 +117,7 @@ local Constants = {
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
-    requestCallTrigger_method = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
+    requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
     requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boolean)"),
 
     GUI_field = GUIBase_type_def:get_field("_GUI"),
@@ -126,23 +128,6 @@ local Constants = {
 
     getObject = function(args)
         get_hook_storage().this = to_managed_object(args[2]);
-    end,
-
-    getMethod = function(methods, name, isCallback)
-        if isCallback then
-            for _, v in ipairs(methods) do
-                if strmatch(v:get_name(), "^<" .. name .. ">.*$") ~= nil then
-                    return v;
-                end
-            end
-        else
-            for _, v in ipairs(methods) do
-                if v:get_name() == name then
-                    return v;
-                end
-            end
-        end
-        return nil;
     end
 };
 

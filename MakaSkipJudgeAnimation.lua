@@ -1,49 +1,23 @@
 local Constants = _G.require("Constants/Constants");
 
-local ipairs = Constants.ipairs;
+local get_hook_storage = Constants.get_hook_storage;
 
-local find_type_definition = Constants.find_type_definition;
-local hook = Constants.hook;
+local getThisPtr = Constants.getThisPtr;
 
-local GUI090002PartsItemReceive_type_def = find_type_definition("app.GUI090002PartsItemReceive");
+local GUI090002PartsItemReceive_type_def = Constants.find_type_definition("app.GUI090002PartsItemReceive");
 local get__Mode_method = GUI090002PartsItemReceive_type_def:get_method("get__Mode");
-local get__JudgeAnimationEnd_method = GUI090002PartsItemReceive_type_def:get_method("get__JudgeAnimationEnd");
-local get__WaitAnimationTime_method = GUI090002PartsItemReceive_type_def:get_method("get__WaitAnimationTime");
 local set__WaitAnimationTime_method = GUI090002PartsItemReceive_type_def:get_method("set__WaitAnimationTime(System.Single)");
-local get__WaitControlTime_method = GUI090002PartsItemReceive_type_def:get_method("get__WaitControlTime");
 local set__WaitControlTime_method = GUI090002PartsItemReceive_type_def:get_method("set__WaitControlTime(System.Single)");
 
 local MODE_type_def = get__Mode_method:get_return_type();
-local MODE = {
-    MODE_type_def:get_field("JUDGE00"):get_data(nil),
-    MODE_type_def:get_field("JUDGE01"):get_data(nil)
-};
+local JUDGE00 = MODE_type_def:get_field("JUDGE00"):get_data(nil);
+local JUDGE01 = MODE_type_def:get_field("JUDGE01"):get_data(nil);
 
-local GUI090002PartsItemReceive_ptr = nil;
-hook(GUI090002PartsItemReceive_type_def:get_method("start(app.cGUIPartsRecieveItemsInfo, System.Collections.Generic.List`1<app.cReceiveItemInfo>)"), function(args)
-    GUI090002PartsItemReceive_ptr = args[2];
-end);
-
-hook(GUI090002PartsItemReceive_type_def:get_method("onVisibleUpdate"), nil, function()
-    if GUI090002PartsItemReceive_ptr ~= nil then
-        local Mode = get__Mode_method:call(GUI090002PartsItemReceive_ptr);
-        for _, v in ipairs(MODE) do
-            if Mode == v then
-                if get__JudgeAnimationEnd_method:call(GUI090002PartsItemReceive_ptr) == false then
-                    if get__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
-                        set__WaitAnimationTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
-                    end
-                elseif get__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr) > 0.01 then
-                    set__WaitControlTime_method:call(GUI090002PartsItemReceive_ptr, 0.01);
-                end
-                break;
-            end
-        end
-    end
-end);
-
-hook(find_type_definition("app.GUI090002"):get_method("onClose"), function()
-    if GUI090002PartsItemReceive_ptr ~= nil then
-        GUI090002PartsItemReceive_ptr = nil;
+Constants.hook(GUI090002PartsItemReceive_type_def:get_method("start(app.cGUIPartsRecieveItemsInfo, System.Collections.Generic.List`1<app.cReceiveItemInfo>)"), getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
+    set__WaitControlTime_method:call(this_ptr, 0.0);
+    local Mode = get__Mode_method:call(this_ptr);
+    if Mode == JUDGE00 or Mode == JUDGE01 then
+        set__WaitAnimationTime_method:call(this_ptr, 0.01);
     end
 end);
