@@ -6,7 +6,6 @@ local tonumber = Constants.tonumber;
 local tostring = Constants.tostring;
 local strgsub = Constants.strgsub;
 
-local call_object_func = Constants.call_object_func;
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
 local set_native_field = Constants.set_native_field;
@@ -191,6 +190,7 @@ end);
 on_config_save(saveConfig);
 
 do
+    local call_object_func = Constants.call_object_func;
     local GUIVariousData = call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
     if GUIVariousData ~= nil then
         local GUINotifyWindowData = call_object_func(GUIVariousData, "get_NotifyWindowData");

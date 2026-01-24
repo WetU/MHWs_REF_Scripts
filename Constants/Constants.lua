@@ -8,7 +8,8 @@ local strmatch = string.match;
 local math = _G.math;
 
 local sdk = _G.sdk;
-local hook = sdk.hook;
+local call_native_func = sdk.call_native_func;
+local call_object_func = sdk.call_object_func;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
 local float_to_ptr = sdk.float_to_ptr;
@@ -20,16 +21,12 @@ local json = _G.json;
 local re = _G.re;
 
 local GA_type_def = find_type_definition("app.GA");
-local get_Chat_method = GA_type_def:get_method("get_Chat");
-local get_GUI_method = GA_type_def:get_method("get_GUI");
-local get_Save_method = GA_type_def:get_method("get_Save");
+local ChatManager = GA_type_def:get_method("get_Chat"):call(nil);
+local GUIManager = GA_type_def:get_method("get_GUI"):call(nil);
 
-local getCurrentUserSaveData_method = get_Save_method:get_return_type():get_method("getCurrentUserSaveData");
-
-local UserSaveParam_type_def = getCurrentUserSaveData_method:get_return_type();
-local get_Item_method = UserSaveParam_type_def:get_method("get_Item");
-
-local get_ShortcutPallet_method = get_Item_method:get_return_type():get_method("get_ShortcutPallet");
+local CurrentUserSaveData = call_object_func(GA_type_def:get_method("get_Save"):call(nil), "getCurrentUserSaveData");
+local UserSaveParam_type_def = CurrentUserSaveData:get_type_definition();
+local ShortcutPalletParam = call_object_func(call_native_func(CurrentUserSaveData, UserSaveParam_type_def, "get_Item"), "get_ShortcutPallet");
 
 local get_Chara_method = find_type_definition("app.cHunterActionBase"):get_method("get_Chara");
 
@@ -56,14 +53,15 @@ local Constants = {
     mathmodf = math.modf,
     mathfloor = math.floor,
 
-    hook = hook,
+    hook = sdk.hook,
     find_type_definition = find_type_definition,
-    call_object_func = sdk.call_object_func,
+    call_native_func = call_native_func,
+    call_object_func = call_object_func,
     set_native_field = sdk.set_native_field,
     create_int32 = sdk.create_int32,
-    to_float = sdk.to_float,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
+    to_float = sdk.to_float,
     float_to_ptr = float_to_ptr,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
 
@@ -86,23 +84,23 @@ local Constants = {
 
     STAGES = {},
 
-    ChatManager = nil,
-    GUIManager = nil,
-    UserSaveData = nil,
-    ShortcutPalletParam = nil,
+    ChatManager = ChatManager,
+    GUIManager = GUIManager,
+    UserSaveData = CurrentUserSaveData,
+    ShortcutPalletParam = ShortcutPalletParam,
 
     FacilitySupplyItems_type_def = find_type_definition("app.FacilitySupplyItems"),
     GUI070000_type_def = GUI070000_type_def,
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
-    GUIManager_type_def = get_GUI_method:get_return_type(),
+    GUIManager_type_def = GUIManager:get_type_definition(),
     HunterCharacter_type_def = HunterCharacter_type_def,
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
-    ShortcutPalletParam_type_def = get_ShortcutPallet_method:get_return_type(),
+    ShortcutPalletParam_type_def = ShortcutPalletParam:get_type_definition(),
     UserSaveParam_type_def = UserSaveParam_type_def,
 
-    addSystemLog_method = get_Chat_method:get_return_type():get_method("addSystemLog(System.String)"),
+    addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
     get_ActualVisible_method = find_type_definition("via.gui.PlayObject"):get_method("get_ActualVisible"),
     get_Chara_method = get_Chara_method,
     get_CurCtrlInputPriority_method = GUIBase_type_def:get_method("get_CurCtrlInputPriority"),
@@ -148,21 +146,15 @@ local Constants = {
     end
 };
 
-for _, v in ipairs(find_type_definition("app.FieldDef.STAGE"):get_fields()) do
-    if v:is_static() then
-        local name = v:get_name();
-        if name ~= "INVALID" and name ~= "MAX" then
-            Constants.STAGES[name] = v:get_data(nil);
+do
+    for _, v in ipairs(find_type_definition("app.FieldDef.STAGE"):get_fields()) do
+        if v:is_static() then
+            local name = v:get_name();
+            if name ~= "INVALID" and name ~= "MAX" then
+                Constants.STAGES[name] = v:get_data(nil);
+            end
         end
     end
-end
-
-do
-    Constants.ChatManager = get_Chat_method:call(nil);
-    Constants.GUIManager = get_GUI_method:call(nil);
-    local UserSaveData = getCurrentUserSaveData_method:call(get_Save_method:call(nil));
-    Constants.UserSaveData = UserSaveData;
-    Constants.ShortcutPalletParam = get_ShortcutPallet_method:call(get_Item_method:call(UserSaveData));
 end
 
 return Constants;

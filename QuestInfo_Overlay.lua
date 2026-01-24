@@ -68,29 +68,31 @@ local get_AttackPower_method = HunterStatus_type_def:get_method("get_AttackPower
 local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_method("get_AttibuteType");
 
 local WeaponAttr = {};
-for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
-    if v:is_static() == true then
-        local name = v:get_name();
-        if name == "NONE" then
-            WeaponAttr["무속성"] = v:get_data(nil);
-        elseif name == "FIRE" then
-            WeaponAttr["불속성"] = v:get_data(nil);
-        elseif name == "WATER" then
-            WeaponAttr["물속성"] = v:get_data(nil);
-        elseif name == "ICE" then
-            WeaponAttr["얼음속성"] = v:get_data(nil);
-        elseif name == "ELEC" then
-            WeaponAttr["번개속성"] = v:get_data(nil);
-        elseif name == "DRAGON" then
-            WeaponAttr["용속성"] = v:get_data(nil);
-        elseif name == "POISON" then
-            WeaponAttr["독속성"] = v:get_data(nil);
-        elseif name == "PARALYSE" then
-            WeaponAttr["마비속성"] = v:get_data(nil);
-        elseif name == "SLEEP" then
-            WeaponAttr["수면속성"] = v:get_data(nil);
-        elseif name == "BLAST" then
-            WeaponAttr["폭파속성"] = v:get_data(nil);
+do
+    for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
+        if v:is_static() then
+            local name = v:get_name();
+            if name == "NONE" then
+                WeaponAttr["무속성"] = v:get_data(nil);
+            elseif name == "FIRE" then
+                WeaponAttr["불속성"] = v:get_data(nil);
+            elseif name == "WATER" then
+                WeaponAttr["물속성"] = v:get_data(nil);
+            elseif name == "ICE" then
+                WeaponAttr["얼음속성"] = v:get_data(nil);
+            elseif name == "ELEC" then
+                WeaponAttr["번개속성"] = v:get_data(nil);
+            elseif name == "DRAGON" then
+                WeaponAttr["용속성"] = v:get_data(nil);
+            elseif name == "POISON" then
+                WeaponAttr["독속성"] = v:get_data(nil);
+            elseif name == "PARALYSE" then
+                WeaponAttr["마비속성"] = v:get_data(nil);
+            elseif name == "SLEEP" then
+                WeaponAttr["수면속성"] = v:get_data(nil);
+            elseif name == "BLAST" then
+                WeaponAttr["폭파속성"] = v:get_data(nil);
+            end
         end
     end
 end

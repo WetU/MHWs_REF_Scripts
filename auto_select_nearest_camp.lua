@@ -18,14 +18,6 @@ local distance_method = find_type_definition("via.MathEx"):get_method("distance(
 
 local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
 
-local get_MAP3D_method = Constants.GUIManager_type_def:get_method("get_MAP3D");
-
-local get_MapStageDrawData_method = get_MAP3D_method:get_return_type():get_method("get_MapStageDrawData");
-
-local getDrawData_method = get_MapStageDrawData_method:get_return_type():get_method("getDrawData(app.FieldDef.STAGE)");
-
-local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
-
 local AreaIconData_type_def = find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
 local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
@@ -137,8 +129,10 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
 end);
 
 do
-    local MapStageDrawData = get_MapStageDrawData_method:call(get_MAP3D_method:call(Constants.GUIManager));
+    local MapStageDrawData = Constants.call_object_func(Constants.call_native_func(Constants.GUIManager, Constants.GUIManager_type_def, "get_MAP3D"), "get_MapStageDrawData");
     if MapStageDrawData ~= nil then
+        local getDrawData_method = MapStageDrawData:get_type_definition():get_method("getDrawData(app.FieldDef.STAGE)");
+        local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
         for _, stageID in pairs(STAGES) do
             local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
             if DrawData ~= nil then

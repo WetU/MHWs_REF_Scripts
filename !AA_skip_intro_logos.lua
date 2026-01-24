@@ -17,11 +17,13 @@ local Skip_field = GUI010001_type_def:get_field("_Skip");
 local EnableSkip_field = GUI010001_type_def:get_field("_EnableSkip");
 
 local lastFlow = nil;
-for _, v in ipairs(Flow_field:get_type():get_fields()) do
-    if v:is_static() then
-        local enum_value = v:get_data(nil);
-        if lastFlow == nil or enum_value > lastFlow then
-            lastFlow = enum_value;
+do
+    for _, v in ipairs(Flow_field:get_type():get_fields()) do
+        if v:is_static() then
+            local enum_value = v:get_data(nil);
+            if lastFlow == nil or enum_value > lastFlow then
+                lastFlow = enum_value;
+            end
         end
     end
 end

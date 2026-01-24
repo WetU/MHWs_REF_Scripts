@@ -132,6 +132,10 @@ local WeaponType = {
 
 local TRUE_ptr = Constants.to_ptr(true);
 
+hook(changeItemNumFromDialogue_method, function(args)
+    args[5] = TRUE_ptr;
+end);
+
 hook(find_type_definition("app.FacilityCollection"):get_method("lotItem"), nil, function()
     local NPCParam_array = get_CollectionNPC_method:call(get_Collection_method:call(Constants.UserSaveData));
     for i = 0, COLLECTION_NPC_NUM - 1 do
