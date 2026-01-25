@@ -99,40 +99,31 @@ end);
 --<< GUI020100 Seamless Quest Result >>--
 local GUI020100_type_def = find_type_definition("app.GUI020100");
 local get__PartsQuestRewardItem_method = GUI020100_type_def:get_method("get__PartsQuestRewardItem");
-local endQuestReward_method = GUI020100_type_def:get_method("endQuestReward");
-local endQuestJudge_method = GUI020100_type_def:get_method("endQuestJudge");
-local endQuestResultList_method = GUI020100_type_def:get_method("endQuestResultList");
-local endQuestContribution_method = GUI020100_type_def:get_method("endQuestContribution");
+local get__PartsQuestContribute_method = GUI020100_type_def:get_method("get__PartsQuestContribute");
 local GUI020100_InputCtrl_field = GUI020100_type_def:get_field("_InputCtrl");
 
 local get_FixControl_method = get__PartsQuestRewardItem_method:get_return_type():get_parent_type():get_parent_type():get_method("get_FixControl");
 
-local finish_method = get_FixControl_method:get_return_type():get_method("finish");
+local FixControl_type_def = get_FixControl_method:get_return_type();
+local set__FixTimer_method = FixControl_type_def:get_method("set__FixTimer(System.Single)");
+local finish_method = FixControl_type_def:get_method("finish");
 
 local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT"):get_data(nil);
 
 hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, function()
-    local this_ptr = get_hook_storage().this_ptr;
-    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(this_ptr)));
-    endQuestReward_method:call(this_ptr);
+    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
 end);
 
 hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, function()
-    local this_ptr = get_hook_storage().this_ptr;
-    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(this_ptr)));
-    endQuestJudge_method:call(this_ptr);
+    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
 end);
 
 hook(GUI020100_type_def:get_method("toRandomAmuletJudge"), getThisPtr, function()
     requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(get_hook_storage().this_ptr), JUST_TIMING_SHORTCUT);
 end);
 
-hook(GUI020100_type_def:get_method("toQuestResultList"), getThisPtr, function()
-    endQuestResultList_method:call(get_hook_storage().this_ptr);
-end);
-
 hook(GUI020100_type_def:get_method("toQuestContribution"), getThisPtr, function()
-    endQuestContribution_method:call(get_hook_storage().this_ptr);
+    set__FixTimer_method:call(get_FixControl_method:call(get__PartsQuestContribute_method:call(get_hook_storage().this_ptr)), 0.01);
 end);
 
 hook(find_type_definition("app.cGUIQuestResultInfo"):get_method("getSeamlesResultListDispTime"), nil, function()

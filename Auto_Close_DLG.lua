@@ -15,15 +15,7 @@ local get_hook_storage = Constants.get_hook_storage;
 local load_file = Constants.load_file;
 local dump_file = Constants.dump_file;
 
-local on_config_save = Constants.on_config_save;
-
 local getThisPtr = Constants.getThisPtr;
-
-local config = load_file("auto_close_DLG.json") or {};
-
-local function saveConfig()
-    dump_file("auto_close_DLG.json", config);
-end
 
 local addSystemLog_method = Constants.addSystemLog_method;
 local requestClose_method = Constants.requestClose_method;
@@ -94,6 +86,7 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI070000_DLG01"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
+    NotifyWindowID_type_def:get_field("GUI080004_0002"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080004_008"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
     NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
@@ -106,13 +99,9 @@ local auto_close_IDs = {
     NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
 };
 
-local function auto_close(notifyWindowApp, infoApp, id)
+local function closeWindow(notifyWindowApp, infoApp)
     endWindow_method:call(infoApp, 0);
-    if config[id] == nil then
-        config[id] = isExistWindowEndFunc_method:call(infoApp);
-        saveConfig();
-    end
-    if config[id] then
+    if isExistWindowEndFunc_method:call(infoApp) then
         executeWindowEndFunc_method:call(infoApp);
     end
     closeGUI_method:call(notifyWindowApp);
@@ -124,7 +113,7 @@ hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
-        auto_close(NotifyWindowApp, CurInfoApp, GUI000002_0000);
+        closeWindow(NotifyWindowApp, CurInfoApp);
     end
 end);
 
@@ -162,16 +151,12 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     end);
                     addSystemLog_method:call(Constants.ChatManager, msg);
                 end
-                endWindow_method:call(CurInfoApp, 0);
-                if isExistWindowEndFunc_method:call(CurInfoApp) then
-                    executeWindowEndFunc_method:call(CurInfoApp);
-                end
-                closeGUI_method:call(NotifyWindowApp);
+                closeWindow(NotifyWindowApp, CurInfoApp);
             end
         else
             for _, v in ipairs(auto_close_IDs) do
                 if Id == v then
-                    auto_close(NotifyWindowApp, CurInfoApp, Id);
+                    closeWindow(NotifyWindowApp, CurInfoApp);
                     break;
                 end
             end
@@ -186,8 +171,6 @@ end);
 hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, function()
     requestClose_method:call(get_hook_storage().this_ptr, true);
 end);
-
-on_config_save(saveConfig);
 
 do
     local call_object_func = Constants.call_object_func;

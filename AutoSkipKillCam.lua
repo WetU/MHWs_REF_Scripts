@@ -5,8 +5,6 @@ local hook = Constants.hook;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local on_script_reset = Constants.on_script_reset;
-
 local getThisPtr = Constants.getThisPtr;
 
 local requestClose_method = Constants.requestClose_method;
@@ -98,7 +96,7 @@ hook(find_type_definition("app.GUI020204"):get_method("onOpen"), getThisPtr, fun
     requestClose_method:call(get_hook_storage().this_ptr, true);
 end);
 
-on_script_reset(function()
+Constants.on_script_reset(function()
     if hook_datas.isSetted then
         set_PlaySpeed_method:call(hook_datas.GUI, 1.0);
     end

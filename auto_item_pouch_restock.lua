@@ -1,6 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local tostring = Constants.tostring;
 local ipairs = Constants.ipairs;
 
 local find_type_definition = Constants.find_type_definition;
@@ -39,7 +38,7 @@ local function restockItems(sendMessage)
     if isValidData_method:call(nil, mySetIdx) then
         applyMySetToPouch_method:call(nil, mySetIdx);
         if sendMessage then
-            addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다: [" .. tostring(mySetIdx) .. "]");
+            addSystemLog_method:call(Constants.ChatManager, "아이템 세트가 적용되었습니다: [" .. mySetIdx .. "]");
         end
     else
         fillPouchItems_method:call(nil);

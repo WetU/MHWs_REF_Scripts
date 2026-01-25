@@ -21,8 +21,6 @@ local get_hook_storage = Constants.get_hook_storage;
 local push_font = Constants.push_font;
 local pop_font = Constants.pop_font;
 
-local on_frame = Constants.on_frame;
-
 local drawtext = Constants.drawtext;
 
 local font = Constants.load_font(nil, 20);
@@ -250,7 +248,7 @@ hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
     end
 end);
 
-on_frame(function()
+Constants.on_frame(function()
     if QuestInfoCreated then
         push_font(font);
         drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. curDeathCount .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);

@@ -116,12 +116,16 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                     setVars(this_ptr, diffFloor_idx);
                     return to_ptr(create_int32(diffFloor_FloorNum));
                 end
-            elseif sameFloor_idx ~= nil and sameFloor_idx > 0 then
-                setVars(this_ptr, sameFloor_idx);
-                return to_ptr(create_int32(sameFloor_FloorNum));
-            elseif diffFloor_idx ~= nil and diffFloor_idx > 0 then
-                setVars(this_ptr, diffFloor_idx);
-                return to_ptr(create_int32(diffFloor_FloorNum));
+            elseif sameFloor_idx ~= nil then
+                if sameFloor_idx > 0 then
+                    setVars(this_ptr, sameFloor_idx);
+                    return to_ptr(create_int32(sameFloor_FloorNum));
+                end
+            elseif diffFloor_idx ~= nil then
+                if diffFloor_idx > 0 then
+                    setVars(this_ptr, diffFloor_idx);
+                    return to_ptr(create_int32(diffFloor_FloorNum));
+                end
             end
         end
     end
