@@ -17,6 +17,9 @@ local PorterRide_departure_method = PorterRideFastTravelGo_type_def:get_method("
 local PorterRideYokuryuuFastTravel_type_def = find_type_definition("app.PlayerCommonAction.cPorterRideYokuryuuFastTravel");
 local PorterRideYokuryuu_departure_method = PorterRideYokuryuuFastTravel_type_def:get_method("departure");
 
+local PorterNoRideFastTravelGo_type_def = find_type_definition("app.PlayerCommonAction.cPorterNoRideFastTravelGo");
+local startFTFade_method = PorterNoRideFastTravelGo_type_def:get_method("startFTFade(System.Boolean)");
+
 local skipAction = nil;
 hook(FastTravelGo_type_def:get_method("setupArrivalInfo"), function(args)
     local this_ptr = args[2];
@@ -54,5 +57,18 @@ end, function()
     if skipAction then
         skipAction = nil;
         PorterRideYokuryuu_departure_method:call(get_hook_storage().this_ptr);
+    end
+end);
+
+hook(PorterNoRideFastTravelGo_type_def:get_method("setupArrivalInfo"), function(args)
+    local this_ptr = args[2];
+    if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) then
+        get_hook_storage().this_ptr = this_ptr;
+        skipAction = true;
+    end
+end, function()
+    if skipAction then
+        skipAction = nil;
+        startFTFade_method:call(get_hook_storage().this_ptr, true);
     end
 end);

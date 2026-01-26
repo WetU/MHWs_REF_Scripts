@@ -173,10 +173,13 @@ hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, fun
 end);
 
 do
-    local call_object_func = Constants.call_object_func;
-    local GUIVariousData = call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
+    local GUIVariousData = Constants.call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
     if GUIVariousData ~= nil then
-        local GUINotifyWindowData = call_object_func(GUIVariousData, "get_NotifyWindowData");
+        local GUIVariousData_type_def = GUIVariousData:get_type_definition();
+        set_native_field(GUIVariousData, GUIVariousData_type_def, "_WaitTimeForJudge", 0.01);
+        set_native_field(GUIVariousData, GUIVariousData_type_def, "_WaitTimeForFixQuestResult", 0.01);
+        set_native_field(GUIVariousData, GUIVariousData_type_def, "_WaitTimeForSeamlessJudge", 0.01);
+        local GUINotifyWindowData = Constants.call_native_func(GUIVariousData, GUIVariousData_type_def, "get_NotifyWindowData");
         if GUINotifyWindowData ~= nil then
             local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
             local Setting_type_def = getSetting_method:get_return_type();
