@@ -1,15 +1,11 @@
 local Constants = _G.require("Constants/Constants");
 
-local pairs = Constants.pairs;
-
 local find_type_definition = Constants.find_type_definition;
 local create_int32 = Constants.create_int32;
 local hook = Constants.hook;
 local to_ptr = Constants.to_ptr;
 
 local get_hook_storage = Constants.get_hook_storage;
-
-local getThisPtr = Constants.getThisPtr;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
@@ -24,7 +20,10 @@ local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
 
 local Int32_value_field = get_AreaNum_method:get_return_type():get_field("m_value");
 
-local GUI050001_type_def = find_type_definition("app.GUI050001");
+local GUI050001_AcceptList_type_def = find_type_definition("app.GUI050001_AcceptList");
+local QuestAcceptUI_field = GUI050001_AcceptList_type_def:get_field("_QuestAcceptUI");
+
+local GUI050001_type_def = QuestAcceptUI_field:get_type();
 local get_CurrentStartPointList_method = GUI050001_type_def:get_method("get_CurrentStartPointList");
 local get_QuestOrderParam_method = GUI050001_type_def:get_method("get_QuestOrderParam");
 local setCurrentSelectStartPointIndex_method = GUI050001_type_def:get_method("setCurrentSelectStartPointIndex(System.Int32)");
@@ -56,16 +55,20 @@ local STAGES = Constants.STAGES;
 
 local DrawDatas = {};
 
+local StartPointIdx = nil;
+local shouldFocusFloorNum = nil;
+
 local function setVars(GUI050001, startPointIdx)
+    StartPointIdx = startPointIdx;
     setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
     requestSelectIndexCore_method:call(InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001)), startPointIdx, 0);
 end
 
-hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(retval)
-    local this_ptr = get_hook_storage().this_ptr;
-    local QuestOrderParam = get_QuestOrderParam_method:call(this_ptr);
+hook(GUI050001_AcceptList_type_def:get_method("updateStartPointText"), function(args)
+    local GUI050001 = QuestAcceptUI_field:get_data(args[2]);
+    local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
-        local startPointlist = get_CurrentStartPointList_method:call(this_ptr);
+        local startPointlist = get_CurrentStartPointList_method:call(GUI050001);
         local startPointlist_size = GenericList_get_Count_method:call(startPointlist);
         if startPointlist_size > 1 then
             local QuestViewData = QuestViewData_field:get_data(QuestOrderParam);
@@ -83,10 +86,10 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
                         local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
                         if targetEmAreaNum == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
                             if j > 0 then
-                                setVars(this_ptr, j);
-                                return to_ptr(create_int32(get_MapFloorNumSafety_method:call(FieldAreaInfo)));
+                                setVars(GUI050001, j);
+                                shouldFocusFloorNum = get_MapFloorNumSafety_method:call(FieldAreaInfo);
                             end
-                            return retval;
+                            return;
                         end
                         if areaIconPos == nil then
                             if areaIconPosList == nil then
@@ -113,21 +116,37 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), getThisPtr, function(
             end
             if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
                 if diffFloor_idx > 0 then
-                    setVars(this_ptr, diffFloor_idx);
-                    return to_ptr(create_int32(diffFloor_FloorNum));
+                    setVars(GUI050001, diffFloor_idx);
+                    shouldFocusFloorNum = diffFloor_FloorNum;
                 end
             elseif sameFloor_idx ~= nil then
                 if sameFloor_idx > 0 then
-                    setVars(this_ptr, sameFloor_idx);
-                    return to_ptr(create_int32(sameFloor_FloorNum));
+                    setVars(GUI050001, sameFloor_idx);
+                    shouldFocusFloorNum = sameFloor_FloorNum;
                 end
             elseif diffFloor_idx ~= nil then
                 if diffFloor_idx > 0 then
-                    setVars(this_ptr, diffFloor_idx);
-                    return to_ptr(create_int32(diffFloor_FloorNum));
+                    setVars(GUI050001, diffFloor_idx);
+                    shouldFocusFloorNum = diffFloor_FloorNum;
                 end
             end
         end
+    end
+end);
+
+hook(GUI050001_type_def:get_method("mapForceSelectFloor"), function(args)
+    if StartPointIdx ~= nil then
+        get_hook_storage().this_ptr = args[2];
+    end
+end, function(retval)
+    if StartPointIdx ~= nil then
+        setVars(get_hook_storage().this_ptr, StartPointIdx);
+        StartPointIdx = nil;
+    end
+    if shouldFocusFloorNum ~= nil then
+        local dummy_int32 = create_int32(shouldFocusFloorNum);
+        shouldFocusFloorNum = nil;
+        return to_ptr(dummy_int32);
     end
     return retval;
 end);
@@ -137,7 +156,7 @@ do
     if MapStageDrawData ~= nil then
         local getDrawData_method = MapStageDrawData:get_type_definition():get_method("getDrawData(app.FieldDef.STAGE)");
         local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
-        for _, stageID in pairs(STAGES) do
+        for _, stageID in Constants.pairs(STAGES) do
             local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
             if DrawData ~= nil then
                 local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
