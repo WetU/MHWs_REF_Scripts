@@ -11,11 +11,10 @@ local to_int64 = Constants.to_int64;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local getThisPtr = Constants.getThisPtr;
-
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_set_Item_method = Constants.GenericList_set_Item_method;
+local getThisPtr = Constants.getThisPtr;
 
 local checkQuestClear_method = find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
 

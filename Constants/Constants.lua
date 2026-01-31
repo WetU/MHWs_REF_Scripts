@@ -1,9 +1,6 @@
 local _G = _G;
 
-local ipairs = _G.ipairs;
-
 local string = _G.string;
-local strmatch = string.match;
 
 local math = _G.math;
 
@@ -17,8 +14,6 @@ local float_to_ptr = sdk.float_to_ptr;
 local get_hook_storage = _G.thread.get_hook_storage;
 
 local imgui = _G.imgui;
-local json = _G.json;
-local re = _G.re;
 
 local GA_type_def = find_type_definition("app.GA");
 local ChatManager = GA_type_def:get_method("get_Chat"):call(nil);
@@ -42,11 +37,11 @@ local InputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.I
 
 local Constants = {
     pairs = _G.pairs,
-    ipairs = ipairs,
+    ipairs = _G.ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
 
-    strmatch = strmatch,
+    strmatch = string.match,
     strformat = string.format,
     strgsub = string.gsub,
 
@@ -68,12 +63,7 @@ local Constants = {
 
     get_hook_storage = get_hook_storage,
 
-    dump_file = json.dump_file,
-    load_file = json.load_file,
-
-    on_config_save = re.on_config_save,
-    on_script_reset = re.on_script_reset,
-    on_frame = re.on_frame,
+    on_frame = _G.re.on_frame,
 
     load_font = imgui.load_font,
     push_font = imgui.push_font,
@@ -120,8 +110,6 @@ local Constants = {
     requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
     requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boolean)"),
 
-    GUI_field = GUIBase_type_def:get_field("_GUI"),
-
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
     end,
@@ -132,7 +120,7 @@ local Constants = {
 };
 
 do
-    for _, v in ipairs(find_type_definition("app.FieldDef.STAGE"):get_fields()) do
+    for _, v in Constants.ipairs(find_type_definition("app.FieldDef.STAGE"):get_fields()) do
         if v:is_static() then
             local name = v:get_name();
             if name ~= "INVALID" and name ~= "MAX" then

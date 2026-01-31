@@ -1,7 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local ipairs = Constants.ipairs;
-
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
 local set_native_field = Constants.set_native_field;
@@ -18,7 +16,7 @@ local EnableSkip_field = GUI010001_type_def:get_field("_EnableSkip");
 
 local lastFlow = nil;
 do
-    for _, v in ipairs(Flow_field:get_type():get_fields()) do
+    for _, v in Constants.ipairs(Flow_field:get_type():get_fields()) do
         if v:is_static() then
             local enum_value = v:get_data(nil);
             if lastFlow == nil or enum_value > lastFlow then

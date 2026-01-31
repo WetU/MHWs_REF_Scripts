@@ -12,18 +12,14 @@ local set_native_field = Constants.set_native_field;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local load_file = Constants.load_file;
-local dump_file = Constants.dump_file;
-
-local getThisPtr = Constants.getThisPtr;
-
 local addSystemLog_method = Constants.addSystemLog_method;
 local requestClose_method = Constants.requestClose_method;
+local getThisPtr = Constants.getThisPtr;
 
 local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
 local isVisibleGUI_method = Constants.GUIManager_type_def:get_parent_type():get_method("isVisibleGUI(app.GUIID.ID)");
-local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil); -- static
+local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil);
 
 local GUI000002_type_def = Constants.GUI000002_type_def;
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
@@ -109,7 +105,7 @@ end
 
 hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.1);
+    set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.0);
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
@@ -119,7 +115,7 @@ end);
 
 hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.1);
+    set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.0);
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
@@ -165,7 +161,7 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
 end);
 
 hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
-    set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.1);
+    set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.0);
 end);
 
 hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, function()

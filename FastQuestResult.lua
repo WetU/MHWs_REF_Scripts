@@ -6,14 +6,12 @@ local to_int64 = Constants.to_int64;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local getThisPtr = Constants.getThisPtr;
-
 local get_IDInt_method = Constants.get_IDInt_method;
 local get_InputPriority_method = Constants.get_InputPriority_method;
-local requestCallTrigger_method = Constants.requestCallTrigger_method;
-
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
+local requestCallTrigger_method = Constants.requestCallTrigger_method;
+local getThisPtr = Constants.getThisPtr;
 
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 --<< GUI070000 Fix Quest Result >>--
