@@ -33,6 +33,8 @@ local GUI000002_type_def = find_type_definition("app.GUI000002");
 local GUIBaseApp_type_def = GUI000002_type_def:get_parent_type();
 local GUIBase_type_def = GUIBaseApp_type_def:get_parent_type();
 
+local requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boolean)");
+
 local InputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 
 local Constants = {
@@ -108,7 +110,7 @@ local Constants = {
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
     requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
-    requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boolean)"),
+    requestClose_method = requestClose_method,
 
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
@@ -116,6 +118,10 @@ local Constants = {
 
     getObject = function(args)
         get_hook_storage().this = to_managed_object(args[2]);
+    end,
+
+    requestClose = function()
+        requestClose_method:call(get_hook_storage().this_ptr, true);
     end
 };
 

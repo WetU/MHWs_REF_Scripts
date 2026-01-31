@@ -13,8 +13,8 @@ local set_native_field = Constants.set_native_field;
 local get_hook_storage = Constants.get_hook_storage;
 
 local addSystemLog_method = Constants.addSystemLog_method;
-local requestClose_method = Constants.requestClose_method;
 local getThisPtr = Constants.getThisPtr;
+local requestClose = Constants.requestClose;
 
 local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
@@ -164,9 +164,7 @@ hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
     set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.0);
 end);
 
-hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, function()
-    requestClose_method:call(get_hook_storage().this_ptr, true);
-end);
+hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, requestClose);
 
 do
     local GUIVariousData = Constants.call_object_func(Constants.get_VariousData_method:call(nil), "get_GUIVariousData");
