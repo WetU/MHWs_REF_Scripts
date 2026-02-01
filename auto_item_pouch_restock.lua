@@ -9,7 +9,6 @@ local to_int64 = Constants.to_int64;
 local get_hook_storage = Constants.get_hook_storage;
 
 local addSystemLog_method = Constants.addSystemLog_method;
-local requestClose_method = Constants.requestClose_method;
 local getThisPtr = Constants.getThisPtr;
 
 local IsArenaQuest_method = find_type_definition("app.EnemyUtil"):get_method("IsArenaQuest"); -- static
@@ -35,12 +34,18 @@ local restockMenus = {
 };
 
 local GUI020201_type_def = find_type_definition("app.GUI020201");
+local StampPanels_field = GUI020201_type_def:get_field("_StampPanels");
 local GUI020201_CurType_field = GUI020201_type_def:get_field("_CurType");
 
 local GUI020216_type_def = find_type_definition("app.GUI020216");
+local Panel_field = GUI020216_type_def:get_field("_Panel");
 local GUI020216_CurType_field = GUI020216_type_def:get_field("_CurType");
 
 local START = GUI020201_CurType_field:get_type():get_field("START"):get_data(nil);
+
+local gui_Control_type_def = Panel_field:get_type():get_parent_type():get_parent_type();
+local set_PlayFrame_method = gui_Control_type_def:get_method("set_PlayFrame(System.Single)");
+local set_PlayState_method = gui_Control_type_def:get_method("set_PlayState(System.String)");
 
 local mySetIdx = 0;
 
@@ -94,10 +99,15 @@ end);
 
 hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    if GUI020201_CurType_field:get_data(this_ptr) == START and IsArenaQuest_method:call(nil) == false then
+    local CurType = GUI020201_CurType_field:get_data(this_ptr);
+    if CurType == START and IsArenaQuest_method:call(nil) == false then
         restockItems(true);
     end
-    requestClose_method:call(this_ptr, true);
+    local StampPanel = StampPanels_field:get_data(this_ptr):get_element(CurType);
+    if StampPanel ~= nil then
+        set_PlayState_method:call(StampPanel, "DISABLE");
+        set_PlayFrame_method:call(StampPanel, 5.0);
+    end
 end);
 
 hook(GUI020216_type_def:get_method("onOpen"), getThisPtr, function()
@@ -105,7 +115,9 @@ hook(GUI020216_type_def:get_method("onOpen"), getThisPtr, function()
     if GUI020216_CurType_field:get_data(this_ptr) == START then
         restockItems(true);
     end
-    requestClose_method:call(this_ptr, true);
+    local Panel = Panel_field:get_data(this_ptr);
+    set_PlayState_method:call(Panel, "HIDDEN");
+    set_PlayFrame_method:call(Panel, 1.0);
 end);
 
 hook(find_type_definition("app.PlayerCommonAction.cPorterRideStart"):get_method("doEnter"), nil, PlayerStartRiding);

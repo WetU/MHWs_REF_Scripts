@@ -110,7 +110,6 @@ local Constants = {
     GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
     requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
-    requestClose_method = requestClose_method,
 
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
