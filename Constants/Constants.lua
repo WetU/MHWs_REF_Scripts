@@ -23,10 +23,6 @@ local CurrentUserSaveData = call_object_func(GA_type_def:get_method("get_Save"):
 local UserSaveParam_type_def = CurrentUserSaveData:get_type_definition();
 local ShortcutPalletParam = call_object_func(call_native_func(CurrentUserSaveData, UserSaveParam_type_def, "get_Item"), "get_ShortcutPallet");
 
-local get_Chara_method = find_type_definition("app.cHunterActionBase"):get_method("get_Chara");
-
-local HunterCharacter_type_def = get_Chara_method:get_return_type();
-
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
 local GUI000002_type_def = find_type_definition("app.GUI000002");
@@ -88,7 +84,6 @@ local Constants = {
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = GUIManager:get_type_definition(),
-    HunterCharacter_type_def = HunterCharacter_type_def,
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ShortcutPalletParam_type_def = ShortcutPalletParam:get_type_definition(),
@@ -96,11 +91,9 @@ local Constants = {
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
     get_ActualVisible_method = find_type_definition("via.gui.PlayObject"):get_method("get_ActualVisible"),
-    get_Chara_method = get_Chara_method,
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
     get_InputPriority_method = InputCtrl_type_def:get_method("get_InputPriority"),
-    get_IsMaster_method = HunterCharacter_type_def:get_method("get_IsMaster"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     get_VariousData_method = GA_type_def:get_method("get_VariousData"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),

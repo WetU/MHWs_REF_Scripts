@@ -48,15 +48,15 @@ local StrongSlingerShoot_type_def = find_type_definition("app.PlayerCommonAction
 local Phase_field = StrongSlingerShoot_type_def:get_field("_Phase");
 local AmmoType_field = StrongSlingerShoot_type_def:get_field("_AmmoType");
 local ChargeTimer_field = StrongSlingerShoot_type_def:get_field("_ChargeTimer");
-local get_Chara_method = Constants.get_Chara_method;
+local get_Chara_method = StrongSlingerShoot_type_def:get_parent_type():get_parent_type():get_parent_type():get_method("get_Chara");
+
+local get_IsMaster_method = get_Chara_method:get_return_type():get_method("get_IsMaster");
 
 local SHOOT = Phase_field:get_type():get_field("SHOOT"):get_data(nil);
 
 local END = find_type_definition("ace.ActionDef.UPDATE_RESULT"):get_field("END"):get_data(nil);
 
 local EX_CHARGE = find_type_definition("app.HunterDef.SLINGER_AMMO_TYPE"):get_field("EX_CHARGE"):get_data(nil);
-
-local get_IsMaster_method = Constants.get_IsMaster_method;
 
 local getHunterStatus_method = Constants.FacilitySupplyItems_type_def:get_method("getHunterStatus"); -- static
 
