@@ -59,6 +59,8 @@ local Constants = {
     to_float = sdk.to_float,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
 
+    ValueType_new = _G.ValueType.new,
+
     get_hook_storage = get_hook_storage,
 
     on_frame = _G.re.on_frame,

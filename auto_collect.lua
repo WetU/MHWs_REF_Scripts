@@ -6,7 +6,10 @@ local tinsert = Constants.tinsert;
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
 local to_int64 = Constants.to_int64;
+local to_ptr = Constants.to_ptr;
 local set_native_field = Constants.set_native_field;
+
+local ValueType_new = Constants.ValueType_new;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -115,7 +118,8 @@ local ItemID = {
 local STOCK_TYPE_type_def = find_type_definition("app.ItemUtil.STOCK_TYPE");
 local STOCK_TYPE = {
     POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil),
-    BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil)
+    BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil),
+    BOTH_BOX_POUCH = STOCK_TYPE_type_def:get_field("BOTH_BOX_POUCH"):get_data(nil)
 };
 
 local FacilityID_type_def = FacilityId_field:get_type();
@@ -130,9 +134,17 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
+local function dummy()
+    local dummy_STOCK_TYPE = ValueType_new(STOCK_TYPE_type_def);
+    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOTH_BOX_POUCH);
+    return to_ptr(dummy_STOCK_TYPE);
+end
+
+local BOTH_BOX_POUCH_ptr = dummy();
 local TRUE_ptr = Constants.to_ptr(true);
 
 hook(changeItemNumFromDialogue_method, function(args)
+    args[4] = BOTH_BOX_POUCH_ptr;
     args[5] = TRUE_ptr;
 end);
 
