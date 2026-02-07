@@ -23,6 +23,7 @@ local GenericList_Clear_method = Constants.GenericList_Clear_method;
 local GenericList_RemoveAt_method = Constants.GenericList_RemoveAt_method;
 
 local FacilityUtil_type_def = find_type_definition("app.FacilityUtil");
+local isEnoughItem_method = FacilityUtil_type_def:get_method("isEnoughItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local isEnoughPoint_method = FacilityUtil_type_def:get_method("isEnoughPoint(System.Int32)"); -- static
 local payPoint_method = FacilityUtil_type_def:get_method("payPoint(System.Int32)"); -- static
@@ -32,7 +33,6 @@ local Shikyu_method = find_type_definition("app.ItemDef"):get_method("Shikyu(app
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local changeItemNumFromDialogue_method = ItemUtil_type_def:get_method("changeItemNumFromDialogue(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE, System.Boolean)"); -- static
 local getSellItem_method = ItemUtil_type_def:get_method("getSellItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
-local getItemNum_method = ItemUtil_type_def:get_method("getItemNum(app.ItemDef.ID, app.ItemUtil.STOCK_TYPE)"); -- static
 
 local WeaponUtil_type_def = find_type_definition("app.WeaponUtil");
 local getWeaponData_method = WeaponUtil_type_def:get_method("getWeaponData(System.Int32, app.WeaponDef.TYPE)"); -- static
@@ -116,11 +116,7 @@ local ItemID = {
 };
 
 local STOCK_TYPE_type_def = find_type_definition("app.ItemUtil.STOCK_TYPE");
-local STOCK_TYPE = {
-    POUCH = STOCK_TYPE_type_def:get_field("POUCH"):get_data(nil),
-    BOX = STOCK_TYPE_type_def:get_field("BOX"):get_data(nil),
-    BOTH_BOX_POUCH = STOCK_TYPE_type_def:get_field("BOTH_BOX_POUCH"):get_data(nil)
-};
+local BOTH_BOX_POUCH = STOCK_TYPE_type_def:get_field("BOTH_BOX_POUCH"):get_data(nil);
 
 local FacilityID_type_def = FacilityId_field:get_type();
 local FacilityID = {
@@ -136,7 +132,7 @@ local WeaponType = {
 
 local function dummy()
     local dummy_STOCK_TYPE = ValueType_new(STOCK_TYPE_type_def);
-    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", STOCK_TYPE.BOTH_BOX_POUCH);
+    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", BOTH_BOX_POUCH);
     return to_ptr(dummy_STOCK_TYPE);
 end
 
@@ -160,7 +156,7 @@ hook(find_type_definition("app.FacilityCollection"):get_method("lotItem"), nil, 
                 if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
                     local Num = ItemWork_Num_field:get_data(ItemWork);
                     if Num > 0 then
-                        getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
+                        getSellItem_method:call(nil, ItemId, Num, BOTH_BOX_POUCH);
                     end
                 end
             end
@@ -178,7 +174,7 @@ hook(find_type_definition("app.FacilityLargeWorkshop"):get_method("endFestival")
         if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
             local Num = ItemWork_Num_field:get_data(Reward);
             if Num > 0 then
-                getSellItem_method:call(nil, ItemId, Num, STOCK_TYPE.BOX);
+                getSellItem_method:call(nil, ItemId, Num, BOTH_BOX_POUCH);
                 clearRewardItem_method:call(LargeWorkshopParam, i);
             end
         end
@@ -205,7 +201,7 @@ local function getItemFromMoriver(moriverInfo, completedTbl)
     if gettingItemId > ItemID.NONE and gettingItemId < ItemID.MAX then
         local gettingNum = ItemWork_Num_field:get_data(ItemFromMoriver);
         if gettingNum > 0 then
-            changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, STOCK_TYPE.BOX, true);
+            changeItemNumFromDialogue_method:call(nil, gettingItemId, gettingNum, BOTH_BOX_POUCH, true);
         end
     end
     tinsert(completedTbl, moriverInfo);
@@ -226,21 +222,9 @@ local function execMoriver(facilityMoriver)
                 local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
                     local givingNum = ItemWork_Num_field:get_data(ItemFromPlayer);
-                    local boxNum = getItemNum_method:call(nil, givingItemId, STOCK_TYPE.BOX);
-                    if boxNum >= givingNum then
-                        payItem_method:call(nil, givingItemId, givingNum, STOCK_TYPE.BOX);
+                    if isEnoughItem_method:call(nil, givingItemId, givingNum, BOTH_BOX_POUCH) then
+                        payItem_method:call(nil, givingItemId, givingNum, BOTH_BOX_POUCH);
                         getItemFromMoriver(MoriverInfo, completedMoriverInfos);
-                    else
-                        local pouchNum = getItemNum_method:call(nil, giveItemId, STOCK_TYPE.POUCH);
-                        if pouchNum >= givingNum or (boxNum + pouchNum) >= givingNum then
-                            if boxNum > 0 then
-                                payItem_method:call(nil, givingItemId, boxNum, STOCK_TYPE.BOX);
-                                payItem_method:call(nil, givingItemId, givingNum - boxNum, STOCK_TYPE.POUCH);
-                            else
-                                payItem_method:call(nil, givingItemId, pouchNum, STOCK_TYPE.POUCH);
-                            end
-                            getItemFromMoriver(MoriverInfo, completedMoriverInfos);
-                        end
                     end
                 end
             end
@@ -283,7 +267,7 @@ end);
 hook(Constants.FacilitySupplyItems_type_def:get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = to_int64(args[3]) & 0xFFFFFFFF;
     if Shikyu_method:call(nil, ItemId) == false then
-        getSellItem_method:call(nil, ItemId, to_int64(args[4]) & 0xFFFF, STOCK_TYPE.BOX);
+        getSellItem_method:call(nil, ItemId, to_int64(args[4]) & 0xFFFF, BOTH_BOX_POUCH);
         return SKIP_ORIGINAL;
     end
 end);
@@ -301,7 +285,7 @@ hook(find_type_definition("app.savedata.cShipParam"):get_method("setItems(System
                 if isEnoughPoint_method:call(nil, totalCost) then
                     local ItemId = SupportShipData_get_ItemId_method:call(ShipData);
                     if ItemId > ItemID.NONE and ItemId < ItemID.MAX then
-                        getSellItem_method:call(nil, ItemId, j, STOCK_TYPE.BOX);
+                        getSellItem_method:call(nil, ItemId, j, BOTH_BOX_POUCH);
                         payPoint_method:call(nil, totalCost);
                         set_native_field(ShipData, SupportShipData_type_def, "_StockNum", StockNum - j);
                     else
