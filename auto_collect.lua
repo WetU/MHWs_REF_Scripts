@@ -229,8 +229,10 @@ local function execMoriver(facilityMoriver)
                 end
             end
         end
-        for _, completedMoriverInfo in ipairs(completedMoriverInfos) do
-            executedSharing_method:call(facilityMoriver, completedMoriverInfo);
+        if #completedMoriverInfos > 0 then
+            for _, completedMoriverInfo in ipairs(completedMoriverInfos) do
+                executedSharing_method:call(facilityMoriver, completedMoriverInfo);
+            end
         end
     end
 end
