@@ -25,8 +25,6 @@ local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
 local get_Owner_method = GUIPartsReward_type_def:get_parent_type():get_method("get_Owner");
 
-local JUDGE = find_type_definition("app.cGUIPartsReward.MODE"):get_field("JUDGE"):get_data(nil); -- static
-
 local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
 local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_parent_type():get_parent_type():get_method("get__PanelNewMark");
@@ -39,14 +37,6 @@ local GUI070001_type_def = find_type_definition("app.GUI070001");
 local get_IsViewMode_method = GUI070001_type_def:get_method("get_IsViewMode");
 local skipAnimation_method = GUI070001_type_def:get_method("skipAnimation");
 
-local function GUIPartsReward_getMode(mode_ptr, isRandomAmulet_ptr)
-    local mode = to_int64(mode_ptr) & 0xFFFFFFFF;
-    if mode == JUDGE and (to_int64(isRandomAmulet_ptr) & 1) == 1 then
-        mode = 2;
-    end
-    return mode;
-end
-
 -- args[5] = isViewMode;
 -- args[6] = isRandomAmuletJudge;
 local isFixQuestResult = nil;
@@ -56,7 +46,7 @@ hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUI
         if get_IDInt_method:call(get_Owner_method:call(this_ptr)) == UI070000 then
             local storage = get_hook_storage();
             storage.this_ptr = this_ptr;
-            storage.Mode = GUIPartsReward_getMode(args[4], args[6]);
+            storage.isRandomAmuletJudge = (to_int64(args[6]) & 1) == 1;
             isFixQuestResult = true;
         end
     end
@@ -66,7 +56,7 @@ end, function()
         local storage = get_hook_storage();
         local this_ptr = storage.this_ptr;
         set__WaitControlTime_method:call(this_ptr, 0.0);
-        if storage.Mode ~= 2 then
+        if storage.isRandomAmuletJudge == false then
             local ItemGridParts = ItemGridParts_field:get_data(this_ptr);
             for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
                 local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
@@ -100,14 +90,12 @@ local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("te
 
 local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT"):get_data(nil);
 
-hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, function()
+local function endQuestReward()
     finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
-end);
+end
 
-hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, function()
-    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
-end);
-
+hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, endQuestReward);
+hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, endQuestReward);
 hook(GUI020100_type_def:get_method("toRandomAmuletJudge"), getThisPtr, function()
     requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(get_hook_storage().this_ptr), JUST_TIMING_SHORTCUT);
 end);
