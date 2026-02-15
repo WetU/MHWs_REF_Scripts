@@ -31,7 +31,7 @@ local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPa
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
 local get__PanelNewMark_method = GUIItemGridPartsFluent_type_def:get_parent_type():get_parent_type():get_method("get__PanelNewMark");
 
-local get_Enabled_method = get_SelectItem_method:get_return_type():get_method("get_Enabled");
+local get_Enabled_method = Constants.get_Enabled_method;
 
 local get_ActualVisible_method = Constants.get_ActualVisible_method;
 

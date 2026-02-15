@@ -16,8 +16,6 @@ local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_set_Item_method = Constants.GenericList_set_Item_method;
 local getThisPtr = Constants.getThisPtr;
 
-local checkQuestClear_method = find_type_definition("app.QuestUtil"):get_method("checkQuestClear(app.MissionIDList.ID)"); -- static
-
 local GUI050000_type_def = find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
 
@@ -48,7 +46,10 @@ local Remove_method = get_ViewQuestDataList_method:get_return_type():get_method(
 
 local GUIQuestViewData_type_def = find_type_definition("app.cGUIQuestViewData");
 local get_MissionID_method = GUIQuestViewData_type_def:get_method("get_MissionID");
+local get_MissionType_method = GUIQuestViewData_type_def:get_method("get_MissionType");
 local Session_field = GUIQuestViewData_type_def:get_field("Session");
+
+local STREAM_EVENTQUEST = get_MissionType_method:get_return_type():get_field("STREAM_EVENTQUEST"):get_data(nil);
 
 local get_SearchResult_method = Session_field:get_type():get_method("get_SearchResult");
 
@@ -60,6 +61,14 @@ local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
 local multiplaySetting_field = SearchResultQuest_type_def:get_field("multiplaySetting");
 
 local NPC_ONLY = multiplaySetting_field:get_type():get_field("NPC_ONLY"):get_data(nil);
+
+local get_Mission_method = Constants.UserSaveParam_type_def:get_method("get_Mission");
+local get_MissionClearFlag_method = get_Mission_method:get_return_type():get_method("get_MissionClearFlag");
+local isOn_method = get_MissionClearFlag_method:get_return_type():get_method("isOn(System.Int32)");
+
+local get_Enabled_method = Constants.get_Enabled_method;
+local getObject_method = Constants.gui_Control_type_def:get_method("getObject(System.String)");
+local set_Visible_method = Constants.gui_PlayObject_type_def:get_method("set_Visible(System.Boolean)");
 
 local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
@@ -74,6 +83,8 @@ local SortDifficulty = {
     CATEGORY_type_def:get_field("ARENA"):get_data(nil),
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
 };
+
+local MissionClearFlag = nil;
 
 local function setSortDifficulty(obj, sortType)
     if sortType == 0 then
@@ -114,9 +125,12 @@ end, function()
                 if ViewQuestDataList_size > 0 then
                     local cleared_quests = {};
                     local uncleared_quests = {};
+                    if MissionClearFlag == nil then
+                        MissionClearFlag = get_MissionClearFlag_method:call(get_Mission_method:call(Constants.UserSaveData));
+                    end
                     for i = 0, ViewQuestDataList_size - 1 do
                         local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
-                        tinsert(checkQuestClear_method:call(nil, get_MissionID_method:call(quest_data)) and cleared_quests or uncleared_quests, quest_data);
+                        tinsert(isOn_method:call(MissionClearFlag, get_MissionID_method:call(quest_data)) and cleared_quests or uncleared_quests, quest_data);
                     end
                     local unclearedCount = #uncleared_quests;
                     local clearedCount = #cleared_quests;
@@ -189,3 +203,30 @@ end, function()
         end
     end
 end);
+
+local validPNL = nil;
+local function preUpdateItem(args)
+    local selectItem = args[3];
+    if get_Enabled_method:call(selectItem) then
+        local QuestViewData = args[4];
+        if get_MissionType_method:call(QuestViewData) == STREAM_EVENTQUEST then
+            if MissionClearFlag == nil then
+                MissionClearFlag = get_MissionClearFlag_method:call(get_Mission_method:call(Constants.UserSaveData));
+            end
+            if isOn_method:call(MissionClearFlag, get_MissionID_method:call(QuestViewData)) then
+                get_hook_storage().PNL = getObject_method:call(getObject_method:call(getObject_method:call(selectItem, "PNL_icon"), "PNL_icon_R_bottom"), "PNL_clear");
+                validPNL = true;
+            end
+        end
+    end
+end
+
+local function postUpdateItem()
+    if validPNL then
+        validPNL = nil;
+        set_Visible_method:call(get_hook_storage().PNL, true);
+    end
+end
+
+hook(find_type_definition("app.GUI050000QuestListParts.cQuestList_GridViewParts"):get_method("updateItem(via.gui.SelectItem, app.cGUIQuestViewData)"), preUpdateItem, postUpdateItem);
+hook(find_type_definition("app.GUI050000QuestListParts.cQuestList_ListViewParts"):get_method("updateItem(via.gui.SelectItem, app.cGUIQuestViewData)"), preUpdateItem, postUpdateItem);

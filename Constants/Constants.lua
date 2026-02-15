@@ -33,6 +33,10 @@ local requestClose_method = GUIBase_type_def:get_method("requestClose(System.Boo
 
 local InputCtrl_type_def = find_type_definition("ace.cGUIInputCtrl`2<app.GUIID.ID,app.GUIFunc.TYPE>");
 
+local gui_SelectItem_type_def = find_type_definition("via.gui.SelectItem");
+local gui_Control_type_def = gui_SelectItem_type_def:get_parent_type();
+local gui_PlayObject_type_def = gui_Control_type_def:get_parent_type():get_parent_type();
+
 local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
@@ -82,6 +86,8 @@ local Constants = {
     ShortcutPalletParam = ShortcutPalletParam,
 
     FacilitySupplyItems_type_def = find_type_definition("app.FacilitySupplyItems"),
+    gui_Control_type_def = gui_Control_type_def,
+    gui_PlayObject_type_def = gui_PlayObject_type_def,
     GUI000002_type_def = GUI000002_type_def,
     GUIID_type_def = find_type_definition("app.GUIID.ID"),
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
@@ -92,7 +98,8 @@ local Constants = {
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
-    get_ActualVisible_method = find_type_definition("via.gui.PlayObject"):get_method("get_ActualVisible"),
+    get_ActualVisible_method = gui_PlayObject_type_def:get_method("get_ActualVisible"),
+    get_Enabled_method = gui_SelectItem_type_def:get_method("get_Enabled"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
     get_InputPriority_method = InputCtrl_type_def:get_method("get_InputPriority"),
