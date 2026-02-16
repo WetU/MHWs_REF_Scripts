@@ -46,7 +46,7 @@ hook(GUIPartsReward_type_def:get_method("start(app.cGUIPartsRewardInfo, app.cGUI
         if get_IDInt_method:call(get_Owner_method:call(this_ptr)) == UI070000 then
             local storage = get_hook_storage();
             storage.this_ptr = this_ptr;
-            storage.isRandomAmuletJudge = (to_int64(args[6]) & 1) == 1;
+            storage.isRandomAmuletJudge = to_int64(args[6]) & 1;
             isFixQuestResult = true;
         end
     end
@@ -56,7 +56,7 @@ end, function()
         local storage = get_hook_storage();
         local this_ptr = storage.this_ptr;
         set__WaitControlTime_method:call(this_ptr, 0.0);
-        if storage.isRandomAmuletJudge == false then
+        if storage.isRandomAmuletJudge == 0 then
             local ItemGridParts = ItemGridParts_field:get_data(this_ptr);
             for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
                 local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
