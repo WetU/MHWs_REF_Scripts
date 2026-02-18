@@ -45,8 +45,17 @@ local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 
 local FacilityDining_type_def = get_Dining_method:get_return_type();
-local isSuppliableFoodMax_method = FacilityDining_type_def:get_method("isSuppliableFoodMax");
+local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
+local isSuppliableFoodMaxEx_method = FacilityDining_type_def:get_method("isSuppliableFoodMaxEx");
+local supplyFoodEx_method = FacilityDining_type_def:get_method("supplyFoodEx");
+local isMaxTicketSide_method = FacilityDining_type_def:get_method("isMaxTicketSide");
+local supplyTicketSide_method = FacilityDining_type_def:get_method("supplyTicketSide");
+local isMaxTicketMain_method = FacilityDining_type_def:get_method("isMaxTicketMain");
+local supplyTicketMain_method = FacilityDining_type_def:get_method("supplyTicketMain");
+local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
+
+local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
 local FacilityMoriver_type_def = get_Moriver_method:get_return_type();
 local get__HavingCampfire_method = FacilityMoriver_type_def:get_method("get__HavingCampfire");
@@ -189,9 +198,35 @@ hook(FacilityPugee_type_def:get_method("isEnableCoolTimer"), getThisPtr, functio
     return retval;
 end);
 
-local function getSuppliedFood(facilityDining)
-    if isSuppliableFoodMax_method:call(facilityDining) then
-        supplyFood_method:call(facilityDining);
+local SupplyFoodMax = nil;
+local function getSupplyFoodMax(FacilityDining)
+    if SupplyFoodMax == nil then
+        SupplyFoodMax = get_SupplyFoodMax_method:call(SettingData_field:get_data(FacilityDining));
+    end
+    return SupplyFoodMax;
+end
+
+local function getSuppliedFoods(FacilityDining)
+    if getSuppliableFoodNum_method:call(FacilityDining) >= getSupplyFoodMax(FacilityDining) then
+        supplyFood_method:call(FacilityDining);
+    end
+end
+
+local function getSuppliedFoodsEx(FacilityDining)
+    if isSuppliableFoodMaxEx_method:call(FacilityDining) then
+        supplyFoodEx_method:call(FacilityDining);
+    end
+end
+
+local function getTicketSide(FacilityDining)
+    if isMaxTicketSide_method:call(FacilityDining) then
+        supplyTicketSide_method:call(FacilityDining);
+    end
+end
+
+local function getTicketMain(FacilityDining)
+    if isMaxTicketMain_method:call(FacilityDining) then
+        supplyTicketMain_method:call(FacilityDining);
     end
 end
 
@@ -243,11 +278,27 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     if get__HavingCampfire_method:call(FacilityMoriver) then
         execMoriver(FacilityMoriver);
     end
-    getSuppliedFood(get_Dining_method:call(FacilityManager));
+    local FacilityDining = get_Dining_method:call(FacilityManager);
+    getSuppliedFoods(FacilityDining);
+    getSuppliedFoodsEx(FacilityDining);
+    getTicketSide(FacilityDining);
+    getTicketMain(FacilityDining);
 end);
 
 hook(FacilityDining_type_def:get_method("addSupplyNum"), getThisPtr, function()
-    getSuppliedFood(get_hook_storage().this_ptr);
+    getSuppliedFoods(get_hook_storage().this_ptr);
+end);
+
+hook(FacilityDining_type_def:get_method("addSupplyEx(System.Int32)"), getThisPtr, function()
+    getSuppliedFoodsEx(get_hook_storage().this_ptr);
+end);
+
+hook(FacilityDining_type_def:get_method("supplyTimerGoalSide(app.cFacilityTimer)"), getThisPtr, function()
+    getTicketSide(get_hook_storage().this_ptr);
+end);
+
+hook(FacilityDining_type_def:get_method("addQuestNum"), getThisPtr, function()
+    getTicketMain(get_hook_storage().this_ptr);
 end);
 
 hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()

@@ -21,7 +21,6 @@ local GUIManager = GA_type_def:get_method("get_GUI"):call(nil);
 
 local CurrentUserSaveData = call_object_func(GA_type_def:get_method("get_Save"):call(nil), "getCurrentUserSaveData");
 local UserSaveParam_type_def = CurrentUserSaveData:get_type_definition();
-local ShortcutPalletParam = call_object_func(call_native_func(CurrentUserSaveData, UserSaveParam_type_def, "get_Item"), "get_ShortcutPallet");
 
 local GenericList_type_def = find_type_definition("System.Collections.Generic.List`1<app.user_data.SupportShipData.cData>");
 
@@ -83,7 +82,7 @@ local Constants = {
     ChatManager = ChatManager,
     GUIManager = GUIManager,
     UserSaveData = CurrentUserSaveData,
-    ShortcutPalletParam = ShortcutPalletParam,
+    ShortcutPalletParam = call_object_func(call_native_func(CurrentUserSaveData, UserSaveParam_type_def, "get_Item"), "get_ShortcutPallet"),
 
     FacilitySupplyItems_type_def = find_type_definition("app.FacilitySupplyItems"),
     gui_Control_type_def = gui_Control_type_def,
@@ -94,7 +93,6 @@ local Constants = {
     GUIManager_type_def = GUIManager:get_type_definition(),
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
-    ShortcutPalletParam_type_def = ShortcutPalletParam:get_type_definition(),
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),

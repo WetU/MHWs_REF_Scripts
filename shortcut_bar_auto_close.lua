@@ -9,7 +9,8 @@ local getObject = Constants.getObject;
 
 local get_UpTimeSecond_method = find_type_definition("via.Application"):get_method("get_UpTimeSecond"); -- static
 
-local ShortcutPalletParam_type_def = Constants.ShortcutPalletParam_type_def;
+local ShortcutPalletParam = Constants.ShortcutPalletParam;
+local ShortcutPalletParam_type_def = ShortcutPalletParam:get_type_definition();
 local setCurrentIndex_method = ShortcutPalletParam_type_def:get_method("setCurrentIndex(app.ItemDef.PALLET_TYPE, System.Int32)");
 local getCurrentIndex_method = ShortcutPalletParam_type_def:get_method("getCurrentIndex(app.ItemDef.PALLET_TYPE)");
 
@@ -21,7 +22,6 @@ local lastClosedTime = nil;
 
 hook(GUI020600_type_def:get_method("onHudOpen"), function()
 	if lastClosedTime ~= nil and (get_UpTimeSecond_method:call(nil) - lastClosedTime) >= 5.0 then
-		local ShortcutPalletParam = Constants.ShortcutPalletParam;
 		if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
 			setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
 		end
