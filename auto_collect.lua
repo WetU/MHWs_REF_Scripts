@@ -45,7 +45,7 @@ local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 
 local FacilityDining_type_def = get_Dining_method:get_return_type();
-local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
+local get__SaveParam_method = FacilityDining_type_def:get_method("get__SaveParam");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
 local isSuppliableFoodMaxEx_method = FacilityDining_type_def:get_method("isSuppliableFoodMaxEx");
 local supplyFoodEx_method = FacilityDining_type_def:get_method("supplyFoodEx");
@@ -54,6 +54,8 @@ local supplyTicketSide_method = FacilityDining_type_def:get_method("supplyTicket
 local isMaxTicketMain_method = FacilityDining_type_def:get_method("isMaxTicketMain");
 local supplyTicketMain_method = FacilityDining_type_def:get_method("supplyTicketMain");
 local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
+
+local SupplyNum_field = get__SaveParam_method:get_return_type():get_field("SupplyNum");
 
 local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
@@ -207,7 +209,7 @@ local function getSupplyFoodMax(FacilityDining)
 end
 
 local function getSuppliedFoods(FacilityDining)
-    if getSuppliableFoodNum_method:call(FacilityDining) >= getSupplyFoodMax(FacilityDining) then
+    if SupplyNum_field:get_data(get__SaveParam_method:call(FacilityDining)) >= getSupplyFoodMax(FacilityDining) then
         supplyFood_method:call(FacilityDining);
     end
 end
@@ -221,12 +223,6 @@ end
 local function getTicketSide(FacilityDining)
     if isMaxTicketSide_method:call(FacilityDining) then
         supplyTicketSide_method:call(FacilityDining);
-    end
-end
-
-local function getTicketMain(FacilityDining)
-    if isMaxTicketMain_method:call(FacilityDining) then
-        supplyTicketMain_method:call(FacilityDining);
     end
 end
 
@@ -282,7 +278,7 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     getSuppliedFoods(FacilityDining);
     getSuppliedFoodsEx(FacilityDining);
     getTicketSide(FacilityDining);
-    getTicketMain(FacilityDining);
+    isMaxTicketMain_method:call(FacilityDining);
 end);
 
 hook(FacilityDining_type_def:get_method("addSupplyNum"), getThisPtr, function()
@@ -297,8 +293,11 @@ hook(FacilityDining_type_def:get_method("supplyTimerGoalSide(app.cFacilityTimer)
     getTicketSide(get_hook_storage().this_ptr);
 end);
 
-hook(FacilityDining_type_def:get_method("addQuestNum"), getThisPtr, function()
-    getTicketMain(get_hook_storage().this_ptr);
+hook(isMaxTicketMain_method, getThisPtr, function(retval)
+    if (to_int64(retval) & 1) == 1 then
+        supplyTicketMain_method:call(get_hook_storage().this_ptr);
+    end
+    return retval;
 end);
 
 hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getThisPtr, function()
