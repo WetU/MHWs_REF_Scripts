@@ -17,13 +17,24 @@ local ZERO_float_ptr = Constants.ZERO_float_ptr;
 --<< GUI070000 Fix Quest Result >>--
 local UI070000 = Constants.GUIID_type_def:get_field("UI070000"):get_data(nil); -- static
 
+local isItemRequiredForWishlist_method = find_type_definition("app.WishlistUtil"):get_method("isItemRequiredForWishlist(app.ItemDef.ID)");
+
 local GUIPartsReward_type_def = find_type_definition("app.cGUIPartsReward");
+local get__Info_method = GUIPartsReward_type_def:get_method("get__Info");
 local set__WaitControlTime_method = GUIPartsReward_type_def:get_method("set__WaitControlTime(System.Single)");
 local receiveAll_method = GUIPartsReward_type_def:get_method("receiveAll");
 local GUIPartsReward_InputCtrl_field = GUIPartsReward_type_def:get_field("_InputCtrl");
 local ItemGridParts_field = GUIPartsReward_type_def:get_field("_ItemGridParts");
 
 local get_Owner_method = GUIPartsReward_type_def:get_parent_type():get_method("get_Owner");
+
+local GUIPartsRewardInfo_get_RewardItems_method = get__Info_method:get_return_type():get_method("get_RewardItems");
+
+local GUIRewardItems_type_def = find_type_definition("app.cGUIRewardItems");
+local get_ItemInfoSize_method = GUIRewardItems_type_def:get_method("get_ItemInfoSize");
+local getItemInfo_method = GUIRewardItems_type_def:get_method("getItemInfo(System.Int32)");
+
+local get_ItemId_method = getItemInfo_method:get_return_type():get_parent_type():get_method("get_ItemId");
 
 local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
@@ -64,6 +75,15 @@ end, function()
                     return;
                 end
             end
+            local RewardItems_list = GUIPartsRewardInfo_get_RewardItems_method:call(get__Info_method:call(this_ptr));
+            for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
+                local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
+                for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do
+                    if isItemRequiredForWishlist_method:call(nil, get_ItemId_method:call(getItemInfo_method:call(RewardItems, j))) then
+                        return;
+                    end
+                end
+            end
             if get_InputPriority_method:call(GUIPartsReward_InputCtrl_field:get_data(this_ptr)) == 0 then
                 receiveAll_method:call(this_ptr);
             end
@@ -82,7 +102,12 @@ local GUI020100_type_def = find_type_definition("app.GUI020100");
 local get__PartsQuestRewardItem_method = GUI020100_type_def:get_method("get__PartsQuestRewardItem");
 local GUI020100_InputCtrl_field = GUI020100_type_def:get_field("_InputCtrl");
 
-local get_FixControl_method = get__PartsQuestRewardItem_method:get_return_type():get_parent_type():get_parent_type():get_method("get_FixControl");
+local GUI020100PanelQuestRewardItem_type_def = get__PartsQuestRewardItem_method:get_return_type();
+local get__PartsQuestRewardItems_method = GUI020100PanelQuestRewardItem_type_def:get_method("get__PartsQuestRewardItems");
+
+local GUIPartsRewardItems_get_RewardItems_method = get__PartsQuestRewardItems_method:get_return_type():get_method("get_RewardItems");
+
+local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type():get_method("get_FixControl");
 
 local finish_method = get_FixControl_method:get_return_type():get_method("finish");
 
@@ -90,12 +115,26 @@ local terminateQuestResult_method = Constants.GUIManager_type_def:get_method("te
 
 local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIMING_SHORTCUT"):get_data(nil);
 
-local function endQuestReward()
-    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
-end
+hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, function()
+    local this_ptr = get_hook_storage().this_ptr;
+    local GUI020100PanelQuestRewardItem = get__PartsQuestRewardItem_method:call(this_ptr);
+    local RewardItems_list = GUIPartsRewardItems_get_RewardItems_method:call(get__PartsQuestRewardItems_method:call(GUI020100PanelQuestRewardItem));
+    for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
+        local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
+        for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do
+            if isItemRequiredForWishlist_method:call(nil, get_ItemId_method:call(getItemInfo_method:call(RewardItems, j))) then
+                requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(this_ptr), JUST_TIMING_SHORTCUT);
+                return;
+            end
+        end
+    end
+    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
+end);
 
-hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, endQuestReward);
-hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, endQuestReward);
+hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, function()
+    finish_method:call(get_FixControl_method:call(get__PartsQuestRewardItem_method:call(get_hook_storage().this_ptr)));
+end);
+
 hook(GUI020100_type_def:get_method("toRandomAmuletJudge"), getThisPtr, function()
     requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(get_hook_storage().this_ptr), JUST_TIMING_SHORTCUT);
 end);

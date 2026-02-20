@@ -11,7 +11,7 @@ local get_hook_storage = Constants.get_hook_storage;
 local addSystemLog_method = Constants.addSystemLog_method;
 local getThisPtr = Constants.getThisPtr;
 
-local IsArenaQuest_method = find_type_definition("app.EnemyUtil"):get_method("IsArenaQuest"); -- static
+local isArenaQuest_method = find_type_definition("app.NpcPartnerUtil"):get_method("isArenaQuest"); -- static
 
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static
@@ -63,7 +63,7 @@ local function restockItems(sendMessage)
 end
 
 local function PlayerStartRiding(retval)
-    if IsArenaQuest_method:call(nil) == false then
+    if isArenaQuest_method:call(nil) == false then
         restockItems(false);
     end
     return retval;
@@ -75,7 +75,7 @@ end);
 
 local valid_GUI090001 = nil;
 hook(GUI090001_type_def:get_method("onClose"), function(args)
-    if IsArenaQuest_method:call(nil) == false then
+    if isArenaQuest_method:call(nil) == false then
         local this_ptr = args[2];
         local CurrentMenu = CurrentMenu_field:get_data(this_ptr);
         for _, v in ipairs(restockMenus) do
@@ -99,7 +99,7 @@ hook(GUI020201_type_def:get_method("onOpen"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
     local CurType = GUI020201_CurType_field:get_data(this_ptr);
     set_PlayState_method:call(StampPanels_field:get_data(this_ptr):get_element(CurType), "DISABLE");
-    if CurType == START and IsArenaQuest_method:call(nil) == false then
+    if CurType == START and isArenaQuest_method:call(nil) == false then
         restockItems(true);
     end
 end);

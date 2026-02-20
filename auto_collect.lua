@@ -45,8 +45,9 @@ local get_Dining_method = FacilityManager_type_def:get_method("get_Dining")
 local get_Moriver_method = FacilityManager_type_def:get_method("get_Moriver");
 
 local FacilityDining_type_def = get_Dining_method:get_return_type();
-local get__SaveParam_method = FacilityDining_type_def:get_method("get__SaveParam");
+local getSuppliableFoodNum_method = FacilityDining_type_def:get_method("getSuppliableFoodNum");
 local supplyFood_method = FacilityDining_type_def:get_method("supplyFood");
+local getSuppliableFoodNumEx_method = FacilityDining_type_def:get_method("getSuppliableFoodNumEx");
 local isSuppliableFoodMaxEx_method = FacilityDining_type_def:get_method("isSuppliableFoodMaxEx");
 local supplyFoodEx_method = FacilityDining_type_def:get_method("supplyFoodEx");
 local isMaxTicketSide_method = FacilityDining_type_def:get_method("isMaxTicketSide");
@@ -54,8 +55,6 @@ local supplyTicketSide_method = FacilityDining_type_def:get_method("supplyTicket
 local isMaxTicketMain_method = FacilityDining_type_def:get_method("isMaxTicketMain");
 local supplyTicketMain_method = FacilityDining_type_def:get_method("supplyTicketMain");
 local SettingData_field = FacilityDining_type_def:get_field("_SettingData");
-
-local SupplyNum_field = get__SaveParam_method:get_return_type():get_field("SupplyNum");
 
 local get_SupplyFoodMax_method = SettingData_field:get_type():get_method("get_SupplyFoodMax");
 
@@ -209,7 +208,7 @@ local function getSupplyFoodMax(FacilityDining)
 end
 
 local function getSuppliedFoods(FacilityDining)
-    if SupplyNum_field:get_data(get__SaveParam_method:call(FacilityDining)) >= getSupplyFoodMax(FacilityDining) then
+    if getSuppliableFoodNum_method:call(FacilityDining) - getSuppliableFoodNumEx_method:call(FacilityDining) >= getSupplyFoodMax(FacilityDining) then
         supplyFood_method:call(FacilityDining);
     end
 end
