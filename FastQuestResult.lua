@@ -34,7 +34,7 @@ local GUIRewardItems_type_def = find_type_definition("app.cGUIRewardItems");
 local get_ItemInfoSize_method = GUIRewardItems_type_def:get_method("get_ItemInfoSize");
 local getItemInfo_method = GUIRewardItems_type_def:get_method("getItemInfo(System.Int32)");
 
-local get_ItemId_method = getItemInfo_method:get_return_type():get_parent_type():get_method("get_ItemId");
+local get_ItemId_method = Constants.SendItemInfo_type_def:get_parent_type():get_method("get_ItemId");
 
 local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");
@@ -105,7 +105,9 @@ local GUI020100_InputCtrl_field = GUI020100_type_def:get_field("_InputCtrl");
 local GUI020100PanelQuestRewardItem_type_def = get__PartsQuestRewardItem_method:get_return_type();
 local get__PartsQuestRewardItems_method = GUI020100PanelQuestRewardItem_type_def:get_method("get__PartsQuestRewardItems");
 
-local GUIPartsRewardItems_get_RewardItems_method = get__PartsQuestRewardItems_method:get_return_type():get_method("get_RewardItems");
+local GUIPartsRewardItems_type_def = get__PartsQuestRewardItems_method:get_return_type();
+local GUIPartsRewardItems_get_RewardItems_method = GUIPartsRewardItems_type_def:get_method("get_RewardItems");
+local GUIPartsRewardItems_ItemGridParts_field = GUIPartsRewardItems_type_def:get_field("_ItemGridParts");
 
 local get_FixControl_method = GUI020100PanelQuestRewardItem_type_def:get_parent_type():get_parent_type():get_method("get_FixControl");
 
@@ -118,7 +120,15 @@ local JUST_TIMING_SHORTCUT = Constants.GUIFunc_TYPE_type_def:get_field("JUST_TIM
 hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
     local GUI020100PanelQuestRewardItem = get__PartsQuestRewardItem_method:call(this_ptr);
-    local RewardItems_list = GUIPartsRewardItems_get_RewardItems_method:call(get__PartsQuestRewardItems_method:call(GUI020100PanelQuestRewardItem));
+    local GUIPartsRewardItems = get__PartsQuestRewardItems_method:call(GUI020100PanelQuestRewardItem);
+    local ItemGridParts = GUIPartsRewardItems_ItemGridParts_field:get_data(GUIPartsRewardItems);
+    for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
+        if get_ActualVisible_method:call(get__PanelNewMark_method:call(GenericList_get_Item_method:call(ItemGridParts, i))) then
+            requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(this_ptr), JUST_TIMING_SHORTCUT);
+            return;
+        end
+    end
+    local RewardItems_list = GUIPartsRewardItems_get_RewardItems_method:call(GUIPartsRewardItems);
     for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
         local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
         for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do

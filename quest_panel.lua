@@ -7,6 +7,7 @@ local tinsert = Constants.tinsert;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local set_native_field = Constants.set_native_field;
+local to_managed_object = Constants.to_managed_object;
 local to_int64 = Constants.to_int64;
 
 local get_hook_storage = Constants.get_hook_storage;
@@ -22,7 +23,7 @@ local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestC
 local QuestCounterContext_type_def = get_QuestCounterContext_method:get_return_type();
 local QuestViewType_field = QuestCounterContext_type_def:get_field("QuestViewType");
 
-local GRID = QuestViewType_field:get_type():get_field("GRID"):get_data(nil);
+local LIST = QuestViewType_field:get_type():get_field("LIST"):get_data(nil);
 
 local GUI050000QuestListParts_type_def = find_type_definition("app.GUI050000QuestListParts");
 local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get_ViewCategory");
@@ -74,12 +75,12 @@ local CATEGORY_type_def = get_ViewCategory_method:get_return_type();
 local CATEGORY_FREE = CATEGORY_type_def:get_field("FREE"):get_data(nil);
 local CATEGORY_DECLARATION_HISTORY = CATEGORY_type_def:get_field("DECLARATION_HISTORY"):get_data(nil);
 local CATEGORY_KEEP_QUEST = CATEGORY_type_def:get_field("KEEP_QUEST"):get_data(nil);
+local CATEGORY_EVENT = CATEGORY_type_def:get_field("EVENT"):get_data(nil);
 local CATEGORY_RECRUITMENT_LOBBY = CATEGORY_type_def:get_field("RECRUITMENT_LOBBY"):get_data(nil);
 local CATEGORY_LINK_MEMBER = CATEGORY_type_def:get_field("LINK_MEMBER"):get_data(nil);
 local CATEGORY_SERCH_RESCUE_SIGNAL = CATEGORY_type_def:get_field("SERCH_RESCUE_SIGNAL"):get_data(nil);
 local SortDifficulty = {
     CATEGORY_type_def:get_field("STORY"):get_data(nil),
-    CATEGORY_type_def:get_field("EVENT"):get_data(nil),
     CATEGORY_type_def:get_field("ARENA"):get_data(nil),
     CATEGORY_type_def:get_field("CHALLENGE"):get_data(nil)
 };
@@ -101,8 +102,8 @@ end
 
 hook(GUI050000_type_def:get_method("onOpen"), getThisPtr, function()
     local QuestCounterContext = get_QuestCounterContext_method:call(get_hook_storage().this_ptr);
-    if QuestViewType_field:get_data(QuestCounterContext) ~= GRID then
-        set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", GRID);
+    if QuestViewType_field:get_data(QuestCounterContext) ~= LIST then
+        set_native_field(QuestCounterContext, QuestCounterContext_type_def, "QuestViewType", LIST);
     end
 end);
 
@@ -118,7 +119,7 @@ end, function()
         local this_ptr = get_hook_storage().this_ptr;
         if get_IsCancel_method:call(this_ptr) == false then
             local CATEGORY = get_ViewCategory_method:call(this_ptr);
-            if CATEGORY == CATEGORY_FREE then
+            if CATEGORY == CATEGORY_FREE or CATEGORY == CATEGORY_EVENT then
                 setSortDifficulty(this_ptr, 0);
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
                 local ViewQuestDataList_size = GenericList_get_Count_method:call(ViewQuestDataList);
@@ -208,8 +209,8 @@ local validPNL = nil;
 local function preUpdateItem(args)
     local selectItem = args[3];
     if get_Enabled_method:call(selectItem) then
-        local QuestViewData = args[4];
-        if get_MissionType_method:call(QuestViewData) == STREAM_EVENTQUEST then
+        local QuestViewData = to_managed_object(args[4]);
+        if QuestViewData ~= nil and get_MissionType_method:call(QuestViewData) == STREAM_EVENTQUEST then
             if MissionClearFlag == nil then
                 MissionClearFlag = get_MissionClearFlag_method:call(get_Mission_method:call(Constants.UserSaveData));
             end

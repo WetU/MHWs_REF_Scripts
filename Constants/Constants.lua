@@ -57,6 +57,7 @@ local Constants = {
     call_object_func = call_object_func,
     set_native_field = sdk.set_native_field,
     create_int32 = sdk.create_int32,
+    to_managed_object = to_managed_object,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
     to_float = sdk.to_float,
@@ -93,6 +94,7 @@ local Constants = {
     GUIManager_type_def = GUIManager:get_type_definition(),
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
+    SendItemInfo_type_def = find_type_definition("app.cSendItemInfo"),
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),

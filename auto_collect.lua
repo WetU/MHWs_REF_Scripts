@@ -107,7 +107,7 @@ local execute_method = Event_field:get_type():get_method("execute");
 
 local getRewardItemData_method = find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
 
-local getReward_method = find_type_definition("app.cSendItemInfo"):get_method("getReward(System.Boolean, System.Boolean)");
+local getReward_method = Constants.SendItemInfo_type_def:get_method("getReward(System.Boolean, System.Boolean)");
 
 local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
 local ST502 = Constants.STAGES.ST502;
