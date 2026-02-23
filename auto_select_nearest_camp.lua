@@ -2,7 +2,9 @@ local Constants = _G.require("Constants/Constants");
 
 local find_type_definition = Constants.find_type_definition;
 local create_int32 = Constants.create_int32;
+local create_uint32 = Constants.create_uint32;
 local hook = Constants.hook;
+local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
 
 local get_hook_storage = Constants.get_hook_storage;
@@ -177,3 +179,57 @@ do
         end
     end
 end
+
+local get_Camera_method = Constants.get_Camera_method;
+
+local MasterPlCamera_field = get_Camera_method:get_return_type():get_field("_MasterPlCamera");
+
+local get_LockTarget_method = MasterPlCamera_field:get_type():get_method("get_LockTarget");
+
+local EnemyBrowser_type_def = get_LockTarget_method:get_return_type();
+local isAreaMoveRequested_method = EnemyBrowser_type_def:get_method("isAreaMoveRequested");
+local Context_field = EnemyBrowser_type_def:get_field("_Context");
+
+local get_Em_method = Context_field:get_type():get_method("get_Em");
+
+local Area_field = get_Em_method:get_return_type():get_field("Area");
+
+local get_CurrentAreaMoveSchedule_method = Area_field:get_type():get_method("get_CurrentAreaMoveSchedule");
+
+local get_CurrentTargetPos_method = get_CurrentAreaMoveSchedule_method:get_return_type():get_method("get_CurrentTargetPos");
+
+local GUI060101CommonList_type_def = find_type_definition("app.cGUI060101CommonList");
+local FastTravelList_field = GUI060101CommonList_type_def:get_field("_FastTravelList");
+
+local BeaconGimmick_field = find_type_definition("app.cFastTravelInfo"):get_field("BeaconGimmick");
+
+local hasIdx = nil;
+hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"), function(args)
+    local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+    if LockTarget ~= nil and isAreaMoveRequested_method:call(LockTarget) then
+        local movePos = get_CurrentTargetPos_method:call(get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget)))));
+        local FastTravelList = FastTravelList_field:get_data(args[2]);
+        local nearestIdx, nearestDist = nil, nil;
+        for i = 0, GenericList_get_Count_method:call(FastTravelList) - 1 do
+            local distance = distance_method:call(nil, movePos, getPos_method:call(BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i))));
+            if nearestDist == nil or distance < nearestDist then
+                nearestDist = distance;
+                nearestIdx = i;
+            end
+        end
+        if nearestIdx ~= nil then
+            get_hook_storage().Idx = nearestIdx;
+            hasIdx = true;
+        end
+    end
+end, function(retval)
+    if hasIdx then
+        hasIdx = nil;
+        local Idx = get_hook_storage().Idx;
+        log.debug(tostring(Idx));
+        if to_int64(retval) & 0xFFFFFFFF ~= Idx then
+            return to_ptr(create_uint32(Idx));
+        end
+    end
+    return retval;
+end);

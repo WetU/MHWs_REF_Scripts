@@ -57,6 +57,7 @@ local Constants = {
     call_object_func = call_object_func,
     set_native_field = sdk.set_native_field,
     create_int32 = sdk.create_int32,
+    create_uint32 = sdk.create_uint32,
     to_managed_object = to_managed_object,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
@@ -99,6 +100,7 @@ local Constants = {
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
     get_ActualVisible_method = gui_PlayObject_type_def:get_method("get_ActualVisible"),
+    get_Camera_method = GA_type_def:get_method("get_Camera"),
     get_Enabled_method = gui_SelectItem_type_def:get_method("get_Enabled"),
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
