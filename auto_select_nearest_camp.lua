@@ -2,7 +2,6 @@ local Constants = _G.require("Constants/Constants");
 
 local find_type_definition = Constants.find_type_definition;
 local create_int32 = Constants.create_int32;
-local create_uint32 = Constants.create_uint32;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
@@ -52,6 +51,29 @@ local get_Stage_method = GUIQuestViewData_type_def:get_method("get_Stage");
 local InputCtrl_field = StartPointList_field:get_type():get_field("_InputCtrl");
 
 local requestSelectIndexCore_method = find_type_definition("ace.cGUIInputCtrl_FluentScrollList`2<app.GUIID.ID,app.GUIFunc.TYPE>"):get_method("requestSelectIndexCore(System.Int32, System.Int32)");
+
+local get_Camera_method = Constants.get_Camera_method;
+
+local MasterPlCamera_field = get_Camera_method:get_return_type():get_field("_MasterPlCamera");
+
+local get_LockTarget_method = MasterPlCamera_field:get_type():get_method("get_LockTarget");
+
+local EnemyBrowser_type_def = get_LockTarget_method:get_return_type();
+local isAreaMoveRequested_method = EnemyBrowser_type_def:get_method("isAreaMoveRequested");
+local Context_field = EnemyBrowser_type_def:get_field("_Context");
+
+local get_Em_method = Context_field:get_type():get_method("get_Em");
+
+local Area_field = get_Em_method:get_return_type():get_field("Area");
+
+local get_CurrentAreaMoveSchedule_method = Area_field:get_type():get_method("get_CurrentAreaMoveSchedule");
+
+local get_CurrentTargetPos_method = get_CurrentAreaMoveSchedule_method:get_return_type():get_method("get_CurrentTargetPos");
+
+local GUI060101CommonList_type_def = find_type_definition("app.cGUI060101CommonList");
+local FastTravelList_field = GUI060101CommonList_type_def:get_field("_FastTravelList");
+
+local BeaconGimmick_field = find_type_definition("app.cFastTravelInfo"):get_field("BeaconGimmick");
 
 local STAGES = Constants.STAGES;
 
@@ -156,53 +178,6 @@ end, function(retval)
     return retval;
 end);
 
-do
-    local MapStageDrawData = Constants.call_object_func(Constants.call_native_func(Constants.GUIManager, Constants.GUIManager_type_def, "get_MAP3D"), "get_MapStageDrawData");
-    if MapStageDrawData ~= nil then
-        local getDrawData_method = MapStageDrawData:get_type_definition():get_method("getDrawData(app.FieldDef.STAGE)");
-        local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
-        for _, stageID in Constants.pairs(STAGES) do
-            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
-            if DrawData ~= nil then
-                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
-                if AreaIconPosList ~= nil then
-                    DrawDatas[stageID] = {};
-                    local thisStage = DrawDatas[stageID];
-                    for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
-                        local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
-                        if AreaIconData ~= nil then
-                            thisStage[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-local get_Camera_method = Constants.get_Camera_method;
-
-local MasterPlCamera_field = get_Camera_method:get_return_type():get_field("_MasterPlCamera");
-
-local get_LockTarget_method = MasterPlCamera_field:get_type():get_method("get_LockTarget");
-
-local EnemyBrowser_type_def = get_LockTarget_method:get_return_type();
-local isAreaMoveRequested_method = EnemyBrowser_type_def:get_method("isAreaMoveRequested");
-local Context_field = EnemyBrowser_type_def:get_field("_Context");
-
-local get_Em_method = Context_field:get_type():get_method("get_Em");
-
-local Area_field = get_Em_method:get_return_type():get_field("Area");
-
-local get_CurrentAreaMoveSchedule_method = Area_field:get_type():get_method("get_CurrentAreaMoveSchedule");
-
-local get_CurrentTargetPos_method = get_CurrentAreaMoveSchedule_method:get_return_type():get_method("get_CurrentTargetPos");
-
-local GUI060101CommonList_type_def = find_type_definition("app.cGUI060101CommonList");
-local FastTravelList_field = GUI060101CommonList_type_def:get_field("_FastTravelList");
-
-local BeaconGimmick_field = find_type_definition("app.cFastTravelInfo"):get_field("BeaconGimmick");
-
 local hasIdx = nil;
 hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"), function(args)
     local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
@@ -226,10 +201,33 @@ end, function(retval)
     if hasIdx then
         hasIdx = nil;
         local Idx = get_hook_storage().Idx;
-        log.debug(tostring(Idx));
         if to_int64(retval) & 0xFFFFFFFF ~= Idx then
-            return to_ptr(create_uint32(Idx));
+            return to_ptr(Idx);
         end
     end
     return retval;
 end);
+
+do
+    local MapStageDrawData = Constants.call_object_func(Constants.call_native_func(Constants.GUIManager, Constants.GUIManager_type_def, "get_MAP3D"), "get_MapStageDrawData");
+    if MapStageDrawData ~= nil then
+        local getDrawData_method = MapStageDrawData:get_type_definition():get_method("getDrawData(app.FieldDef.STAGE)");
+        local get_AreaIconPosList_method = getDrawData_method:get_return_type():get_method("get_AreaIconPosList");
+        for _, stageID in Constants.pairs(STAGES) do
+            local DrawData = getDrawData_method:call(MapStageDrawData, stageID);
+            if DrawData ~= nil then
+                local AreaIconPosList = get_AreaIconPosList_method:call(DrawData);
+                if AreaIconPosList ~= nil then
+                    DrawDatas[stageID] = {};
+                    local thisStage = DrawDatas[stageID];
+                    for i = 0, GenericList_get_Count_method:call(AreaIconPosList) - 1 do
+                        local AreaIconData = GenericList_get_Item_method:call(AreaIconPosList, i);
+                        if AreaIconData ~= nil then
+                            thisStage[get_AreaNum_method:call(AreaIconData)] = get_AreaIconPos_method:call(AreaIconData);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
