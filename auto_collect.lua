@@ -13,6 +13,8 @@ local ValueType_new = Constants.ValueType_new;
 
 local get_hook_storage = Constants.get_hook_storage;
 
+local FALSE_ptr = Constants.FALSE_ptr;
+
 local getThisPtr = Constants.getThisPtr;
 
 local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
@@ -219,12 +221,6 @@ local function getSuppliedFoodsEx(FacilityDining)
     end
 end
 
-local function getTicketSide(FacilityDining)
-    if isMaxTicketSide_method:call(FacilityDining) then
-        supplyTicketSide_method:call(FacilityDining);
-    end
-end
-
 local function getItemFromMoriver(moriverInfo, completedTbl)
     local ItemFromMoriver = ItemFromMoriver_field:get_data(moriverInfo);
     local gettingItemId = ItemWork_get_ItemId_method:call(ItemFromMoriver);
@@ -276,7 +272,7 @@ hook(find_type_definition("app.IngameState"):get_method("enter"), nil, function(
     local FacilityDining = get_Dining_method:call(FacilityManager);
     getSuppliedFoods(FacilityDining);
     getSuppliedFoodsEx(FacilityDining);
-    getTicketSide(FacilityDining);
+    isMaxTicketSide_method:call(FacilityDining);
     isMaxTicketMain_method:call(FacilityDining);
 end);
 
@@ -288,13 +284,18 @@ hook(FacilityDining_type_def:get_method("addSupplyEx(System.Int32)"), getThisPtr
     getSuppliedFoodsEx(get_hook_storage().this_ptr);
 end);
 
-hook(FacilityDining_type_def:get_method("supplyTimerGoalSide(app.cFacilityTimer)"), getThisPtr, function()
-    getTicketSide(get_hook_storage().this_ptr);
+hook(isMaxTicketSide_method, getThisPtr, function(retval)
+    if (to_int64(retval) & 1) == 1 then
+        supplyTicketSide_method:call(get_hook_storage().this_ptr);
+        return FALSE_ptr;
+    end
+    return retval;
 end);
 
 hook(isMaxTicketMain_method, getThisPtr, function(retval)
     if (to_int64(retval) & 1) == 1 then
         supplyTicketMain_method:call(get_hook_storage().this_ptr);
+        return FALSE_ptr;
     end
     return retval;
 end);

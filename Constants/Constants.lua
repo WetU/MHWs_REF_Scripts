@@ -9,6 +9,7 @@ local call_native_func = sdk.call_native_func;
 local call_object_func = sdk.call_object_func;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
+local to_ptr = sdk.to_ptr;
 local float_to_ptr = sdk.float_to_ptr;
 
 local get_hook_storage = _G.thread.get_hook_storage;
@@ -58,7 +59,7 @@ local Constants = {
     set_native_field = sdk.set_native_field,
     create_int32 = sdk.create_int32,
     to_managed_object = to_managed_object,
-    to_ptr = sdk.to_ptr,
+    to_ptr = to_ptr,
     to_int64 = sdk.to_int64,
     to_float = sdk.to_float,
     SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
@@ -75,6 +76,7 @@ local Constants = {
 
     drawtext = _G.draw.text,
 
+    FALSE_ptr = to_ptr(false),
     ZERO_float_ptr = float_to_ptr(0.0),
     SMALL_float_ptr = float_to_ptr(0.01),
 
