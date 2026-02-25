@@ -149,7 +149,7 @@ local function dummy()
 end
 
 local BOTH_BOX_POUCH_ptr = dummy();
-local TRUE_ptr = Constants.to_ptr(true);
+local TRUE_ptr = to_ptr(true);
 
 hook(changeItemNumFromDialogue_method, function(args)
     args[4] = BOTH_BOX_POUCH_ptr;
