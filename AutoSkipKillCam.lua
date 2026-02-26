@@ -15,7 +15,7 @@ local Input_field = GUI020202_type_def:get_field("_Input");
 
 local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_SKIP"):get_data(nil);
 
-local FALSE_ptr = Constants.FALSE_ptr;
+local FALSE_ptr = Constants.to_ptr(false);
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 
 hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
