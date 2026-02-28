@@ -145,6 +145,36 @@ local function getQuestTimeInfo(questElapsedTime)
 end
 
 local isMasterPlayerShootUpdate = nil;
+hook(StrongSlingerShoot_type_def:get_method("doEnter"), function(args)
+    if QuestInfoCreated then
+        local this_ptr = args[2];
+        if get_IsMaster_method:call(get_Chara_method:call(this_ptr)) and AmmoType_field:get_data(this_ptr) == EX_CHARGE then
+            get_hook_storage().this_ptr = this_ptr;
+            isMasterPlayerShootUpdate = true;
+        end
+    end
+end, function(retval)
+    if isMasterPlayerShootUpdate then
+        isMasterPlayerShootUpdate = nil;
+        local this_ptr = get_hook_storage().this_ptr;
+        if Phase_field:get_data(this_ptr) == SHOOT then
+            if slingerChargeMax ~= "" then
+                slingerChargeMax = "";
+            end
+        else
+            local ChargeTimer = ChargeTimer_field:get_data(this_ptr);
+            if ChargeTimer == nil then
+                if slingerChargeMax ~= "" then
+                    slingerChargeMax = "";
+                end
+            elseif ChargeTimer >= maxSlingerChargeTime and slingerChargeMax ~= "슬링어 풀차지" then
+                slingerChargeMax = "슬링어 풀차지";
+            end
+        end
+    end
+    return retval;
+end);
+
 hook(StrongSlingerShoot_type_def:get_method("doUpdate"), function(args)
     if QuestInfoCreated then
         local this_ptr = args[2];

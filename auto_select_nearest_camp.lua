@@ -58,9 +58,7 @@ local MasterPlCamera_field = get_Camera_method:get_return_type():get_field("_Mas
 
 local get_LockTarget_method = MasterPlCamera_field:get_type():get_method("get_LockTarget");
 
-local EnemyBrowser_type_def = get_LockTarget_method:get_return_type();
-local isAreaMoveRequested_method = EnemyBrowser_type_def:get_method("isAreaMoveRequested");
-local Context_field = EnemyBrowser_type_def:get_field("_Context");
+local Context_field = get_LockTarget_method:get_return_type():get_field("_Context");
 
 local get_Em_method = Context_field:get_type():get_method("get_Em");
 
@@ -68,7 +66,12 @@ local Area_field = get_Em_method:get_return_type():get_field("Area");
 
 local get_CurrentAreaMoveSchedule_method = Area_field:get_type():get_method("get_CurrentAreaMoveSchedule");
 
-local get_CurrentTargetPos_method = get_CurrentAreaMoveSchedule_method:get_return_type():get_method("get_CurrentTargetPos");
+local AreaMoveSchedule_type_def = get_CurrentAreaMoveSchedule_method:get_return_type();
+local get_CurrentTargetPos_method = AreaMoveSchedule_type_def:get_method("get_CurrentTargetPos");
+local get_RelayInfoList_method = AreaMoveSchedule_type_def:get_method("get_RelayInfoList");
+local isInRelay_method = AreaMoveSchedule_type_def:get_method("isInRelay");
+
+local RelayInfoPoint_getPos_method = find_type_definition("app.mcEnemyAreaMoveCoordinator.cSchedule.cRelayInfoPoint"):get_method("getPos");
 
 local GUI060101CommonList_type_def = find_type_definition("app.cGUI060101CommonList");
 local FastTravelList_field = GUI060101CommonList_type_def:get_field("_FastTravelList");
@@ -178,31 +181,37 @@ end, function(retval)
     return retval;
 end);
 
-local hasIdx = nil;
+local hasEmTarget = nil;
 hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"), function(args)
     local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-    if LockTarget ~= nil and isAreaMoveRequested_method:call(LockTarget) then
-        local movePos = get_CurrentTargetPos_method:call(get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget)))));
-        local FastTravelList = FastTravelList_field:get_data(args[2]);
-        local nearestIdx, nearestDist = nil, nil;
-        for i = 0, GenericList_get_Count_method:call(FastTravelList) - 1 do
-            local distance = distance_method:call(nil, movePos, getPos_method:call(BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i))));
-            if nearestDist == nil or distance < nearestDist then
-                nearestDist = distance;
-                nearestIdx = i;
-            end
-        end
-        if nearestIdx ~= nil then
-            get_hook_storage().Idx = nearestIdx;
-            hasIdx = true;
-        end
+    if LockTarget ~= nil then
+        local storage = get_hook_storage();
+        storage.this_ptr = args[2];
+        storage.LockTarget = LockTarget;
+        hasEmTarget = true;
     end
 end, function(retval)
-    if hasIdx then
-        hasIdx = nil;
-        local Idx = get_hook_storage().Idx;
-        if to_int64(retval) & 0xFFFFFFFF ~= Idx then
-            return to_ptr(Idx);
+    if hasEmTarget then
+        hasEmTarget = nil;
+        local storage = get_hook_storage();
+        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(storage.LockTarget))));
+        local FastTravelList = FastTravelList_field:get_data(storage.this_ptr);
+        local destPos = nil;
+        local nearestIdx, nearestDist = nil, nil;
+        if isInRelay_method:call(AreaMoveSchedule) then
+            local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
+            destPos = RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1));
+        else
+            destPos = get_CurrentTargetPos_method:call(AreaMoveSchedule);
+        end
+        for i = 0, GenericList_get_Count_method:call(FastTravelList) - 1 do
+            local distance = distance_method:call(nil, destPos, getPos_method:call(BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i))));
+            if nearestDist == nil or distance < nearestDist then
+                nearestIdx, nearestDist = i, distance;
+            end
+        end
+        if nearestIdx ~= nil and (to_int64(retval) & 0xFFFFFFFF) ~= nearestIdx then
+            return to_ptr(nearestIdx);
         end
     end
     return retval;
