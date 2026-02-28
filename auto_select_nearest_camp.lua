@@ -3,7 +3,6 @@ local Constants = _G.require("Constants/Constants");
 local find_type_definition = Constants.find_type_definition;
 local create_int32 = Constants.create_int32;
 local hook = Constants.hook;
-local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
 local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
