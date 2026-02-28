@@ -9,6 +9,7 @@ local hook = Constants.hook;
 local set_native_field = Constants.set_native_field;
 local to_managed_object = Constants.to_managed_object;
 local to_int64 = Constants.to_int64;
+local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -87,6 +88,15 @@ local SortDifficulty = {
 
 local MissionClearFlag = nil;
 
+local function isContain(arg)
+    for _, v in ipairs(SortDifficulty) do
+        if arg == v then
+            return true;
+        end
+    end
+    return false;
+end
+
 local function setSortDifficulty(obj, sortType)
     if sortType == 0 then
         setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
@@ -110,15 +120,24 @@ end);
 local isUserRequest = nil;
 hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boolean)"), function(args)
     if (to_int64(args[3]) & 1) == 0 then
-        get_hook_storage().this_ptr = args[2];
-        isUserRequest = false;
+        local this_ptr = args[2];
+        local CATEGORY = get_ViewCategory_method:call(this_ptr);
+        if CATEGORY == CATEGORY_FREE or CATEGORY == CATEGORY_DECLARATION_HISTORY or CATEGORY == CATEGORY_KEEP_QUEST or CATEGORY == CATEGORY_EVENT or CATEGORY == CATEGORY_RECRUITMENT_LOBBY
+        or CATEGORY == CATEGORY_LINK_MEMBER or CATEGORY == CATEGORY_SERCH_RESCUE_SIGNAL or isContain(CATEGORY) then
+            local storage = get_hook_storage();
+            storage.this_ptr = this_ptr;
+            storage.CATEGORY = CATEGORY;
+            isUserRequest = false;
+            return SKIP_ORIGINAL;
+        end
     end
 end, function()
     if isUserRequest == false then
         isUserRequest = nil;
-        local this_ptr = get_hook_storage().this_ptr;
+        local storage = get_hook_storage();
+        local this_ptr = storage.this_ptr;
         if get_IsCancel_method:call(this_ptr) == false then
-            local CATEGORY = get_ViewCategory_method:call(this_ptr);
+            local CATEGORY = storage.CATEGORY;
             if CATEGORY == CATEGORY_FREE or CATEGORY == CATEGORY_EVENT then
                 setSortDifficulty(this_ptr, 0);
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
@@ -194,12 +213,7 @@ end, function()
                     setSortDifficulty(this_ptr, 4);
                 end
             else
-                for _, v in ipairs(SortDifficulty) do
-                    if CATEGORY == v then
-                        setSortDifficulty(this_ptr, 0);
-                        break;
-                    end
-                end
+                setSortDifficulty(this_ptr, 0);
             end
         end
     end

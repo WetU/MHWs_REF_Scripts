@@ -5,6 +5,7 @@ local create_int32 = Constants.create_int32;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
+local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -168,6 +169,9 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), function(args)
     if StartPointIdx ~= nil then
         get_hook_storage().this_ptr = args[2];
     end
+    if shouldFocusFloorNum ~= nil then
+        return SKIP_ORIGINAL;
+    end
 end, function(retval)
     if StartPointIdx ~= nil then
         setVars(get_hook_storage().this_ptr, StartPointIdx);
@@ -189,6 +193,7 @@ hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"),
         storage.this_ptr = args[2];
         storage.LockTarget = LockTarget;
         hasEmTarget = true;
+        return SKIP_ORIGINAL;
     end
 end, function(retval)
     if hasEmTarget then
@@ -210,7 +215,7 @@ end, function(retval)
                 nearestIdx, nearestDist = i, distance;
             end
         end
-        if nearestIdx ~= nil and (to_int64(retval) & 0xFFFFFFFF) ~= nearestIdx then
+        if nearestIdx ~= nil then
             return to_ptr(nearestIdx);
         end
     end
