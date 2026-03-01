@@ -9,8 +9,6 @@ local get_hook_storage = Constants.get_hook_storage;
 local getObject = Constants.getObject;
 local getThisPtr = Constants.getThisPtr;
 
-local makeDummyEnum = Constants.makeDummyEnum;
-
 local GUI010001_type_def = find_type_definition("app.GUI010001");
 local Flow_field = GUI010001_type_def:get_field("_Flow");
 local Skip_field = GUI010001_type_def:get_field("_Skip");
