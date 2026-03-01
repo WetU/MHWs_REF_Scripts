@@ -12,6 +12,7 @@ local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local requestCallTrigger_method = Constants.requestCallTrigger_method;
 local getThisPtr = Constants.getThisPtr;
+local skipOriginal = Constants.skipOriginal;
 
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 --<< GUI070000 Fix Quest Result >>--
@@ -153,6 +154,6 @@ hook(find_type_definition("app.cGUI020100PanelQuestResultList"):get_method("star
     terminateQuestResult_method:call(Constants.GUIManager);
 end);
 
-hook(find_type_definition("app.cGUIQuestResultInfo"):get_method("getSeamlesResultListDispTime"), nil, function()
+hook(find_type_definition("app.cGUIQuestResultInfo"):get_method("getSeamlesResultListDispTime"), skipOriginal, function()
     return ZERO_float_ptr;
 end);

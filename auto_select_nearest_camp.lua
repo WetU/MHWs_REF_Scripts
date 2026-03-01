@@ -177,9 +177,10 @@ end, function(retval)
         StartPointIdx = nil;
     end
     if shouldFocusFloorNum ~= nil then
-        local dummy_int32 = create_int32(shouldFocusFloorNum);
+        local dummy_retval = to_ptr(shouldFocusFloorNum);
+        --local dummy_int32 = create_int32(shouldFocusFloorNum);
         shouldFocusFloorNum = nil;
-        return to_ptr(dummy_int32);
+        return dummy_retval;
     end
     return retval;
 end);

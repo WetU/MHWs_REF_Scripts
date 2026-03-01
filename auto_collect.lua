@@ -8,19 +8,15 @@ local find_type_definition = Constants.find_type_definition;
 local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
 local set_native_field = Constants.set_native_field;
-
-local ValueType_new = Constants.ValueType_new;
+local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
 local getThisPtr = Constants.getThisPtr;
 
-local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
-
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_Clear_method = Constants.GenericList_Clear_method;
-local GenericList_RemoveAt_method = Constants.GenericList_RemoveAt_method;
 
 local FacilityUtil_type_def = find_type_definition("app.FacilityUtil");
 local isEnoughItem_method = FacilityUtil_type_def:get_method("isEnoughItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -109,7 +105,7 @@ local getRewardItemData_method = find_type_definition("app.GimmickRewardUtil"):g
 
 local getReward_method = Constants.SendItemInfo_type_def:get_method("getReward(System.Boolean, System.Boolean)");
 
-local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil); -- static
+local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
 local ST502 = Constants.STAGES.ST502;
 
 local SupportShipData_type_def = find_type_definition("app.user_data.SupportShipData.cData");
@@ -125,14 +121,9 @@ local ItemID = {
     MAX = ItemID_type_def:get_field("MAX"):get_data(nil)
 };
 
-local STOCK_TYPE_type_def = find_type_definition("app.ItemUtil.STOCK_TYPE");
-local BOTH_BOX_POUCH = STOCK_TYPE_type_def:get_field("BOTH_BOX_POUCH"):get_data(nil);
-
 local FacilityID_type_def = FacilityId_field:get_type();
-local FacilityID = {
-    SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil),
-    SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil)
-};
+local SHARING = FacilityID_type_def:get_field("SHARING"):get_data(nil);
+local SWOP = FacilityID_type_def:get_field("SWOP"):get_data(nil);
 
 local WeaponType_type_def = SupportShipData_get_WeaponType_method:get_return_type();
 local WeaponType = {
@@ -140,13 +131,8 @@ local WeaponType = {
     MAX = WeaponType_type_def:get_field("MAX"):get_data(nil)
 };
 
-local function dummy()
-    local dummy_STOCK_TYPE = ValueType_new(STOCK_TYPE_type_def);
-    set_native_field(dummy_STOCK_TYPE, STOCK_TYPE_type_def, "value__", BOTH_BOX_POUCH);
-    return to_ptr(dummy_STOCK_TYPE);
-end
-
-local BOTH_BOX_POUCH_ptr = dummy();
+local BOTH_BOX_POUCH = find_type_definition("app.ItemUtil.STOCK_TYPE"):get_field("BOTH_BOX_POUCH"):get_data(nil);
+local BOTH_BOX_POUCH_ptr = to_ptr(BOTH_BOX_POUCH);
 local TRUE_ptr = to_ptr(true);
 
 hook(changeItemNumFromDialogue_method, function(args)
@@ -251,9 +237,9 @@ local function execMoriver(facilityMoriver)
         for i = 0, moriverCount - 1 do
             local MoriverInfo = GenericList_get_Item_method:call(MoriverInfos, i);
             local FacilityId = FacilityId_field:get_data(MoriverInfo);
-            if FacilityId == FacilityID.SHARING then
+            if FacilityId == SHARING then
                 getItemFromMoriver(MoriverInfo, completedMoriverInfos);
-            elseif FacilityId == FacilityID.SWOP then
+            elseif FacilityId == SWOP then
                 local ItemFromPlayer = ItemFromPlayer_field:get_data(MoriverInfo);
                 local givingItemId = ItemWork_get_ItemId_method:call(ItemFromPlayer);
                 if givingItemId > ItemID.NONE and givingItemId < ItemID.MAX then
@@ -309,15 +295,15 @@ hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getTh
 end);
 
 hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getThisPtr, function()
-    local FacilityRallus_ptr = get_hook_storage().this_ptr;
-    local SupplyNum = get_SupplyNum_method:call(FacilityRallus_ptr);
+    local this_ptr = get_hook_storage().this_ptr;
+    local SupplyNum = get_SupplyNum_method:call(this_ptr);
     local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
     for i = 0, SupplyNum - 1 do
         getReward_method:call(GenericList_get_Item_method:call(SendItemInfo_List, i), true, true);
     end
     GenericList_Clear_method:call(SendItemInfo_List);
-    execute_method:call(Event_field:get_data(FacilityRallus_ptr));
-    resetSupplyNum_method:call(FacilityRallus_ptr);
+    execute_method:call(Event_field:get_data(this_ptr));
+    resetSupplyNum_method:call(this_ptr);
 end);
 
 hook(Constants.FacilitySupplyItems_type_def:get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)

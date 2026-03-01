@@ -10,6 +10,8 @@ local requestCallTrigger_method = Constants.requestCallTrigger_method;
 local getThisPtr = Constants.getThisPtr;
 local requestClose = Constants.requestClose;
 
+local skipOriginal = Constants.skipOriginal;
+
 local GUI020202_type_def = find_type_definition("app.GUI020202");
 local Input_field = GUI020202_type_def:get_field("_Input");
 
@@ -18,7 +20,7 @@ local RETURN_TIME_SKIP = Constants.GUIFunc_TYPE_type_def:get_field("RETURN_TIME_
 local FALSE_ptr = Constants.to_ptr(false);
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 
-hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), nil, function()
+hook(Constants.QuestDirector_type_def:get_method("canPlayHuntCompleteCamera"), skipOriginal, function()
     return FALSE_ptr;
 end);
 

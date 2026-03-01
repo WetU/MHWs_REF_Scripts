@@ -10,6 +10,7 @@ local call_object_func = sdk.call_object_func;
 local find_type_definition = sdk.find_type_definition;
 local to_managed_object = sdk.to_managed_object;
 local float_to_ptr = sdk.float_to_ptr;
+local SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL;
 
 local get_hook_storage = _G.thread.get_hook_storage;
 
@@ -61,9 +62,7 @@ local Constants = {
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
     to_float = sdk.to_float,
-    SKIP_ORIGINAL = sdk.PreHookResult.SKIP_ORIGINAL,
-
-    ValueType_new = _G.ValueType.new,
+    SKIP_ORIGINAL = SKIP_ORIGINAL,
 
     get_hook_storage = get_hook_storage,
 
@@ -110,7 +109,6 @@ local Constants = {
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),
     GenericList_set_Item_method = GenericList_type_def:get_method("set_Item"),
     GenericList_Clear_method = GenericList_type_def:get_method("Clear"),
-    GenericList_RemoveAt_method = GenericList_type_def:get_method("RemoveAt(System.Int32)"),
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
     requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
 
@@ -120,6 +118,10 @@ local Constants = {
 
     getObject = function(args)
         get_hook_storage().this = to_managed_object(args[2]);
+    end,
+
+    skipOriginal = function(args)
+        return SKIP_ORIGINAL;
     end,
 
     requestClose = function()
