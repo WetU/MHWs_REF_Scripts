@@ -8,7 +8,6 @@ local find_type_definition = Constants.find_type_definition;
 local to_int64 = Constants.to_int64;
 local to_ptr = Constants.to_ptr;
 local set_native_field = Constants.set_native_field;
-local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
@@ -306,11 +305,15 @@ hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), 
     resetSupplyNum_method:call(this_ptr);
 end);
 
+local ItemID_Invalid_ptr = to_ptr(ItemID_type_def:get_field("INVALID"):get_data(nil));
+local Int_Zero_ptr = to_ptr(0);
+
 hook(Constants.FacilitySupplyItems_type_def:get_method("addItem(System.Collections.Generic.List`1<app.cSupplyInfo>, app.ItemDef.ID, System.Int16)"), function(args)
     local ItemId = to_int64(args[3]) & 0xFFFFFFFF;
     if Shikyu_method:call(nil, ItemId) == false then
         getSellItem_method:call(nil, ItemId, to_int64(args[4]) & 0xFFFF, BOTH_BOX_POUCH);
-        return SKIP_ORIGINAL;
+        args[3] = ItemID_Invalid_ptr;
+        args[4] = Int_Zero_ptr;
     end
 end);
 

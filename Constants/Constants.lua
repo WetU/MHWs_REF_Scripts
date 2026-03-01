@@ -57,7 +57,6 @@ local Constants = {
     call_native_func = call_native_func,
     call_object_func = call_object_func,
     set_native_field = sdk.set_native_field,
-    create_int32 = sdk.create_int32,
     to_managed_object = to_managed_object,
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,

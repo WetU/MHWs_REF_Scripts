@@ -58,12 +58,10 @@ local ParamString_field = ParamData_type_def:get_field("ParamString");
 local ParamValue_field = ParamData_type_def:get_field("ParamValue");
 
 local ParamType_type_def = ParamType_field:get_type();
-local ParamType = {
-    GUID = ParamType_type_def:get_field("GUID"):get_data(nil),
-    STRING = ParamType_type_def:get_field("STRING"):get_data(nil),
-    INT = ParamType_type_def:get_field("INT"):get_data(nil),
-    LONG = ParamType_type_def:get_field("LONG"):get_data(nil)
-};
+local GUID = ParamType_type_def:get_field("GUID"):get_data(nil);
+local STRING = ParamType_type_def:get_field("STRING"):get_data(nil);
+local INT = ParamType_type_def:get_field("INT"):get_data(nil);
+local LONG = ParamType_type_def:get_field("LONG"):get_data(nil);
 
 local ParamValue_type_def = ParamValue_field:get_type();
 local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
@@ -130,15 +128,15 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
                     msg = strgsub(msg, "{([0-9]+)}", function(i)
                         local Param = get_Item_method:call(Params, tonumber(i));
                         local Type = ParamType_field:get_data(Param);
-                        if Type == ParamType.GUID then
+                        if Type == GUID then
                             return guid2str_method:call(nil, ParamGuid_field:get_data(Param));
-                        elseif Type == ParamType.STRING then
+                        elseif Type == STRING then
                             return ParamString_field:get_data(Param);
                         else
                             local ParamValue = ParamValue_field:get_data(Param);
-                            if Type == ParamType.INT then
+                            if Type == INT then
                                 return tostring(ParamInt_field:get_data(ParamValue));
-                            elseif Type == ParamType.LONG then
+                            elseif Type == LONG then
                                 return tostring(ParamLong_field:get_data(ParamValue));
                             else
                                 return tostring(ParamFloat_field:get_data(ParamValue));
