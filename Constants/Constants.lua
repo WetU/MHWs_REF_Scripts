@@ -37,6 +37,8 @@ local gui_SelectItem_type_def = find_type_definition("via.gui.SelectItem");
 local gui_Control_type_def = gui_SelectItem_type_def:get_parent_type();
 local gui_PlayObject_type_def = gui_Control_type_def:get_parent_type():get_parent_type();
 
+local ReceiveItemInfo_type_def = find_type_definition("app.cReceiveItemInfo");
+
 local Constants = {
     pairs = _G.pairs,
     ipairs = _G.ipairs,
@@ -92,7 +94,7 @@ local Constants = {
     GUIManager_type_def = GUIManager:get_type_definition(),
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
-    SendItemInfo_type_def = find_type_definition("app.cSendItemInfo"),
+    ReceiveItemInfo_type_def = ReceiveItemInfo_type_def,
     UserSaveParam_type_def = UserSaveParam_type_def,
 
     addSystemLog_method = ChatManager:get_type_definition():get_method("addSystemLog(System.String)"),
@@ -102,6 +104,7 @@ local Constants = {
     get_Facility_method = GA_type_def:get_method("get_Facility"),
     get_IDInt_method = GUIBase_type_def:get_method("get_IDInt"),
     get_InputPriority_method = InputCtrl_type_def:get_method("get_InputPriority"),
+    get_ItemId_method = ReceiveItemInfo_type_def:get_method("get_ItemId"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
     get_VariousData_method = GA_type_def:get_method("get_VariousData"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),

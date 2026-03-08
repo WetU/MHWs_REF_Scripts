@@ -35,7 +35,7 @@ local GUIRewardItems_type_def = find_type_definition("app.cGUIRewardItems");
 local get_ItemInfoSize_method = GUIRewardItems_type_def:get_method("get_ItemInfoSize");
 local getItemInfo_method = GUIRewardItems_type_def:get_method("getItemInfo(System.Int32)");
 
-local get_ItemId_method = Constants.SendItemInfo_type_def:get_parent_type():get_method("get_ItemId");
+local get_ItemId_method = Constants.get_ItemId_method;
 
 local GUIItemGridPartsFluent_type_def = find_type_definition("app.cGUIItemGridPartsFluent");
 local get_SelectItem_method = GUIItemGridPartsFluent_type_def:get_method("get_SelectItem");

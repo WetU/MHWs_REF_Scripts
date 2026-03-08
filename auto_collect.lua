@@ -109,9 +109,8 @@ local execute_method = Element_field:get_type():get_method("execute");
 
 local get_Gimmick_method = find_type_definition("app.cGimmickContextHolder"):get_method("get_Gimmick");
 
-local ReceiveItemInfo_type_def = Constants.SendItemInfo_type_def:get_parent_type();
-local ReceiveItemInfo_get_ItemId_method = ReceiveItemInfo_type_def:get_method("get_ItemId");
-local ReceiveItemInfo_get_Num_method = ReceiveItemInfo_type_def:get_method("get_Num");
+local ReceiveItemInfo_get_ItemId_method = Constants.get_ItemId_method;
+local ReceiveItemInfo_get_Num_method = Constants.ReceiveItemInfo_type_def:get_method("get_Num");
 
 local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
 local ST502 = Constants.STAGES.ST502;
