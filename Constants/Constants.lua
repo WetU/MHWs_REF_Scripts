@@ -119,7 +119,7 @@ local Constants = {
         get_hook_storage().this = to_managed_object(args[2]);
     end,
 
-    skipOriginal = function(args)
+    skipOriginal = function()
         return SKIP_ORIGINAL;
     end,
 

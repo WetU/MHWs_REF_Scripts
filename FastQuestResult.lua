@@ -49,6 +49,36 @@ local GUI070001_type_def = find_type_definition("app.GUI070001");
 local get_IsViewMode_method = GUI070001_type_def:get_method("get_IsViewMode");
 local skipAnimation_method = GUI070001_type_def:get_method("skipAnimation");
 
+local function hasNewItem(ItemGridParts, isFix)
+    if isFix then
+        for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
+            local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
+            if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) then
+                return true;
+            end
+        end
+    else
+        for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
+            if get_ActualVisible_method:call(get__PanelNewMark_method:call(GenericList_get_Item_method:call(ItemGridParts, i))) then
+                return true;
+            end
+        end
+    end
+    return false;
+end
+
+local function hasWishItem(RewardItems_list)
+    for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
+        local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
+        for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do
+            if isItemRequiredForWishlist_method:call(nil, get_ItemId_method:call(getItemInfo_method:call(RewardItems, j))) then
+                return true;
+            end
+        end
+    end
+    return false;
+end
+
 -- args[5] = isViewMode;
 -- args[6] = isRandomAmuletJudge;
 local isFixQuestResult = nil;
@@ -68,26 +98,8 @@ end, function()
         local storage = get_hook_storage();
         local this_ptr = storage.this_ptr;
         set__WaitControlTime_method:call(this_ptr, 0.0);
-        if storage.isRandomAmuletJudge == 0 then
-            local ItemGridParts = ItemGridParts_field:get_data(this_ptr);
-            for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
-                local GUIItemGridPartsFluent = GenericList_get_Item_method:call(ItemGridParts, i);
-                if get_Enabled_method:call(get_SelectItem_method:call(GUIItemGridPartsFluent)) and get_ActualVisible_method:call(get__PanelNewMark_method:call(GUIItemGridPartsFluent)) then
-                    return;
-                end
-            end
-            local RewardItems_list = GUIPartsRewardInfo_get_RewardItems_method:call(get__Info_method:call(this_ptr));
-            for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
-                local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
-                for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do
-                    if isItemRequiredForWishlist_method:call(nil, get_ItemId_method:call(getItemInfo_method:call(RewardItems, j))) then
-                        return;
-                    end
-                end
-            end
-            if get_InputPriority_method:call(GUIPartsReward_InputCtrl_field:get_data(this_ptr)) == 0 then
-                receiveAll_method:call(this_ptr);
-            end
+        if storage.isRandomAmuletJudge == 0 and get_InputPriority_method:call(GUIPartsReward_InputCtrl_field:get_data(this_ptr)) == 0 and hasNewItem(ItemGridParts_field:get_data(this_ptr), true) == false and hasWishItem(GUIPartsRewardInfo_get_RewardItems_method:call(get__Info_method:call(this_ptr))) == false then
+            receiveAll_method:call(this_ptr);
         end
     end
 end);
@@ -122,24 +134,11 @@ hook(GUI020100_type_def:get_method("toQuestReward"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
     local GUI020100PanelQuestRewardItem = get__PartsQuestRewardItem_method:call(this_ptr);
     local GUIPartsRewardItems = get__PartsQuestRewardItems_method:call(GUI020100PanelQuestRewardItem);
-    local ItemGridParts = GUIPartsRewardItems_ItemGridParts_field:get_data(GUIPartsRewardItems);
-    for i = 0, GenericList_get_Count_method:call(ItemGridParts) - 1 do
-        if get_ActualVisible_method:call(get__PanelNewMark_method:call(GenericList_get_Item_method:call(ItemGridParts, i))) then
-            requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(this_ptr), JUST_TIMING_SHORTCUT);
-            return;
-        end
+    if hasNewItem(GUIPartsRewardItems_ItemGridParts_field:get_data(GUIPartsRewardItems), false) or hasWishItem(GUIPartsRewardItems_get_RewardItems_method:call(GUIPartsRewardItems)) then
+        requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(this_ptr), JUST_TIMING_SHORTCUT);
+    else
+        finish_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
     end
-    local RewardItems_list = GUIPartsRewardItems_get_RewardItems_method:call(GUIPartsRewardItems);
-    for i = 0, GenericList_get_Count_method:call(RewardItems_list) - 1 do
-        local RewardItems = GenericList_get_Item_method:call(RewardItems_list, i);
-        for j = 0, get_ItemInfoSize_method:call(RewardItems) - 1 do
-            if isItemRequiredForWishlist_method:call(nil, get_ItemId_method:call(getItemInfo_method:call(RewardItems, j))) then
-                requestCallTrigger_method:call(GUI020100_InputCtrl_field:get_data(this_ptr), JUST_TIMING_SHORTCUT);
-                return;
-            end
-        end
-    end
-    finish_method:call(get_FixControl_method:call(GUI020100PanelQuestRewardItem));
 end);
 
 hook(GUI020100_type_def:get_method("toQuestJudge"), getThisPtr, function()

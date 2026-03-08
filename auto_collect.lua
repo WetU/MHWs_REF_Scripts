@@ -17,6 +17,10 @@ local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_Clear_method = Constants.GenericList_Clear_method;
 
+local getGimmickContextHolder_method = find_type_definition("app.StoryUtil"):get_method("getGimmickContextHolder(app.GimmickDef.ID)"); -- static
+
+local getRewardItemData_method = find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
+
 local FacilityUtil_type_def = find_type_definition("app.FacilityUtil");
 local isEnoughItem_method = FacilityUtil_type_def:get_method("isEnoughItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
 local payItem_method = FacilityUtil_type_def:get_method("payItem(app.ItemDef.ID, System.Int16, app.ItemUtil.STOCK_TYPE)"); -- static
@@ -96,13 +100,18 @@ local stroke_method = FacilityPugee_type_def:get_method("stroke(System.Boolean)"
 local FacilityRallus_type_def = find_type_definition("app.FacilityRallus");
 local get_SupplyNum_method = FacilityRallus_type_def:get_method("get_SupplyNum");
 local resetSupplyNum_method = FacilityRallus_type_def:get_method("resetSupplyNum");
+local getSupplyItem_method = FacilityRallus_type_def:get_method("getSupplyItem(app.cGimmickContext)");
 local Event_field = FacilityRallus_type_def:get_field("_Event");
 
-local execute_method = Event_field:get_type():get_method("execute");
+local Element_field = Event_field:get_type():get_field("_Element");
 
-local getRewardItemData_method = find_type_definition("app.GimmickRewardUtil"):get_method("getRewardItemData(app.GimmickDef.ID, app.FieldDef.STAGE, System.Boolean, System.Int32)"); -- static
+local execute_method = Element_field:get_type():get_method("execute");
 
-local getReward_method = Constants.SendItemInfo_type_def:get_method("getReward(System.Boolean, System.Boolean)");
+local get_Gimmick_method = find_type_definition("app.cGimmickContextHolder"):get_method("get_Gimmick");
+
+local ReceiveItemInfo_type_def = Constants.SendItemInfo_type_def:get_parent_type();
+local ReceiveItemInfo_get_ItemId_method = ReceiveItemInfo_type_def:get_method("get_ItemId");
+local ReceiveItemInfo_get_Num_method = ReceiveItemInfo_type_def:get_method("get_Num");
 
 local GM262_000_00 = find_type_definition("app.GimmickDef.ID"):get_field("GM262_000_00"):get_data(nil);
 local ST502 = Constants.STAGES.ST502;
@@ -294,15 +303,20 @@ hook(FacilityMoriver_type_def:get_method("startCampfire(System.Boolean)"), getTh
 end);
 
 hook(FacilityRallus_type_def:get_method("supplyTimerGoal(app.cFacilityTimer)"), getThisPtr, function()
-    local this_ptr = get_hook_storage().this_ptr;
-    local SupplyNum = get_SupplyNum_method:call(this_ptr);
-    local SendItemInfo_List = getRewardItemData_method:call(nil, GM262_000_00, ST502, true, 1 - SupplyNum);
-    for i = 0, SupplyNum - 1 do
-        getReward_method:call(GenericList_get_Item_method:call(SendItemInfo_List, i), true, true);
+    local GimmickContextHolder_list = getGimmickContextHolder_method:call(nil, GM262_000_00);
+    if GenericList_get_Count_method:call(GimmickContextHolder_list) > 0 then
+        getSupplyItem_method:call(get_hook_storage().this_ptr, get_Gimmick_method:call(GenericList_get_Item_method:call(GimmickContextHolder_list, 0)));
+    else
+        local this_ptr = get_hook_storage().this_ptr;
+        execute_method:call(Element_field:get_data(Event_field:get_data(this_ptr)));
+        set_native_field(this_ptr, FacilityRallus_type_def, "_IsGetting", true);
+        for i = 1, get_SupplyNum_method:call(this_ptr) do
+            local SendItemInfo = GenericList_get_Item_method:call(getRewardItemData_method:call(nil, GM262_000_00, ST502, false, 0), 0);
+            changeItemNumFromDialogue_method:call(nil, ReceiveItemInfo_get_ItemId_method:call(SendItemInfo), ReceiveItemInfo_get_Num_method:call(SendItemInfo), BOTH_BOX_POUCH, true);
+        end
+        resetSupplyNum_method:call(this_ptr);
+        set_native_field(this_ptr, FacilityRallus_type_def, "_IsGetting", false);
     end
-    GenericList_Clear_method:call(SendItemInfo_List);
-    execute_method:call(Event_field:get_data(this_ptr));
-    resetSupplyNum_method:call(this_ptr);
 end);
 
 local ItemID_Invalid_ptr = to_ptr(ItemID_type_def:get_field("INVALID"):get_data(nil));
