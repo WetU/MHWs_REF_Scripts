@@ -13,7 +13,7 @@ local requestClose = Constants.requestClose;
 
 local skipOriginal = Constants.skipOriginal;
 
-local isHagitoriTime_method = find_type_definition("app.NpcPartnerUtil"):get_method("isHagitoriTime"); -- static
+local isHagitoriTime_method = Constants.NpcPartnerUtil_type_def:get_method("isHagitoriTime"); -- static
 
 local GUI020202_type_def = find_type_definition("app.GUI020202");
 local Input_field = GUI020202_type_def:get_field("_Input");

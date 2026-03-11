@@ -11,7 +11,7 @@ local get_hook_storage = Constants.get_hook_storage;
 local addSystemLog_method = Constants.addSystemLog_method;
 local getThisPtr = Constants.getThisPtr;
 
-local isArenaQuest_method = find_type_definition("app.NpcPartnerUtil"):get_method("isArenaQuest"); -- static
+local isArenaQuest_method = Constants.NpcPartnerUtil_type_def:get_method("isArenaQuest"); -- static
 
 local ItemUtil_type_def = Constants.ItemUtil_type_def;
 local fillPouchItems_method = ItemUtil_type_def:get_method("fillPouchItems"); -- static

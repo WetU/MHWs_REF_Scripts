@@ -93,6 +93,7 @@ local Constants = {
     GUIFunc_TYPE_type_def = find_type_definition("app.GUIFunc.TYPE"),
     GUIManager_type_def = GUIManager:get_type_definition(),
     ItemUtil_type_def = find_type_definition("app.ItemUtil"),
+    NpcPartnerUtil_type_def = find_type_definition("app.NpcPartnerUtil"),
     QuestDirector_type_def = find_type_definition("app.cQuestDirector"),
     ReceiveItemInfo_type_def = ReceiveItemInfo_type_def,
     UserSaveParam_type_def = UserSaveParam_type_def,
