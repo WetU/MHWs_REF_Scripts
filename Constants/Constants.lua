@@ -115,6 +115,8 @@ local Constants = {
     isInput_method = GUIBaseApp_type_def:get_method("isInput(app.GUIFunc.TYPE)"),
     requestCallTrigger_method = InputCtrl_type_def:get_method("requestCallTrigger(app.GUIFunc.TYPE)"),
 
+    BaseState_field = GUIBase_type_def:get_field("_BaseState"),
+
     getThisPtr = function(args)
         get_hook_storage().this_ptr = args[2];
     end,
