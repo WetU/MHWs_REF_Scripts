@@ -5,6 +5,7 @@ local pairs = Constants.pairs;
 local tonumber = Constants.tonumber;
 local tostring = Constants.tostring;
 local strgsub = Constants.strgsub;
+local tinsert = Constants.tinsert;
 
 local hook = Constants.hook;
 local find_type_definition = Constants.find_type_definition;
@@ -15,11 +16,14 @@ local get_hook_storage = Constants.get_hook_storage;
 local addSystemLog_method = Constants.addSystemLog_method;
 local getThisPtr = Constants.getThisPtr;
 local requestClose = Constants.requestClose;
+local isContain = Constants.isContain;
 
 local guid2str_method = find_type_definition("via.gui.message"):get_method("get(System.Guid)"); -- static
 
 local isVisibleGUI_method = Constants.GUIManager_type_def:get_parent_type():get_method("isVisibleGUI(app.GUIID.ID)");
 local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil);
+
+local GUIVariousData_type_def = find_type_definition("app.user_data.GUIVariousData");
 
 local GUI000002_type_def = Constants.GUI000002_type_def;
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
@@ -42,8 +46,6 @@ local get_TextInfo_method = GUINotifyWindowInfo_type_def:get_method("get_TextInf
 local isExistWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("isExistWindowEndFunc");
 local endWindow_method = GUINotifyWindowInfo_type_def:get_method("endWindow(System.Int32)");
 local executeWindowEndFunc_method = GUINotifyWindowInfo_type_def:get_method("executeWindowEndFunc");
-
-local NotifyWindowID_type_def = get_NotifyWindowId_method:get_return_type();
 
 local GUIMessageInfo_type_def = get_TextInfo_method:get_return_type();
 local get_MsgID_method = GUIMessageInfo_type_def:get_method("get_MsgID");
@@ -68,29 +70,24 @@ local ParamInt_field = ParamValue_type_def:get_field("ParamInt");
 local ParamLong_field = ParamValue_type_def:get_field("ParamLong");
 local ParamFloat_field = ParamValue_type_def:get_field("ParamFloat");
 
-local INVALID = NotifyWindowID_type_def:get_field("INVALID"):get_data(nil);
-local GUI000002_0000 = NotifyWindowID_type_def:get_field("GUI000002_0000"):get_data(nil);
-local change_default_index_IDs = {
-    [NotifyWindowID_type_def:get_field("EQUIP_002"):get_data(nil)] = 1,
-    [NotifyWindowID_type_def:get_field("EQUIP_003"):get_data(nil)] = 2,
-    [NotifyWindowID_type_def:get_field("GUI030000_04_06_DLG"):get_data(nil)] = 0,
-    [NotifyWindowID_type_def:get_field("GUI080301_0004_DLG"):get_data(nil)] = 0
-};
-local auto_close_IDs = {
-    NotifyWindowID_type_def:get_field("GUI040502_0301"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI070000_DLG01"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI070000_DLG02"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080004_0002"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080004_008"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0005_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI080301_0006_DLG"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090002_DLG_02"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_005"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_006"):get_data(nil),
-    NotifyWindowID_type_def:get_field("GUI090700_DLG_010"):get_data(nil),
-    NotifyWindowID_type_def:get_field("MsgGUI090700_DLG_012"):get_data(nil),
-    NotifyWindowID_type_def:get_field("Net_Session_012"):get_data(nil),
-    NotifyWindowID_type_def:get_field("SAVE_0005"):get_data(nil)
+local INVALID = nil;
+local GUI000002_0000 = nil;
+local auto_close_IDs = {};
+local auto_close_ID_names = {
+    "GUI040502_0301",
+    "GUI070000_DLG01",
+    "GUI070000_DLG02",
+    "GUI080004_0002",
+    "GUI080004_008",
+    "GUI080301_0005_DLG",
+    "GUI080301_0006_DLG",
+    "GUI090002_DLG_02",
+    "GUI090700_DLG_005",
+    "GUI090700_DLG_006",
+    "GUI090700_DLG_010",
+    "MsgGUI090700_DLG_012",
+    "Net_Session_012",
+    "SAVE_0005"
 };
 
 local function closeWindow(notifyWindowApp, infoApp)
@@ -103,7 +100,6 @@ end
 
 hook(GUI000002_type_def:get_method("onOpen"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    set_native_field(this_ptr, GUI000002_type_def, "_DispMinTimer", 0.0);
     local NotifyWindowApp = GUI000002_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil and get_NotifyWindowId_method:call(CurInfoApp) == GUI000002_0000 then
@@ -113,7 +109,6 @@ end);
 
 hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     local this_ptr = get_hook_storage().this_ptr;
-    set_native_field(this_ptr, GUI000003_type_def, "_DispMinTimer", 0.0);
     local NotifyWindowApp = GUI000003_NotifyWindowApp_field:get_data(this_ptr);
     local CurInfoApp = get__CurInfoApp_method:call(NotifyWindowApp);
     if CurInfoApp ~= nil then
@@ -158,10 +153,6 @@ hook(GUI000003_type_def:get_method("guiOpenUpdate"), getThisPtr, function()
     end
 end);
 
-hook(GUI000004_type_def:get_method("onOpen"), getThisPtr, function()
-    set_native_field(get_hook_storage().this_ptr, GUI000004_type_def, "_DispMinTimer", 0.0);
-end);
-
 hook(find_type_definition("app.GUI080303"):get_method("onOpen"), getThisPtr, requestClose);
 
 do
@@ -175,10 +166,29 @@ do
         if GUINotifyWindowData ~= nil then
             local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
             local Setting_type_def = getSetting_method:get_return_type();
-            for id, idx in pairs(change_default_index_IDs) do
-                local Setting = getSetting_method:call(GUINotifyWindowData, id);
-                if Setting ~= nil then
-                    set_native_field(Setting, Setting_type_def, "_DefaultIndex", idx);
+            for _, v in pairs(get_NotifyWindowId_method:get_return_type():get_fields()) do
+                if v:is_static() then
+                    local name = v:get_name();
+                    local value = v:get_data(nil);
+                    if name == "INVALID" then
+                        INVALID = value;
+                    else
+                        local Setting = getSetting_method:call(GUINotifyWindowData, value);
+                        if Setting ~= nil then
+                            set_native_field(Setting, Setting_type_def, "_DispMinTime", 0.0);
+                            if name == "GUI000002_0000" then
+                                GUI000002_0000 = value;
+                            elseif name == "EQUIP_002" then
+                                set_native_field(Setting, Setting_type_def, "_DefaultIndex", 1);
+                            elseif name == "EQUIP_003" then
+                                set_native_field(Setting, Setting_type_def, "_DefaultIndex", 2);
+                            elseif name == "GUI030000_04_06_DLG" or name == "GUI080301_0004_DLG" then
+                                set_native_field(Setting, Setting_type_def, "_DefaultIndex", 0);
+                            elseif isContain(auto_close_ID_names, name) then
+                                tinsert(auto_close_IDs, value);
+                            end
+                        end
+                    end
                 end
             end
         end

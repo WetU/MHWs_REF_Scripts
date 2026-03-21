@@ -1,7 +1,7 @@
 local _G = _G;
 
+local ipairs = _G.ipairs;
 local string = _G.string;
-
 local math = _G.math;
 
 local sdk = _G.sdk;
@@ -41,7 +41,7 @@ local ReceiveItemInfo_type_def = find_type_definition("app.cReceiveItemInfo");
 
 local Constants = {
     pairs = _G.pairs,
-    ipairs = _G.ipairs,
+    ipairs = ipairs,
     tostring = _G.tostring,
     tonumber = _G.tonumber,
 
@@ -131,6 +131,15 @@ local Constants = {
 
     requestClose = function()
         requestClose_method:call(get_hook_storage().this_ptr, true);
+    end,
+
+    isContain = function(table, value)
+        for _, v in ipairs(table) do
+            if v == value then
+                return true;
+            end
+        end
+        return false;
     end
 };
 

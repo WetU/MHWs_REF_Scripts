@@ -18,6 +18,8 @@ local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 local GenericList_set_Item_method = Constants.GenericList_set_Item_method;
 local getThisPtr = Constants.getThisPtr;
 
+local isContain = Constants.isContain;
+
 local GUI050000_type_def = find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
 
@@ -88,15 +90,6 @@ local SortDifficulty = {
 
 local MissionClearFlag = nil;
 
-local function isContain(arg)
-    for _, v in ipairs(SortDifficulty) do
-        if arg == v then
-            return true;
-        end
-    end
-    return false;
-end
-
 local function setSortDifficulty(obj, sortType)
     if sortType == 0 then
         setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
@@ -123,7 +116,7 @@ hook(GUI050000QuestListParts_type_def:get_method("sortQuestDataList(System.Boole
         local this_ptr = args[2];
         local CATEGORY = get_ViewCategory_method:call(this_ptr);
         if CATEGORY == CATEGORY_FREE or CATEGORY == CATEGORY_DECLARATION_HISTORY or CATEGORY == CATEGORY_KEEP_QUEST or CATEGORY == CATEGORY_EVENT or CATEGORY == CATEGORY_RECRUITMENT_LOBBY
-        or CATEGORY == CATEGORY_LINK_MEMBER or CATEGORY == CATEGORY_SERCH_RESCUE_SIGNAL or isContain(CATEGORY) then
+        or CATEGORY == CATEGORY_LINK_MEMBER or CATEGORY == CATEGORY_SERCH_RESCUE_SIGNAL or isContain(SortDifficulty, CATEGORY) then
             local storage = get_hook_storage();
             storage.this_ptr = this_ptr;
             storage.CATEGORY = CATEGORY;
