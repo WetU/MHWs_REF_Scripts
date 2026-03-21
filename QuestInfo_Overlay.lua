@@ -4,10 +4,8 @@ local ipairs = Constants.ipairs;
 local pairs = Constants.pairs;
 local tostring = Constants.tostring;
 local tonumber = Constants.tonumber;
-
 local mathmodf = Constants.mathmodf;
 local mathfloor = Constants.mathfloor;
-
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
@@ -24,10 +22,9 @@ local drawtext = Constants.drawtext;
 
 local ZERO_float_ptr = Constants.ZERO_float_ptr;
 
-local skipOriginal = Constants.skipOriginal;
-
 local font = Constants.load_font(nil, 20);
 
+local skipOriginal = Constants.skipOriginal;
 local get_PlParam_method = Constants.get_PlParam_method;
 
 local PlayerGlobalParam_type_def = get_PlParam_method:get_return_type();

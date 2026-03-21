@@ -23,15 +23,11 @@ local guid2str_method = find_type_definition("via.gui.message"):get_method("get(
 local isVisibleGUI_method = Constants.GUIManager_type_def:get_parent_type():get_method("isVisibleGUI(app.GUIID.ID)");
 local UI020100 = Constants.GUIID_type_def:get_field("UI020100"):get_data(nil);
 
-local GUIVariousData_type_def = find_type_definition("app.user_data.GUIVariousData");
-
 local GUI000002_type_def = Constants.GUI000002_type_def;
 local GUI000002_NotifyWindowApp_field = GUI000002_type_def:get_field("_NotifyWindowApp");
 
 local GUI000003_type_def = find_type_definition("app.GUI000003");
 local GUI000003_NotifyWindowApp_field = GUI000003_type_def:get_field("_NotifyWindowApp");
-
-local GUI000004_type_def = find_type_definition("app.GUI000004");
 
 local GUISystemModuleNotifyWindowApp_type_def = GUI000003_NotifyWindowApp_field:get_type();
 local get__CurInfoApp_method = GUISystemModuleNotifyWindowApp_type_def:get_method("get__CurInfoApp");
