@@ -9,6 +9,7 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
+local set_native_field = Constants.set_native_field;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local to_int64 = Constants.to_int64;
@@ -20,11 +21,8 @@ local pop_font = Constants.pop_font;
 
 local drawtext = Constants.drawtext;
 
-local ZERO_float_ptr = Constants.ZERO_float_ptr;
-
 local font = Constants.load_font(nil, 20);
 
-local skipOriginal = Constants.skipOriginal;
 local get_PlParam_method = Constants.get_PlParam_method;
 
 local PlayerGlobalParam_type_def = get_PlParam_method:get_return_type();
@@ -111,8 +109,15 @@ local slingerChargeMax = nil;
 
 local QuestDirector_ptr = nil;
 
-local function postHook_getTimes()
-    return ZERO_float_ptr;
+local function applyPlayerGlobalParams(PlayerGlobalParam)
+    maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(PlayerGlobalParam);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestReplicaLeaveActionWaitTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestClearStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestRetireStampTime", 0.0);
+    set_native_field(PlayerGlobalParam, PlayerGlobalParam_type_def, "_QuestFailedStampTime", 0.0);
 end
 
 local function getWeaponAttr(attr)
@@ -227,7 +232,7 @@ end, function()
         if not QuestInfoCreated then
             slingerChargeMax = "";
             if maxSlingerChargeTime == nil then
-                maxSlingerChargeTime = get_ExChargeSlingerSpeedRate_method:call(get_PlParam_method:call(nil));
+                applyPlayerGlobalParams(get_PlParam_method:call(nil));
             end
             local ActiveQuestData = get_QuestData_method:call(QuestDirector_ptr);
             questTimeLimit = getTimeLimit_method:call(ActiveQuestData) .. "분";
@@ -254,14 +259,6 @@ hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
         curDeathCount = 0;
     end
 end);
-
-hook(PlayerGlobalParam_type_def:get_method("get_QuestClearActionWaitTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestRetireActionWaitTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestFailedActionWaitTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestReplicaLeaveActionWaitTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestClearStampTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestRetireStampTime"), skipOriginal, postHook_getTimes);
-hook(PlayerGlobalParam_type_def:get_method("get_QuestFailedStampTime"), skipOriginal, postHook_getTimes);
 
 Constants.on_frame(function()
     if QuestInfoCreated then

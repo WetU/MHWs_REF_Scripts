@@ -1,7 +1,6 @@
 local Constants = _G.require("Constants/Constants");
 
 local ipairs = Constants.ipairs;
-local pairs = Constants.pairs;
 local tonumber = Constants.tonumber;
 local tostring = Constants.tostring;
 local strgsub = Constants.strgsub;
@@ -162,7 +161,7 @@ do
         if GUINotifyWindowData ~= nil then
             local getSetting_method = GUINotifyWindowData:get_type_definition():get_method("getSetting(app.GUINotifyWindowDef.ID)");
             local Setting_type_def = getSetting_method:get_return_type();
-            for _, v in pairs(get_NotifyWindowId_method:get_return_type():get_fields()) do
+            for _, v in ipairs(get_NotifyWindowId_method:get_return_type():get_fields()) do
                 if v:is_static() then
                     local name = v:get_name();
                     local value = v:get_data(nil);
