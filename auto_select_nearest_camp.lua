@@ -220,6 +220,26 @@ end, function(retval)
     return retval;
 end);
 
+local PorterMoveInfo_type_def = find_type_definition("app.cPorterMoveInfo");
+local get_DirectionUpdateType_method = PorterMoveInfo_type_def:get_method("get_DirectionUpdateType");
+
+local AUTO = get_DirectionUpdateType_method:get_return_type():get_field("AUTO"):get_data(nil);
+
+hook(PorterMoveInfo_type_def:get_method("set_AutoDirection(via.vec3)"), function(args)
+    if get_DirectionUpdateType_method:call(args[2]) == AUTO then
+        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+        if LockTarget ~= nil then
+            local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget))));
+            if isInRelay_method:call(AreaMoveSchedule) then
+                local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
+                args[3] = to_ptr(RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+            else
+                args[3] = to_ptr(get_CurrentTargetPos_method:call(AreaMoveSchedule));
+            end
+        end
+    end
+end);
+
 do
     local MapStageDrawData = Constants.call_object_func(Constants.call_native_func(Constants.GUIManager, Constants.GUIManager_type_def, "get_MAP3D"), "get_MapStageDrawData");
     if MapStageDrawData ~= nil then
