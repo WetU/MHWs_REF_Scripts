@@ -63,6 +63,7 @@ local Constants = {
     to_ptr = sdk.to_ptr,
     to_int64 = sdk.to_int64,
     to_float = sdk.to_float,
+    to_valuetype = sdk.to_valuetype,
     SKIP_ORIGINAL = SKIP_ORIGINAL,
 
     get_hook_storage = get_hook_storage,

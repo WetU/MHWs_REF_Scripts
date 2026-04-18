@@ -2,13 +2,17 @@ local Constants = _G.require("Constants/Constants");
 
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
+local set_native_field = Constants.set_native_field;
 local to_ptr = Constants.to_ptr;
+local to_valuetype = Constants.to_valuetype;
 local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
+
+local getThisPtr = Constants.getThisPtr;
 
 local distance_method = find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
@@ -220,24 +224,27 @@ end, function(retval)
     return retval;
 end);
 
-local PorterMoveInfo_type_def = find_type_definition("app.cPorterMoveInfo");
-local get_DirectionUpdateType_method = PorterMoveInfo_type_def:get_method("get_DirectionUpdateType");
+local PorterFollowTargetInfo_type_def = find_type_definition("app.cPorterFollowTargetInfo");
+local isTargetCurrentBossEnemy_method = PorterFollowTargetInfo_type_def:get_method("isTargetCurrentBossEnemy");
+local getTargetCurrentEnemyContext_method = PorterFollowTargetInfo_type_def:get_method("getTargetCurrentEnemyContext");
 
-local AUTO = get_DirectionUpdateType_method:get_return_type():get_field("AUTO"):get_data(nil);
+local Nullable_vec3_type_def = find_type_definition("System.Nullable`1<via.vec3>");
+local get_HasValue_method = Nullable_vec3_type_def:get_method("get_HasValue");
 
-hook(PorterMoveInfo_type_def:get_method("set_AutoDirection(via.vec3)"), function(args)
-    if get_DirectionUpdateType_method:call(args[2]) == AUTO then
-        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-        if LockTarget ~= nil then
-            local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget))));
+hook(PorterFollowTargetInfo_type_def:get_method("getTargetCurrentPos"), getThisPtr, function(retval)
+    local orgval = to_valuetype(retval, Nullable_vec3_type_def);
+    if get_HasValue_method:call(orgval) then
+        local this_ptr = get_hook_storage().this_ptr;
+        if isTargetCurrentBossEnemy_method:call(this_ptr) then
+            local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(getTargetCurrentEnemyContext_method:call(this_ptr)));
             if isInRelay_method:call(AreaMoveSchedule) then
                 local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
-                args[3] = to_ptr(RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
-            else
-                args[3] = to_ptr(get_CurrentTargetPos_method:call(AreaMoveSchedule));
+                set_native_field(orgval, Nullable_vec3_type_def, "_Value", RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+                return to_ptr(orgval);
             end
         end
     end
+    return retval;
 end);
 
 do
