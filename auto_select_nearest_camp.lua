@@ -4,7 +4,6 @@ local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
 local set_native_field = Constants.set_native_field;
 local to_ptr = Constants.to_ptr;
-local to_valuetype = Constants.to_valuetype;
 local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
@@ -232,15 +231,15 @@ local Nullable_vec3_type_def = find_type_definition("System.Nullable`1<via.vec3>
 local get_HasValue_method = Nullable_vec3_type_def:get_method("get_HasValue");
 
 hook(PorterFollowTargetInfo_type_def:get_method("getTargetCurrentPos"), getThisPtr, function(retval)
-    local orgval = to_valuetype(retval, Nullable_vec3_type_def);
-    if get_HasValue_method:call(orgval) then
+    if get_HasValue_method:call(retval) then
         local this_ptr = get_hook_storage().this_ptr;
         if isTargetCurrentBossEnemy_method:call(this_ptr) then
             local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(getTargetCurrentEnemyContext_method:call(this_ptr)));
             if isInRelay_method:call(AreaMoveSchedule) then
                 local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
-                set_native_field(orgval, Nullable_vec3_type_def, "_Value", RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
-                return to_ptr(orgval);
+                set_native_field(retval, Nullable_vec3_type_def, "_Value", RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+            else
+                set_native_field(retval, Nullable_vec3_type_def, "_Value", get_CurrentTargetPos_method:call(AreaMoveSchedule));
             end
         end
     end
