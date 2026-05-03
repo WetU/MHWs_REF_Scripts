@@ -63,7 +63,11 @@ local get_Em_method = Context_field:get_type():get_method("get_Em");
 
 local Area_field = get_Em_method:get_return_type():get_field("Area");
 
-local get_CurrentAreaMoveSchedule_method = Area_field:get_type():get_method("get_CurrentAreaMoveSchedule");
+local EmModuleArea_type_def = Area_field:get_type();
+local get_CurrentStageNo_method = EmModuleArea_type_def:get_method("get_CurrentStageNo");
+local get_CurrentAreaNo_method = EmModuleArea_type_def:get_method("get_CurrentAreaNo");
+local get_TargetAreaNo_method = EmModuleArea_type_def:get_method("get_TargetAreaNo");
+local get_CurrentAreaMoveSchedule_method = EmModuleArea_type_def:get_method("get_CurrentAreaMoveSchedule");
 
 local AreaMoveSchedule_type_def = get_CurrentAreaMoveSchedule_method:get_return_type();
 local get_CurrentTargetPos_method = AreaMoveSchedule_type_def:get_method("get_CurrentTargetPos");
@@ -84,10 +88,11 @@ local DrawDatas = {};
 local StartPointIdx = nil;
 local shouldFocusFloorNum = nil;
 
-local function setVars(GUI050001, startPointIdx)
+local function setVars(GUI050001, startPointIdx, hasFloorNum)
     StartPointIdx = startPointIdx;
     setCurrentSelectStartPointIndex_method:call(GUI050001, startPointIdx);
     requestSelectIndexCore_method:call(InputCtrl_field:get_data(StartPointList_field:get_data(GUI050001)), startPointIdx, 0);
+    shouldFocusFloorNum = hasFloorNum;
 end
 
 hook(GUI050001_AcceptList_type_def:get_method("updateStartPointText"), function(args)
@@ -114,8 +119,7 @@ hook(GUI050001_AcceptList_type_def:get_method("updateStartPointText"), function(
                             local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
                             if targetEmAreaNum == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
                                 if j > 0 then
-                                    setVars(GUI050001, j);
-                                    shouldFocusFloorNum = get_MapFloorNumSafety_method:call(FieldAreaInfo);
+                                    setVars(GUI050001, j, get_MapFloorNumSafety_method:call(FieldAreaInfo));
                                 end
                                 return;
                             end
@@ -144,18 +148,15 @@ hook(GUI050001_AcceptList_type_def:get_method("updateStartPointText"), function(
                 end
                 if sameFloor_shortest_distance ~= nil and diffFloor_shortest_distance ~= nil and diffFloor_shortest_distance < (sameFloor_shortest_distance * 0.45) then
                     if diffFloor_idx > 0 then
-                        setVars(GUI050001, diffFloor_idx);
-                        shouldFocusFloorNum = diffFloor_FloorNum;
+                        setVars(GUI050001, diffFloor_idx, diffFloor_FloorNum);
                     end
                 elseif sameFloor_idx ~= nil then
                     if sameFloor_idx > 0 then
-                        setVars(GUI050001, sameFloor_idx);
-                        shouldFocusFloorNum = sameFloor_FloorNum;
+                        setVars(GUI050001, sameFloor_idx, sameFloor_FloorNum);
                     end
                 elseif diffFloor_idx ~= nil then
                     if diffFloor_idx > 0 then
-                        setVars(GUI050001, diffFloor_idx);
-                        shouldFocusFloorNum = diffFloor_FloorNum;
+                        setVars(GUI050001, diffFloor_idx, diffFloor_FloorNum);
                     end
                 end
             end
@@ -172,7 +173,7 @@ hook(GUI050001_type_def:get_method("mapForceSelectFloor"), function(args)
     end
 end, function(retval)
     if StartPointIdx ~= nil then
-        setVars(get_hook_storage().this_ptr, StartPointIdx);
+        setVars(get_hook_storage().this_ptr, StartPointIdx, shouldFocusFloorNum);
         StartPointIdx = nil;
     end
     if shouldFocusFloorNum ~= nil then
@@ -185,37 +186,60 @@ end);
 
 local hasEmTarget = nil;
 hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"), function(args)
-    local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-    if LockTarget ~= nil then
-        local storage = get_hook_storage();
-        storage.this_ptr = args[2];
-        storage.LockTarget = LockTarget;
-        hasEmTarget = true;
-        return SKIP_ORIGINAL;
+    local FastTravelList = FastTravelList_field:get_data(args[2]);
+    local listCount = GenericList_get_Count_method:call(FastTravelList);
+    if listCount > 1 then
+        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+        if LockTarget ~= nil then
+            local EmModuleArea = Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget)));
+            local tarAreaNo = get_TargetAreaNo_method:call(EmModuleArea);
+            if get_CurrentAreaNo_method:call(EmModuleArea) ~= tarAreaNo then
+                local storage = get_hook_storage();
+                storage.FastTravelList = FastTravelList;
+                storage.listCount = listCount;
+                storage.AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(EmModuleArea);
+                storage.tarFloorNum = getFloorNumFromAreaNum_method:call(nil, get_CurrentStageNo_method:call(EmModuleArea), tarAreaNo);
+                storage.tarAreaNo = tarAreaNo;
+                hasEmTarget = true;
+                return SKIP_ORIGINAL;
+            end
+        end
     end
 end, function(retval)
     if hasEmTarget then
         hasEmTarget = nil;
         local storage = get_hook_storage();
-        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(storage.LockTarget))));
-        local FastTravelList = FastTravelList_field:get_data(storage.this_ptr);
+        local TargetAreaNo = storage.tarAreaNo;
+        local TargetFloorNo = storage.tarFloorNum;
+        local AreaMoveSchedule = storage.AreaMoveSchedule;
+        local FastTravelList = storage.FastTravelList;
         local destPos = nil;
-        local nearestIdx, nearestDist = nil, nil;
+        local sameArea_shortest_distance, sameArea_idx = nil, nil;
+        local sameFloor_shortest_distance, sameFloor_idx = nil, nil;
+        local diffFloor_shortest_distance, diffFloor_idx = nil, nil;
         if isInRelay_method:call(AreaMoveSchedule) then
             local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
             destPos = RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1));
         else
             destPos = get_CurrentTargetPos_method:call(AreaMoveSchedule);
         end
-        for i = 0, GenericList_get_Count_method:call(FastTravelList) - 1 do
-            local distance = distance_method:call(nil, destPos, getPos_method:call(BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i))));
-            if nearestDist == nil or distance < nearestDist then
-                nearestIdx, nearestDist = i, distance;
+        for i = 0, storage.listCount - 1 do
+            local BeaconGimmick = BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i));
+            local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
+            local distance = distance_method:call(nil, destPos, getPos_method:call(BeaconGimmick));
+            if TargetAreaNo == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
+                if sameArea_shortest_distance == nil or distance < sameArea_shortest_distance then
+                    sameArea_shortest_distance, sameArea_idx = distance, i;
+                end
+            elseif TargetFloorNo == get_MapFloorNumSafety_method:call(FieldAreaInfo) then
+                if sameFloor_shortest_distance == nil or distance < sameFloor_shortest_distance then
+                    sameFloor_shortest_distance, sameFloor_idx = distance, i;
+                end
+            elseif diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
+                diffFloor_shortest_distance, diffFloor_idx = distance, i;
             end
         end
-        if nearestIdx ~= nil then
-            return to_ptr(nearestIdx);
-        end
+        return to_ptr(sameArea_idx or sameFloor_idx or diffFloor_idx);
     end
     return retval;
 end);
