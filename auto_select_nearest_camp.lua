@@ -7,6 +7,8 @@ local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
+local ValueType_new = Constants.ValueType_new;
+
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
@@ -65,11 +67,11 @@ local Area_field = get_Em_method:get_return_type():get_field("Area");
 
 local EmModuleArea_type_def = Area_field:get_type();
 local get_CurrentStageNo_method = EmModuleArea_type_def:get_method("get_CurrentStageNo");
-local get_CurrentAreaNo_method = EmModuleArea_type_def:get_method("get_CurrentAreaNo");
-local get_TargetAreaNo_method = EmModuleArea_type_def:get_method("get_TargetAreaNo");
 local get_CurrentAreaMoveSchedule_method = EmModuleArea_type_def:get_method("get_CurrentAreaMoveSchedule");
+local getIsTransitionAreaMoveFlag_method = EmModuleArea_type_def:get_method("getIsTransitionAreaMoveFlag");
 
 local AreaMoveSchedule_type_def = get_CurrentAreaMoveSchedule_method:get_return_type();
+local get_AreaNo_method = AreaMoveSchedule_type_def:get_method("get_AreaNo");
 local get_CurrentTargetPos_method = AreaMoveSchedule_type_def:get_method("get_CurrentTargetPos");
 local get_RelayInfoList_method = AreaMoveSchedule_type_def:get_method("get_RelayInfoList");
 local isInRelay_method = AreaMoveSchedule_type_def:get_method("isInRelay");
@@ -95,7 +97,7 @@ local function setVars(GUI050001, startPointIdx, hasFloorNum)
     shouldFocusFloorNum = hasFloorNum;
 end
 
-hook(GUI050001_AcceptList_type_def:get_method("updateStartPointText"), function(args)
+hook(GUI050001_AcceptList_type_def:get_method("onOpen"), function(args)
     local GUI050001 = QuestAcceptUI_field:get_data(args[2]);
     local QuestOrderParam = get_QuestOrderParam_method:call(GUI050001);
     if get_IsSameStageDeclaration_method:call(QuestOrderParam) == false then
@@ -186,20 +188,17 @@ end);
 
 local hasEmTarget = nil;
 hook(GUI060101CommonList_type_def:get_method("getFastTravelIndexNearestTarget"), function(args)
-    local FastTravelList = FastTravelList_field:get_data(args[2]);
-    local listCount = GenericList_get_Count_method:call(FastTravelList);
-    if listCount > 1 then
+    local fastTravellist = FastTravelList_field:get_data(args[2]);
+    local fastTravellist_size = GenericList_get_Count_method:call(fastTravellist);
+    if fastTravellist_size > 1 then
         local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
         if LockTarget ~= nil then
             local EmModuleArea = Area_field:get_data(get_Em_method:call(Context_field:get_data(LockTarget)));
-            local tarAreaNo = get_TargetAreaNo_method:call(EmModuleArea);
-            if get_CurrentAreaNo_method:call(EmModuleArea) ~= tarAreaNo then
+            if getIsTransitionAreaMoveFlag_method:call(EmModuleArea) then
                 local storage = get_hook_storage();
-                storage.FastTravelList = FastTravelList;
-                storage.listCount = listCount;
-                storage.AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(EmModuleArea);
-                storage.tarFloorNum = getFloorNumFromAreaNum_method:call(nil, get_CurrentStageNo_method:call(EmModuleArea), tarAreaNo);
-                storage.tarAreaNo = tarAreaNo;
+                storage.fastTravellist = fastTravellist;
+                storage.fastTravellist_size = fastTravellist_size;
+                storage.EmModuleArea = EmModuleArea;
                 hasEmTarget = true;
                 return SKIP_ORIGINAL;
             end
@@ -209,10 +208,11 @@ end, function(retval)
     if hasEmTarget then
         hasEmTarget = nil;
         local storage = get_hook_storage();
-        local TargetAreaNo = storage.tarAreaNo;
-        local TargetFloorNo = storage.tarFloorNum;
-        local AreaMoveSchedule = storage.AreaMoveSchedule;
-        local FastTravelList = storage.FastTravelList;
+        local EmModuleArea = storage.EmModuleArea;
+        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(EmModuleArea);
+        local TargetAreaNo = get_AreaNo_method:call(AreaMoveSchedule);
+        local TargetFloorNo = nil;
+        local fastTravellist = storage.fastTravellist;
         local destPos = nil;
         local sameArea_shortest_distance, sameArea_idx = nil, nil;
         local sameFloor_shortest_distance, sameFloor_idx = nil, nil;
@@ -223,23 +223,83 @@ end, function(retval)
         else
             destPos = get_CurrentTargetPos_method:call(AreaMoveSchedule);
         end
-        for i = 0, storage.listCount - 1 do
-            local BeaconGimmick = BeaconGimmick_field:get_data(GenericList_get_Item_method:call(FastTravelList, i));
+        for i = 0, storage.fastTravellist_size - 1 do
+            local BeaconGimmick = BeaconGimmick_field:get_data(GenericList_get_Item_method:call(fastTravellist, i));
             local FieldAreaInfo = getExistAreaInfo_method:call(BeaconGimmick);
             local distance = distance_method:call(nil, destPos, getPos_method:call(BeaconGimmick));
             if TargetAreaNo == get_MapAreaNumSafety_method:call(FieldAreaInfo) then
                 if sameArea_shortest_distance == nil or distance < sameArea_shortest_distance then
                     sameArea_shortest_distance, sameArea_idx = distance, i;
                 end
-            elseif TargetFloorNo == get_MapFloorNumSafety_method:call(FieldAreaInfo) then
+            end
+            if sameArea_idx ~= nil then
+                goto continue;
+            end
+            if TargetFloorNo == nil then
+                TargetFloorNo = getFloorNumFromAreaNum_method:call(nil, get_CurrentStageNo_method:call(EmModuleArea), TargetAreaNo);
+            end
+            if TargetFloorNo == get_MapFloorNumSafety_method:call(FieldAreaInfo) then
                 if sameFloor_shortest_distance == nil or distance < sameFloor_shortest_distance then
                     sameFloor_shortest_distance, sameFloor_idx = distance, i;
                 end
-            elseif diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
+            end
+            if sameFloor_idx ~= nil then
+                goto continue;
+            end
+            if diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
                 diffFloor_shortest_distance, diffFloor_idx = distance, i;
             end
+            ::continue::
         end
         return to_ptr(sameArea_idx or sameFloor_idx or diffFloor_idx);
+    end
+    return retval;
+end);
+
+local get_Pt_method = Constants.get_Pt_method;
+
+local getMasterPlayerPorter_method = get_Pt_method:get_return_type():get_method("getMasterPlayerPorter");
+
+local get_ContextHolder_method = getMasterPlayerPorter_method:get_return_type():get_method("get_ContextHolder");
+
+local get_PtContext_method = get_ContextHolder_method:get_return_type():get_method("get_Pt");
+
+local get_MoveInfo_method = get_PtContext_method:get_return_type():get_method("get_MoveInfo");
+
+local get_DirectionUpdateType_method = get_MoveInfo_method:get_return_type():get_method("get_DirectionUpdateType");
+
+local PorterFollowTargetInfo_type_def = find_type_definition("app.cPorterFollowTargetInfo");
+local getTargetCurrentEnemyContext_method = PorterFollowTargetInfo_type_def:get_method("getTargetCurrentEnemyContext");
+
+local AUTO = get_DirectionUpdateType_method:get_return_type():get_field("AUTO"):get_data(nil);
+
+local nullable_vec3_type_def = find_type_definition("System.Nullable`1<via.vec3>");
+local ctor_method = nullable_vec3_type_def:get_method(".ctor(via.vec3)");
+
+local isAutoFollow = nil;
+hook(PorterFollowTargetInfo_type_def:get_method("getTargetCurrentPos"), function(args)
+    if get_DirectionUpdateType_method:call(get_MoveInfo_method:call(get_PtContext_method:call(get_ContextHolder_method:call(getMasterPlayerPorter_method:call(get_Pt_method:call(nil)))))) == AUTO then
+        isAutoFollow = true;
+        get_hook_storage().this_ptr = args[2];
+    end
+end, function(retval)
+    if isAutoFollow then
+        isAutoFollow = nil;
+        local EnemyContext = getTargetCurrentEnemyContext_method:call(get_hook_storage().this_ptr);
+        if EnemyContext ~= nil then
+            local EmModuleArea = Area_field:get_data(EnemyContext);
+            if getIsTransitionAreaMoveFlag_method:call(EmModuleArea) then
+                local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(EmModuleArea);
+                local nullable_vec3 = ValueType_new(nullable_vec3_type_def);
+                if isInRelay_method:call(AreaMoveSchedule) then
+                    local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
+                    ctor_method:call(nullable_vec3, RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+                else
+                    ctor_method:call(nullable_vec3, get_CurrentTargetPos_method:call(AreaMoveSchedule));
+                end
+                return to_ptr(nullable_vec3);
+            end
+        end
     end
     return retval;
 end);
