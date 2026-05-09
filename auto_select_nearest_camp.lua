@@ -266,12 +266,15 @@ local get_IsManualMoving_method = AppNavHelper_type_def:get_method("get_IsManual
 
 local isManualMoving = nil;
 hook(AppNavHelper_type_def:get_method("get_RealTargetPos"), function(args)
-    if isPorterRiding_method:call(nil, getHunterCharacter_method:call(nil)) and get_IsManualMoving_method:call(args[2]) == false then
-        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-        if LockTarget ~= nil then
-            isManualMoving = false;
-            get_hook_storage().LockTarget = LockTarget;
-            return SKIP_ORIGINAL;
+    if get_IsManualMoving_method:call(args[2]) == false then
+        local HunterCharacter = getHunterCharacter_method:call(nil);
+        if HunterCharacter ~= nil and isPorterRiding_method:call(nil, HunterCharacter) then
+            local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+            if LockTarget ~= nil then
+                isManualMoving = false;
+                get_hook_storage().LockTarget = LockTarget;
+                return SKIP_ORIGINAL;
+            end
         end
     end
 end, function(retval)
@@ -291,12 +294,15 @@ end);
 local nullable_vec3 = Constants.ValueType_new(nullable_vec3_type_def);
 local shouldOverrideDest = nil;
 hook(AppNavHelper_type_def:get_method("get_RealFinalDestination"), function(args)
-    if isPorterRiding_method:call(nil, getHunterCharacter_method:call(nil)) and get_IsManualMoving_method:call(args[2]) == false then
-        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-        if LockTarget ~= nil then
-            shouldOverrideDest = true;
-            get_hook_storage().LockTarget = LockTarget;
-            return SKIP_ORIGINAL;
+    if get_IsManualMoving_method:call(args[2]) == false then
+        local HunterCharacter = getHunterCharacter_method:call(nil);
+        if HunterCharacter ~= nil and isPorterRiding_method:call(nil, HunterCharacter) then
+            local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+            if LockTarget ~= nil then
+                isManualMoving = false;
+                get_hook_storage().LockTarget = LockTarget;
+                return SKIP_ORIGINAL;
+            end
         end
     end
 end, function(retval)
