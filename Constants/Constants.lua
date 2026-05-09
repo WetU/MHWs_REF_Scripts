@@ -75,8 +75,6 @@ local Constants = {
 
     drawtext = _G.draw.text,
 
-    ValueType_new = _G.ValueType.new,
-
     ZERO_float_ptr = float_to_ptr(0.0),
     SMALL_float_ptr = float_to_ptr(0.01),
 
@@ -109,7 +107,6 @@ local Constants = {
     get_InputPriority_method = InputCtrl_type_def:get_method("get_InputPriority"),
     get_ItemId_method = ReceiveItemInfo_type_def:get_method("get_ItemId"),
     get_PlParam_method = GA_type_def:get_method("get_PlParam"),
-    get_Pt_method = GA_type_def:get_method("get_Pt"),
     get_VariousData_method = GA_type_def:get_method("get_VariousData"),
     GenericList_get_Count_method = GenericList_type_def:get_method("get_Count"),
     GenericList_get_Item_method = GenericList_type_def:get_method("get_Item(System.Int32)"),

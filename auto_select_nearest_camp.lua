@@ -14,10 +14,6 @@ local distance_method = find_type_definition("via.MathEx"):get_method("distance(
 
 local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
 
-local isPorterRiding_method = find_type_definition("app.NpcUtil"):get_method("isPorterRiding(app.HunterCharacter)"); -- static
-
-local getHunterCharacter_method = find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter"); -- static
-
 local AreaIconData_type_def = find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
 local get_AreaNum_method = AreaIconData_type_def:get_method("get_AreaNum");
@@ -236,8 +232,7 @@ end, function(retval)
             end
             if sameArea_idx ~= nil then
                 goto continue;
-            end
-            if TargetFloorNo == nil then
+            elseif TargetFloorNo == nil then
                 TargetFloorNo = getFloorNumFromAreaNum_method:call(nil, get_CurrentStageNo_method:call(EmModuleArea), TargetAreaNo);
             end
             if TargetFloorNo == get_MapFloorNumSafety_method:call(FieldAreaInfo) then
@@ -247,75 +242,12 @@ end, function(retval)
             end
             if sameFloor_idx ~= nil then
                 goto continue;
-            end
-            if diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
+            elseif diffFloor_shortest_distance == nil or distance < diffFloor_shortest_distance then
                 diffFloor_shortest_distance, diffFloor_idx = distance, i;
             end
             ::continue::
         end
         return to_ptr(sameArea_idx or sameFloor_idx or diffFloor_idx);
-    end
-    return retval;
-end);
-
-local nullable_vec3_type_def = find_type_definition("System.Nullable`1<via.vec3>");
-local ctor_method = nullable_vec3_type_def:get_method(".ctor(via.vec3)");
-
-local AppNavHelper_type_def = find_type_definition("app.mcAppNavHelper");
-local get_IsManualMoving_method = AppNavHelper_type_def:get_method("get_IsManualMoving");
-
-local isManualMoving = nil;
-hook(AppNavHelper_type_def:get_method("get_RealTargetPos"), function(args)
-    if get_IsManualMoving_method:call(args[2]) == false then
-        local HunterCharacter = getHunterCharacter_method:call(nil);
-        if HunterCharacter ~= nil and isPorterRiding_method:call(nil, HunterCharacter) then
-            local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-            if LockTarget ~= nil then
-                isManualMoving = false;
-                get_hook_storage().LockTarget = LockTarget;
-                return SKIP_ORIGINAL;
-            end
-        end
-    end
-end, function(retval)
-    if isManualMoving == false then
-        isManualMoving = nil;
-        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(get_hook_storage().LockTarget))));
-        if isInRelay_method:call(AreaMoveSchedule) then
-            local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
-            return to_ptr(RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
-        else
-            return to_ptr(get_CurrentTargetPos_method:call(AreaMoveSchedule));
-        end
-    end
-    return retval;
-end);
-
-local nullable_vec3 = Constants.ValueType_new(nullable_vec3_type_def);
-local shouldOverrideDest = nil;
-hook(AppNavHelper_type_def:get_method("get_RealFinalDestination"), function(args)
-    if get_IsManualMoving_method:call(args[2]) == false then
-        local HunterCharacter = getHunterCharacter_method:call(nil);
-        if HunterCharacter ~= nil and isPorterRiding_method:call(nil, HunterCharacter) then
-            local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
-            if LockTarget ~= nil then
-                isManualMoving = false;
-                get_hook_storage().LockTarget = LockTarget;
-                return SKIP_ORIGINAL;
-            end
-        end
-    end
-end, function(retval)
-    if shouldOverrideDest then
-        shouldOverrideDest = nil;
-        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(get_hook_storage().LockTarget))));
-        if isInRelay_method:call(AreaMoveSchedule) then
-            local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
-            ctor_method:call(nullable_vec3, RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
-        else
-            ctor_method:call(nullable_vec3, get_CurrentTargetPos_method:call(AreaMoveSchedule));
-        end
-        return to_ptr(nullable_vec3);
     end
     return retval;
 end);
