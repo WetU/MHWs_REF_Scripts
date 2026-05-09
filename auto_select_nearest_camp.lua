@@ -7,14 +7,16 @@ local SKIP_ORIGINAL = Constants.SKIP_ORIGINAL;
 
 local get_hook_storage = Constants.get_hook_storage;
 
-local ValueType_new = Constants.ValueType_new;
-
 local GenericList_get_Count_method = Constants.GenericList_get_Count_method;
 local GenericList_get_Item_method = Constants.GenericList_get_Item_method;
 
 local distance_method = find_type_definition("via.MathEx"):get_method("distance(via.vec3, via.vec3)"); -- static
 
 local getFloorNumFromAreaNum_method = find_type_definition("app.GUIUtilApp.MapUtil"):get_method("getFloorNumFromAreaNum(app.FieldDef.STAGE, System.Int32)"); -- static
+
+local isPorterRiding_method = find_type_definition("app.NpcUtil"):get_method("isPorterRiding(app.HunterCharacter)"); -- static
+
+local getHunterCharacter_method = find_type_definition("app.GUIHudBase"):get_method("getHunterCharacter"); -- static
 
 local AreaIconData_type_def = find_type_definition("app.user_data.MapStageDrawData.cAreaIconData");
 local get_AreaIconPos_method = AreaIconData_type_def:get_method("get_AreaIconPos");
@@ -256,50 +258,58 @@ end, function(retval)
     return retval;
 end);
 
-local get_Pt_method = Constants.get_Pt_method;
-
-local getMasterPlayerPorter_method = get_Pt_method:get_return_type():get_method("getMasterPlayerPorter");
-
-local get_ContextHolder_method = getMasterPlayerPorter_method:get_return_type():get_method("get_ContextHolder");
-
-local get_PtContext_method = get_ContextHolder_method:get_return_type():get_method("get_Pt");
-
-local get_MoveInfo_method = get_PtContext_method:get_return_type():get_method("get_MoveInfo");
-
-local get_DirectionUpdateType_method = get_MoveInfo_method:get_return_type():get_method("get_DirectionUpdateType");
-
-local PorterFollowTargetInfo_type_def = find_type_definition("app.cPorterFollowTargetInfo");
-local getTargetCurrentEnemyContext_method = PorterFollowTargetInfo_type_def:get_method("getTargetCurrentEnemyContext");
-
-local AUTO = get_DirectionUpdateType_method:get_return_type():get_field("AUTO"):get_data(nil);
-
 local nullable_vec3_type_def = find_type_definition("System.Nullable`1<via.vec3>");
 local ctor_method = nullable_vec3_type_def:get_method(".ctor(via.vec3)");
 
-local isAutoFollow = nil;
-hook(PorterFollowTargetInfo_type_def:get_method("getTargetCurrentPos"), function(args)
-    if get_DirectionUpdateType_method:call(get_MoveInfo_method:call(get_PtContext_method:call(get_ContextHolder_method:call(getMasterPlayerPorter_method:call(get_Pt_method:call(nil)))))) == AUTO then
-        isAutoFollow = true;
-        get_hook_storage().this_ptr = args[2];
+local AppNavHelper_type_def = find_type_definition("app.mcAppNavHelper");
+local get_IsManualMoving_method = AppNavHelper_type_def:get_method("get_IsManualMoving");
+
+local isManualMoving = nil;
+hook(AppNavHelper_type_def:get_method("get_RealTargetPos"), function(args)
+    if isPorterRiding_method:call(nil, getHunterCharacter_method:call(nil)) and get_IsManualMoving_method:call(args[2]) == false then
+        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+        if LockTarget ~= nil then
+            isManualMoving = false;
+            get_hook_storage().LockTarget = LockTarget;
+            return SKIP_ORIGINAL;
+        end
     end
 end, function(retval)
-    if isAutoFollow then
-        isAutoFollow = nil;
-        local EnemyContext = getTargetCurrentEnemyContext_method:call(get_hook_storage().this_ptr);
-        if EnemyContext ~= nil then
-            local EmModuleArea = Area_field:get_data(EnemyContext);
-            if getIsTransitionAreaMoveFlag_method:call(EmModuleArea) then
-                local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(EmModuleArea);
-                local nullable_vec3 = ValueType_new(nullable_vec3_type_def);
-                if isInRelay_method:call(AreaMoveSchedule) then
-                    local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
-                    ctor_method:call(nullable_vec3, RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
-                else
-                    ctor_method:call(nullable_vec3, get_CurrentTargetPos_method:call(AreaMoveSchedule));
-                end
-                return to_ptr(nullable_vec3);
-            end
+    if isManualMoving == false then
+        isManualMoving = nil;
+        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(get_hook_storage().LockTarget))));
+        if isInRelay_method:call(AreaMoveSchedule) then
+            local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
+            return to_ptr(RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+        else
+            return to_ptr(get_CurrentTargetPos_method:call(AreaMoveSchedule));
         end
+    end
+    return retval;
+end);
+
+local nullable_vec3 = Constants.ValueType_new(nullable_vec3_type_def);
+local shouldOverrideDest = nil;
+hook(AppNavHelper_type_def:get_method("get_RealFinalDestination"), function(args)
+    if isPorterRiding_method:call(nil, getHunterCharacter_method:call(nil)) and get_IsManualMoving_method:call(args[2]) == false then
+        local LockTarget = get_LockTarget_method:call(MasterPlCamera_field:get_data(get_Camera_method:call(nil)));
+        if LockTarget ~= nil then
+            shouldOverrideDest = true;
+            get_hook_storage().LockTarget = LockTarget;
+            return SKIP_ORIGINAL;
+        end
+    end
+end, function(retval)
+    if shouldOverrideDest then
+        shouldOverrideDest = nil;
+        local AreaMoveSchedule = get_CurrentAreaMoveSchedule_method:call(Area_field:get_data(get_Em_method:call(Context_field:get_data(get_hook_storage().LockTarget))));
+        if isInRelay_method:call(AreaMoveSchedule) then
+            local RelayInfoList = get_RelayInfoList_method:call(AreaMoveSchedule);
+            ctor_method:call(nullable_vec3, RelayInfoPoint_getPos_method:call(GenericList_get_Item_method:call(RelayInfoList, GenericList_get_Count_method:call(RelayInfoList) - 1)));
+        else
+            ctor_method:call(nullable_vec3, get_CurrentTargetPos_method:call(AreaMoveSchedule));
+        end
+        return to_ptr(nullable_vec3);
     end
     return retval;
 end);
