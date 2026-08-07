@@ -1,4 +1,5 @@
 local _G = _G;
+_G.log.set_level("error");
 
 local ipairs = _G.ipairs;
 local string = _G.string;

@@ -1,6 +1,5 @@
 local Constants = _G.require("Constants/Constants");
 
-local ipairs = Constants.ipairs;
 local pairs = Constants.pairs;
 local tostring = Constants.tostring;
 local tonumber = Constants.tonumber;
@@ -65,7 +64,7 @@ local get_AttibuteType_method = get_AttackPower_method:get_return_type():get_met
 
 local WeaponAttr = {};
 do
-    for _, v in ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
+    for _, v in Constants.ipairs(get_AttibuteType_method:get_return_type():get_fields()) do
         if v:is_static() then
             local name = v:get_name();
             if name == "NONE" then

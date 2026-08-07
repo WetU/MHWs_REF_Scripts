@@ -33,14 +33,15 @@ local get_ViewCategory_method = GUI050000QuestListParts_type_def:get_method("get
 local get_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("get_ViewQuestDataList");
 local set_ViewQuestDataList_method = GUI050000QuestListParts_type_def:get_method("set_ViewQuestDataList(System.Collections.Generic.List`1<app.cGUIQuestViewData>)");
 local get_IsCancel_method = GUI050000QuestListParts_type_def:get_method("get_IsCancel");
-local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("setSortDifficulty(System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean)");
--- false, false, false, false, false, false, false = High difficulty first
--- true, false, false, false, false, false, false = Low difficulty first
--- false, false, false, false, false, true, false = Most Attempts left
--- false, false, false, false, false, false, true = Least Attempts left
--- false, false, true, false, false, false, false = No password
--- false, false, false, true, false, false, false = Newly started first
--- false, false, false, false, true false, false = Open member slots
+local setSortDifficulty_method = GUI050000QuestListParts_type_def:get_method("setSortDifficulty(System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean, System.Boolean)");
+-- false, false, false, false, false, false, false, false = High difficulty first
+-- true, false, false, false, false, false, false, false = Low difficulty first
+-- false, false, false, false, false, true, false, false = Most Attempts left
+-- false, false, false, false, false, false, true, false = Least Attempts left
+-- false, false, true, false, false, false, false, false = No password
+-- false, false, false, true, false, false, false, false = Newly started first
+-- false, false, false, false, true false, false, false = Open member slots
+-- false, true, false, false, false, false, false, true = Recommended
 local setSortNewest_method = GUI050000QuestListParts_type_def:get_method("setSortNewest(System.Boolean)");  -- true = old first, false = new first
 local PNLChangeSortType_field = GUI050000QuestListParts_type_def:get_field("_PNLChangeSortType");
 
@@ -92,13 +93,10 @@ local MissionClearFlag = nil;
 
 local function setSortDifficulty(obj, sortType)
     if sortType == 0 then
-        setSortDifficulty_method:call(obj, false, false, false, false, false, false, false);
+        setSortDifficulty_method:call(obj, false, false, false, false, false, false, false, false);
         set_Message_method:call(PNLChangeSortType_field:get_data(obj), "난이도 높은 순");
-    elseif sortType == 4 then
-        setSortDifficulty_method:call(obj, false, false, false, true, false, false, false);
-        set_Message_method:call(PNLChangeSortType_field:get_data(obj), "퀘스트 시작 최신 순");
     elseif sortType == 7 then
-        setSortDifficulty_method:call(obj, false, false, false, false, false, false, true);
+        setSortDifficulty_method:call(obj, false, false, false, false, false, false, true, false);
         set_Message_method:call(PNLChangeSortType_field:get_data(obj), "수주 가능 수 적은 순");
     end
 end
@@ -182,7 +180,7 @@ end, function()
                         set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                     end
                     shouldHideItems = nil;
-                    setSortDifficulty(this_ptr, 4);
+                    setSortDifficulty(this_ptr, 0);
                 end
             elseif CATEGORY == CATEGORY_RECRUITMENT_LOBBY or CATEGORY == CATEGORY_LINK_MEMBER then
                 local ViewQuestDataList = get_ViewQuestDataList_method:call(this_ptr);
@@ -203,7 +201,7 @@ end, function()
                         set_ViewQuestDataList_method:call(this_ptr, ViewQuestDataList);
                     end
                     shouldHideItems = nil;
-                    setSortDifficulty(this_ptr, 4);
+                    setSortDifficulty(this_ptr, 0);
                 end
             else
                 setSortDifficulty(this_ptr, 0);
