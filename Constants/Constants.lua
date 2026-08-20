@@ -1,9 +1,11 @@
 local _G = _G;
-_G.log.set_level("error");
+--_G.log.set_level("error");
 
 local ipairs = _G.ipairs;
 local string = _G.string;
 local math = _G.math;
+
+local re = _G.re;
 
 local sdk = _G.sdk;
 local call_native_func = sdk.call_native_func;
@@ -68,7 +70,8 @@ local Constants = {
 
     get_hook_storage = get_hook_storage,
 
-    on_frame = _G.re.on_frame,
+    on_frame = re.on_frame,
+    cb_STOP = re.CallbackNextAction.STOP,
 
     load_font = imgui.load_font,
     push_font = imgui.push_font,

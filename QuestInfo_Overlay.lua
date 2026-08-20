@@ -8,6 +8,9 @@ local mathfloor = Constants.mathfloor;
 local strmatch = Constants.strmatch;
 local strformat = Constants.strformat;
 
+local on_frame = Constants.on_frame;
+local cb_STOP = Constants.cb_STOP;
+
 local set_native_field = Constants.set_native_field;
 local find_type_definition = Constants.find_type_definition;
 local hook = Constants.hook;
@@ -241,6 +244,14 @@ end, function()
             getQuestTimeInfo(QuestElapsedTime);
             getWeaponAttr(get_AttibuteType_method:call(get_AttackPower_method:call(getHunterStatus_method:call(nil))));
             QuestInfoCreated = true;
+            on_frame(function()
+                if not QuestInfoCreated then
+                    return cb_STOP;
+                end
+                push_font(font);
+                drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. curDeathCount .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
+                pop_font();
+            end);
         elseif QuestElapsedTime ~= oldElapsedTime then
             getQuestTimeInfo(QuestElapsedTime);
         end
@@ -256,13 +267,5 @@ end);
 hook(QuestDirector_type_def:get_method("notifyQuestRetry"), nil, function()
     if QuestInfoCreated then
         curDeathCount = 0;
-    end
-end);
-
-Constants.on_frame(function()
-    if QuestInfoCreated then
-        push_font(font);
-        drawtext(slingerChargeMax .. "\n" .. curWeaponAttr .. "\n" .. QuestTimer .. " / " .. questTimeLimit .. "\n" .. "다운 횟수: " .. curDeathCount .. " / " .. questMaxDeath, 3719, 234, 0xFFFFFFFF);
-        pop_font();
     end
 end);

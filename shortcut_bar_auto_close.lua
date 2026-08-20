@@ -22,10 +22,10 @@ local lastClosedTime = nil;
 
 hook(GUI020600_type_def:get_method("onHudOpen"), function()
 	if lastClosedTime ~= nil and (get_UpTimeSecond_method:call(nil) - lastClosedTime) >= 5.0 then
+		lastClosedTime = nil;
 		if getCurrentIndex_method:call(ShortcutPalletParam, PC) ~= 0 then
 			setCurrentIndex_method:call(ShortcutPalletParam, PC, 0);
 		end
-		lastClosedTime = nil;
 	end
 end);
 
