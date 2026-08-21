@@ -20,6 +20,8 @@ local getThisPtr = Constants.getThisPtr;
 
 local isContain = Constants.isContain;
 
+local getRuntimePlatform_method = find_type_definition("ace.cGraphicsSetting"):get_method("getRuntimePlatform"); -- static
+
 local GUI050000_type_def = find_type_definition("app.GUI050000");
 local get_QuestCounterContext_method = GUI050000_type_def:get_method("get_QuestCounterContext");
 
@@ -59,11 +61,16 @@ local STREAM_EVENTQUEST = get_MissionType_method:get_return_type():get_field("ST
 local get_SearchResult_method = Session_field:get_type():get_method("get_SearchResult");
 
 local SearchResultQuest_type_def = get_SearchResult_method:get_return_type();
+local getHostHunterInfo_method = SearchResultQuest_type_def:get_method("getHostHunterInfo");
 local isLocked_field = SearchResultQuest_type_def:get_field("isLocked");
 local isAutoAccept_field = SearchResultQuest_type_def:get_field("isAutoAccept");
+local isSamePlatform_field = SearchResultQuest_type_def:get_field("isSamePlatform");
 local memberNum_field = SearchResultQuest_type_def:get_field("memberNum");
 local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
 local multiplaySetting_field = SearchResultQuest_type_def:get_field("multiplaySetting");
+
+local HunterInfo_type_def = getHostHunterInfo_method:get_return_type();
+local platformId_field = HunterInfo_type_def:get_field("platformId");
 
 local NPC_ONLY = multiplaySetting_field:get_type():get_field("NPC_ONLY"):get_data(nil);
 
@@ -90,6 +97,8 @@ local SortDifficulty = {
 };
 
 local MissionClearFlag = nil;
+
+local MasterPlayerPlatform = nil;
 
 local function setSortDifficulty(obj, sortType)
     if sortType == 0 then
@@ -190,9 +199,19 @@ end, function()
                     for i = 0, ViewQuestDataList_size - 1 do
                         local quest_data = GenericList_get_Item_method:call(ViewQuestDataList, i);
                         local SearchResult = get_SearchResult_method:call(Session_field:get_data(quest_data));
+                        if isSamePlatform_field:get_data(SearchResult) then
+                            if MasterPlayerPlatform == nil then
+                                MasterPlayerPlatform = getRuntimePlatform_method:call(nil);
+                            end
+                            if platformId_field:get_data(getHostHunterInfo_method:call(SearchResult)) ~= MasterPlayerPlatform then
+                                tinsert(shouldHideItems, quest_data);
+                                goto continue;
+                            end
+                        end
                         if isLocked_field:get_data(SearchResult) or isAutoAccept_field:get_data(SearchResult) == false or (memberNum_field:get_data(SearchResult) >= maxMemberNum_field:get_data(SearchResult)) or multiplaySetting_field:get_data(SearchResult) == NPC_ONLY then
                             tinsert(shouldHideItems, quest_data);
                         end
+                        ::continue::
                     end
                     if #shouldHideItems > 0 then
                         for _, v in ipairs(shouldHideItems) do
