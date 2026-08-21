@@ -69,8 +69,7 @@ local memberNum_field = SearchResultQuest_type_def:get_field("memberNum");
 local maxMemberNum_field = SearchResultQuest_type_def:get_field("maxMemberNum");
 local multiplaySetting_field = SearchResultQuest_type_def:get_field("multiplaySetting");
 
-local HunterInfo_type_def = getHostHunterInfo_method:get_return_type();
-local platformId_field = HunterInfo_type_def:get_field("platformId");
+local platformId_field = getHostHunterInfo_method:get_return_type():get_field("platformId");
 
 local NPC_ONLY = multiplaySetting_field:get_type():get_field("NPC_ONLY"):get_data(nil);
 
